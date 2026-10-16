@@ -1,0 +1,22 @@
+services:
+  frontend:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:?Set NEXT_PUBLIC_API_URL}
+    image: core-backup-worker-fe:latest
+    container_name: core-backup-worker-fe
+    restart: unless-stopped
+    ports:
+      - '${HOST_PORT:-3001}:3000'
+    logging:
+      driver: json-file
+      options:
+        max-size: '50m'
+        max-file: '3'
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:3000/']
+      interval: 30s
+      timeout: 5s
+      start_period: 40s
+      retries: 3
