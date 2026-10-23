@@ -1,15 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  CartesianGrid,
   Cell,
-  Line,
-  LineChart,
   Pie,
   PieChart,
   ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
 } from 'recharts';
 import { fetchPublicOverview } from 'src/auth/public-backup-api';
 import {
@@ -18,21 +12,25 @@ import {
 } from 'src/components/admin/backup/backup-status';
 import { APP_BRAND_SHORT_NAME, APP_ORG_NAME } from 'src/constants/branding';
 import { useBackupStream } from 'src/hooks/useBackupStream';
+import type { BackupRunProgressEvent } from 'src/types/backup-stream';
 import type { WallboardOverview } from 'src/types/wallboard';
 import { formatIsoAsLocalDateTime } from 'src/utils/date-vn';
 import { resolveApiErrorMessage } from 'src/utils/resolve-api-error';
-import { BackupStorageCylinder } from './BackupStorageCylinder';
+import { ActiveJobStream } from './ActiveJobStream';
+import { DatabaseCardsCarousel } from './DatabaseCardsCarousel';
+import { DiskForecastPanel } from './DiskForecastPanel';
+import { HistorySparklineCard } from './HistorySparklineCard';
+import { NextJobCountdown } from './NextJobCountdown';
+import { WallboardAlertsPanel } from './WallboardAlertsPanel';
 import { WallboardPanel } from './WallboardPanel';
 import {
-  formatBytesShort,
   formatRelativeTime,
-  formatShortDay,
   percent,
 } from './wallboard-format';
 
 /** Safety net for TV displays if SSE drops; primary updates come from the stream. */
 const SAFETY_REFRESH_MS = 5 * 60_000;
-const RECENT_JOBS_VISIBLE = 6;
+const RECENT_JOBS_VISIBLE = 5;
 
 const STATUS_COLORS = {
   ok: '#059669',
@@ -112,7 +110,7 @@ export function WallboardDashboard() {
     return () => window.clearInterval(timer);
   }, [load]);
 
-  useBackupStream({
+  const { progressByRunId, statusByRunId } = useBackupStream({
     channel: 'public',
     enabled: true,
     onOpen: () => {
@@ -121,10 +119,18 @@ export function WallboardDashboard() {
     onStatus: () => {
       void load(true);
     },
-    onProgress: () => {
-      void load(true);
-    },
   });
+
+  const liveProgress = useMemo((): BackupRunProgressEvent | null => {
+    const activeRunId =
+      data?.activeJob?.runId ??
+      Object.values(statusByRunId).find((s) => s.status === 'running')?.runId;
+    if (!activeRunId) {
+      const first = Object.values(progressByRunId)[0];
+      return first ?? null;
+    }
+    return progressByRunId[activeRunId] ?? null;
+  }, [data?.activeJob?.runId, progressByRunId, statusByRunId]);
 
   const liveCount = data?.databases.filter((db) => db.live).length ?? 0;
   const offCount = data ? data.databases.length - liveCount : 0;
@@ -151,30 +157,9 @@ export function WallboardDashboard() {
     ].filter((row) => row.value > 0);
   }, [data]);
 
-  const historyChartData = useMemo(() => {
-    if (!data) {
-      return [];
-    }
-    return data.historyByDay.map((day) => ({
-      ...day,
-      label: formatShortDay(day.date),
-    }));
-  }, [data]);
-
   const successPct = data
     ? percent(data.jobSummary.ok, data.jobSummary.total)
     : 0;
-
-  const alertCritical =
-    unreachableCount +
-    (data && !data.freshness.healthy ? 1 : 0) +
-    (data?.zones.lockHeld ? 1 : 0) +
-    diskCritical;
-  const alertWarning =
-    (data?.databases.filter((db) => db.reachability === 'unconfigured')
-      .length ?? 0) +
-    (data?.scheduleEnabled === false ? 1 : 0) +
-    diskWarning;
 
   return (
     <div className="flex h-screen max-h-screen flex-col overflow-hidden bg-slate-100 text-slate-900">
@@ -215,41 +200,12 @@ export function WallboardDashboard() {
           </p>
         ) : data ? (
           <div className="grid min-h-0 flex-1 grid-cols-12 grid-rows-2 gap-2 xl:gap-2.5">
-            {/* Row 1 */}
+            {/* Row 1: Databases | Daily backups | Dự báo tăng trưởng */}
             <WallboardPanel
               className="col-span-4 row-start-1"
               title="Databases"
               subtitle={`${liveCount} live · ${offCount} off · ${data.databases.length} tổng`}>
-              <div className="grid h-full grid-cols-3 content-start gap-1.5 overflow-hidden xl:gap-2">
-                {data.databases.map((db) => (
-                  <article
-                    key={`${db.group}-${db.database}-${db.host}`}
-                    className="min-w-0 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5">
-                    <div className="flex items-start justify-between gap-1">
-                      <p className="truncate text-xs font-semibold text-slate-900 xl:text-sm">
-                        {db.database}
-                      </p>
-                      <span
-                        className={`inline-flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-bold ${
-                          db.live
-                            ? 'bg-emerald-100 text-emerald-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}>
-                        {db.live ? (
-                          <span
-                            className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-live-dot motion-reduce:animate-none"
-                            aria-hidden="true"
-                          />
-                        ) : null}
-                        {db.live ? 'LIVE' : 'OFF'}
-                      </span>
-                    </div>
-                    <p className="truncate text-[10px] text-slate-500">
-                      {db.group} · {db.host}
-                    </p>
-                  </article>
-                ))}
-              </div>
+              <DatabaseCardsCarousel databases={data.databases} />
             </WallboardPanel>
 
             <WallboardPanel
@@ -308,7 +264,9 @@ export function WallboardDashboard() {
                   </li>
                   <li className="flex justify-between text-red-700">
                     <span>Lỗi</span>
-                    <span className="font-semibold">{data.jobSummary.error}</span>
+                    <span className="font-semibold">
+                      {data.jobSummary.error}
+                    </span>
                   </li>
                   <li className="flex justify-between text-amber-700">
                     <span>Partial</span>
@@ -322,71 +280,36 @@ export function WallboardDashboard() {
                       {data.jobSummary.running}
                     </span>
                   </li>
-                  <li className="flex justify-between border-t border-slate-200 pt-0.5 text-slate-600">
-                    <span>Tổng</span>
-                    <span className="font-semibold">{data.jobSummary.total}</span>
-                  </li>
                 </ul>
+                {(data.activeJob?.status === 'running' || liveProgress) && (
+                  <div className="shrink-0 border-t border-slate-100 pt-1.5">
+                    <ActiveJobStream
+                      overviewJob={data.activeJob}
+                      liveProgress={liveProgress}
+                      compact
+                    />
+                  </div>
+                )}
               </div>
             </WallboardPanel>
 
             <WallboardPanel
               className="col-span-5 row-start-1"
-              title="Ổ cứng"
+              title="Dự báo tăng trưởng dữ liệu"
               subtitle={
                 disk?.exists
                   ? `${disk.usedPercent}% đã dùng · ${disk.path}`
-                  : `Primary ${data.zones.primaryExists ? 'OK' : 'missing'} · chưa đọc được ổ`
+                  : `Primary ${data.zones.primaryExists ? 'OK' : 'missing'}`
               }>
-              <div className="flex h-full min-h-0 flex-col gap-1">
-                {disk?.exists ? (
-                  <>
-                    <p className="shrink-0 text-[11px] text-slate-600 xl:text-xs">
-                      <span className="font-semibold text-slate-900">
-                        {formatBytesShort(disk.usedBytes)}
-                      </span>
-                      {' / '}
-                      {formatBytesShort(disk.totalBytes)}
-                      <span className="text-slate-500"> đã dùng</span>
-                    </p>
-                    <BackupStorageCylinder disk={disk} />
-                  </>
-                ) : (
-                  <p className="flex flex-1 items-center text-xs text-slate-500">
-                    Chưa có dữ liệu ổ.
-                  </p>
-                )}
-                <div className="grid shrink-0 grid-cols-3 gap-1.5 text-[10px] xl:text-[11px]">
-                  <div className="rounded-lg bg-slate-50 px-2 py-1">
-                    <p className="text-slate-500">Runs</p>
-                    <p className="font-semibold text-slate-900">
-                      {data.zones.runCount}
-                    </p>
-                  </div>
-                  <div className="rounded-lg bg-slate-50 px-2 py-1">
-                    <p className="text-slate-500">Isolated</p>
-                    <p className="font-semibold text-slate-900">
-                      {data.zones.isolatedConfigured ? 'Yes' : 'No'}
-                    </p>
-                  </div>
-                  <div className="rounded-lg bg-slate-50 px-2 py-1">
-                    <p className="text-slate-500">Fresh</p>
-                    <p
-                      className={`font-semibold ${
-                        data.freshness.healthy
-                          ? 'text-emerald-700'
-                          : 'text-red-700'
-                      }`}>
-                      {data.freshness.healthy ? 'OK' : 'Stale'}
-                    </p>
-                  </div>
-                </div>
-              </div>
+              <DiskForecastPanel
+                disk={disk}
+                primaryExists={data.zones.primaryExists}
+              />
             </WallboardPanel>
 
-            {/* Row 2 */}
+            {/* Row 2: Recent jobs | History 14 ngày | Alerts + Countdown */}
             <WallboardPanel
-              className="col-span-4 row-start-2"
+              className="col-span-3 row-start-2"
               title="Recent jobs"
               subtitle={`${Math.min(RECENT_JOBS_VISIBLE, data.recentJobs.length)} / ${data.recentJobs.length}`}>
               <ul className="flex h-full flex-col justify-start gap-1 overflow-hidden">
@@ -425,14 +348,8 @@ export function WallboardDashboard() {
                           </p>
                           <p className="truncate text-[10px] text-slate-500">
                             {job.runId} ·{' '}
-                            {formatIsoAsLocalDateTime(job.startedAt)} ·{' '}
-                            {formatRelativeTime(job.startedAt)}
+                            {formatIsoAsLocalDateTime(job.startedAt)}
                           </p>
-                          {job.status === 'error' && job.error ? (
-                            <p className="truncate text-[10px] text-red-600">
-                              {job.error}
-                            </p>
-                          ) : null}
                         </div>
                       </li>
                     );
@@ -444,114 +361,40 @@ export function WallboardDashboard() {
             <WallboardPanel
               className="col-span-5 row-start-2"
               title="History 14 ngày"
-              subtitle="Asia/Ho_Chi_Minh">
-              <div className="h-full min-h-0 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={historyChartData} margin={{ top: 4, right: 8, left: -18, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                    <XAxis dataKey="label" tick={{ fontSize: 10 }} />
-                    <YAxis allowDecimals={false} tick={{ fontSize: 10 }} width={28} />
-                    <Tooltip />
-                    <Line
-                      type="monotone"
-                      dataKey="ok"
-                      name="OK"
-                      stroke={STATUS_COLORS.ok}
-                      strokeWidth={2}
-                      dot={false}
-                      isAnimationActive={false}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="error"
-                      name="Error"
-                      stroke={STATUS_COLORS.error}
-                      strokeWidth={2}
-                      dot={false}
-                      isAnimationActive={false}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="partial"
-                      name="Partial"
-                      stroke={STATUS_COLORS.partial}
-                      strokeWidth={2}
-                      dot={false}
-                      isAnimationActive={false}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
+              subtitle="Jobs + volume GB/ngày · Asia/Ho_Chi_Minh">
+              <HistorySparklineCard
+                historyByDay={data.historyByDay}
+                recentJobs={data.recentJobs}
+              />
             </WallboardPanel>
 
-            <WallboardPanel
-              className="col-span-3 row-start-2"
-              title="Alerts"
-              subtitle="Ưu tiên xử lý">
-              <div className="flex h-full min-h-0 flex-col gap-2">
-                <div className="grid shrink-0 grid-cols-2 gap-1.5">
-                  <div className="rounded-lg bg-red-50 px-2 py-2 text-center">
-                    <p className="text-xl font-bold text-red-700 xl:text-2xl">
-                      {alertCritical}
-                    </p>
-                    <p className="text-[10px] font-medium text-red-600">
-                      Critical
-                    </p>
-                  </div>
-                  <div className="rounded-lg bg-amber-50 px-2 py-2 text-center">
-                    <p className="text-xl font-bold text-amber-700 xl:text-2xl">
-                      {alertWarning}
-                    </p>
-                    <p className="text-[10px] font-medium text-amber-600">
-                      Warning
-                    </p>
-                  </div>
-                </div>
-                <ul className="min-h-0 flex-1 space-y-1 overflow-hidden text-[11px] xl:text-xs">
-                  <li className="flex items-center gap-1.5">
-                    <StatusDot
-                      tone={data.freshness.healthy ? 'ok' : 'error'}
-                    />
-                    <span className="truncate">
-                      Freshness{' '}
-                      {data.freshness.healthy ? 'OK' : 'stale'}
-                      {data.freshness.ageHours != null
-                        ? ` · ${data.freshness.ageHours}h`
-                        : ''}
-                    </span>
-                  </li>
-                  <li className="flex items-center gap-1.5">
-                    <StatusDot
-                      tone={unreachableCount > 0 ? 'error' : 'ok'}
-                    />
-                    <span className="truncate">
-                      {unreachableCount} host unreachable
-                    </span>
-                  </li>
-                  <li className="flex items-center gap-1.5">
-                    <StatusDot
-                      tone={diskCritical > 0 ? 'error' : diskWarning > 0 ? 'warn' : 'ok'}
-                    />
-                    <span className="truncate">
-                      Disk {diskCritical > 0 ? 'critical' : diskWarning > 0 ? 'warning' : 'OK'}
-                    </span>
-                  </li>
-                  <li className="flex items-center gap-1.5">
-                    <StatusDot
-                      tone={data.scheduleEnabled === false ? 'warn' : 'ok'}
-                    />
-                    <span className="truncate">
-                      Schedule{' '}
-                      {data.scheduleEnabled === false
-                        ? 'tắt'
-                        : data.scheduleEnabled
-                          ? 'bật'
-                          : '?'}
-                    </span>
-                  </li>
-                </ul>
-              </div>
-            </WallboardPanel>
+            <div className="col-span-4 row-start-2 flex min-h-0 flex-col gap-2 xl:gap-2.5">
+              <WallboardPanel
+                className="min-h-0 flex-1"
+                title="Next Job Countdown"
+                subtitle={
+                  data.scheduleEnabled === false
+                    ? 'Schedule tắt · vẫn hiện mốc cron'
+                    : 'Lịch sắp tới'
+                }>
+                <NextJobCountdown
+                  schedule={data.schedule}
+                  scheduleEnabled={data.scheduleEnabled}
+                />
+              </WallboardPanel>
+
+              <WallboardPanel
+                className="min-h-0 flex-1"
+                title="Alerts"
+                subtitle="Chỉ hiện vấn đề cần xử lý">
+                <WallboardAlertsPanel
+                  data={data}
+                  unreachableCount={unreachableCount}
+                  diskCritical={diskCritical > 0}
+                  diskWarning={diskWarning > 0}
+                />
+              </WallboardPanel>
+            </div>
           </div>
         ) : null}
       </main>

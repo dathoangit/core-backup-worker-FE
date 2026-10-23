@@ -12,7 +12,7 @@ Backend tương ứng: [`../../core-backup-worker-BE/docs/luong-he-thong.md`](..
 2. **Lịch sử** (`/runs`) — danh sách run, kích hoạt incremental/full theo nhóm, hủy run, mở chi tiết (progress bar + log terminal SSE).
 3. **Tra cứu file** (`/files`) — cây thư mục `.csv.gz` theo ngày/nhóm/DB, dung lượng, checksum MD5/SHA-256.
 4. **Cấu hình** (`/config`) — settings (lịch, đường dẫn, host, alerts Telegram/SMTP).
-5. **Màn hình trung tâm** (`/dashboard`) — TV wallboard public, SSE overview + safety refetch 5 phút.
+5. **Màn hình trung tâm** (`/dashboard`) — TV wallboard public: Active Job stream (SSE progress), Disk forecast, watermark/lag badge, History sparkline 14 ngày, Next Job countdown; safety refetch overview 5 phút.
 6. **Users** (`/admin/users`) — CRUD tài khoản admin.
 
 FE không restore. Nút restore plan chỉ đọc `GET /admin/backup/restore-plan`.
@@ -102,7 +102,9 @@ Hook `useBackupStream` thay polling. Sự kiện: `run.status`, `run.progress`, 
 | `computeBackupFileChecksum` | `POST /admin/backup/files/checksum` |
 | `sendAlertTest` | `POST /admin/alerts/test?channel=telegram\|email` |
 | `fetchSettings` / `updateSetting` | `/admin/settings` (category gồm `alerts`) |
-| `fetchPublicOverview` | `GET /public/backup/overview` (không cookie) |
+| `fetchPublicOverview` | `GET /public/backup/overview` (không cookie) — gồm `activeJob`, `schedule`, `disk.forecast`, `databases[].lagMinutes` |
+
+Wallboard (`WallboardDashboard`) dùng `useBackupStream({ channel: 'public' })` để giữ `progressByRunId` realtime (không chỉ refetch overview). Widget chính: `ActiveJobStream`, `DiskForecastPanel`, `HistorySparklineCard`, `NextJobCountdown`, `DatabaseLagBadge`.
 
 ---
 
@@ -122,6 +124,7 @@ Hook `useBackupStream` thay polling. Sự kiện: `run.status`, `run.progress`, 
 4. `/runs/:runId` hiện progress bar + terminal log.
 5. Run `error` / `partial` → toast + badge chuông header.
 6. Wallboard Recent jobs hiện scope (DB/group), trigger, thời gian, hint “Chờ worker”.
+7. Wallboard Active Job: progress %, rows/s, MB/s, rows processed/estimated, ETA; Disk panel: growth 7d + gzip estimate + days-until-full; DB card: watermark + lag badge; History mini sparkline + countdown incremental / weekly full.
 
 ### Cảnh báo ngoài
 

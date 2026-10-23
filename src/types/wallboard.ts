@@ -18,6 +18,8 @@ export type WallboardDatabase = {
   lastRunStatus: BackupRunStatus | null;
   lastStartedAt: string | null;
   watermark: string | null;
+  /** Minutes since lastStartedAt (backup freshness lag). */
+  lagMinutes: number | null;
 };
 
 export type WallboardJobSummary = {
@@ -34,6 +36,9 @@ export type WallboardHistoryDay = {
   error: number;
   partial: number;
   running: number;
+  bytesWritten?: number;
+  durationSecAvg?: number | null;
+  rowCountTotal?: number;
 };
 
 export type WallboardRecentJob = {
@@ -55,6 +60,13 @@ export type WallboardDiskFolder = {
   bytes: number;
 };
 
+export type WallboardDiskForecast = {
+  dailyGrowthBytes: number | null;
+  compressionRatio: number | null;
+  compressionSavingsPercent: number | null;
+  estimatedDaysUntilFull: number | null;
+};
+
 export type WallboardDisk = {
   path: string;
   exists: boolean;
@@ -64,11 +76,44 @@ export type WallboardDisk = {
   availableBytes: number;
   usedPercent: number;
   folders: WallboardDiskFolder[];
+  forecast?: WallboardDiskForecast | null;
+};
+
+export type WallboardActiveJob = {
+  runId: string;
+  mode: BackupMode;
+  status: BackupRunStatus;
+  startedAt: string | null;
+  percent: number;
+  rowsProcessed: number;
+  estimatedRowsTotal: number | null;
+  bytesProcessed: number;
+  rowsPerSec: number;
+  bytesPerSec: number;
+  etaSeconds: number | null;
+  currentDatabase: string | null;
+  currentTable: string | null;
+};
+
+export type WallboardScheduleTarget = {
+  group: SourceGroup;
+  database: string;
+};
+
+export type WallboardSchedule = {
+  enabled: boolean | null;
+  nextIncrementalAt: string | null;
+  nextFullAt: string | null;
+  nextFullLabel: string | null;
+  nextIncrementalDatabases?: WallboardScheduleTarget[];
+  nextFullDatabases?: WallboardScheduleTarget[];
+  nextFullGroups?: SourceGroup[];
 };
 
 export type WallboardOverview = {
   generatedAt: string;
   scheduleEnabled: boolean | null;
+  schedule: WallboardSchedule;
   freshness: {
     healthy: boolean;
     lastSuccessAt: string | null;
@@ -76,6 +121,7 @@ export type WallboardOverview = {
     ageHours: number | null;
   };
   databases: WallboardDatabase[];
+  activeJob: WallboardActiveJob | null;
   jobSummary: WallboardJobSummary;
   historyByDay: WallboardHistoryDay[];
   recentJobs: WallboardRecentJob[];
