@@ -43,6 +43,9 @@ export type WallboardRecentJob = {
   trigger: BackupTrigger;
   startedAt: string;
   finishedAt: string | null;
+  queuedAt: string | null;
+  sourceGroups: string | null;
+  databasesFilter: string | null;
   error: string | null;
 };
 

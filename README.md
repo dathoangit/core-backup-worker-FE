@@ -10,7 +10,7 @@ Next.js **Pages Router** client shell: TypeScript, Tailwind, JWT auth (localStor
 
 | I need to… | Open first | Deep dive |
 |------------|------------|-----------|
-| Understand the whole frontend | This file | — |
+| Understand the whole frontend | This file | [`docs/luong-he-thong.md`](./docs/luong-he-thong.md) |
 | Login / session / route guards | [`docs/auth.md`](./docs/auth.md) | `src/auth/`, `src/components/layout/AuthGate.tsx` |
 | Admin user management UI | [`docs/admin-users.md`](./docs/admin-users.md) | `src/components/admin/users/`, `src/auth/admin-api.ts` |
 | Admin backup UI | [`docs/admin-backup.md`](./docs/admin-backup.md) | `src/components/admin/backup/`, `src/auth/backup-api.ts` |

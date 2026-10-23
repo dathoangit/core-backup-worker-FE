@@ -1,9 +1,9 @@
 #!/bin/sh
 # Deploy the backup worker UI on xp-cntt-server.
-# Run from core-backup-worker-FE after copying .env.production.example to .env.production.
+# Run from core-backup-worker-FE after copying .env.production.example to .env.
 set -eu
 
-ENV_FILE=.env.production
+ENV_FILE=.env
 
 fail() {
   echo "deploy-prod: $1" >&2
@@ -12,7 +12,7 @@ fail() {
 
 docker compose version >/dev/null 2>&1 || fail "docker compose is not available"
 
-[ -f "$ENV_FILE" ] || fail "$ENV_FILE is missing (copy .env.production.example and set NEXT_PUBLIC_API_URL)"
+[ -f "$ENV_FILE" ] || fail "$ENV_FILE is missing (copy .env.production.example to .env and set NEXT_PUBLIC_API_URL)"
 
 API_URL=$(grep -E '^NEXT_PUBLIC_API_URL=' "$ENV_FILE" | tail -n1 | cut -d= -f2- | tr -d '[:space:]' || true)
 [ -n "$API_URL" ] || fail "NEXT_PUBLIC_API_URL is empty in $ENV_FILE"

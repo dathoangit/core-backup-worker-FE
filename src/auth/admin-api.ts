@@ -8,43 +8,35 @@ import { apiDelete, apiGet, apiPatch, apiPost } from 'src/utils/api';
 
 const apiBase = getPublicApiBaseUrl();
 
-function withToken(token: string) {
-  return { api: apiBase, token };
-}
-
-export function fetchAdminUsers(token: string): Promise<AdminUser[]> {
+export function fetchAdminUsers(): Promise<AdminUser[]> {
   return apiGet<AdminUser[]>({
-    ...withToken(token),
+    api: apiBase,
     endPoint: '/admin/users',
   });
 }
 
-export function createAdminUser(
-  token: string,
-  body: CreateAdminUserRequest,
-): Promise<AdminUser> {
+export function createAdminUser(body: CreateAdminUserRequest): Promise<AdminUser> {
   return apiPost<AdminUser, CreateAdminUserRequest>({
-    ...withToken(token),
+    api: apiBase,
     endPoint: '/admin/users',
     body,
   });
 }
 
 export function updateAdminUser(
-  token: string,
   userId: string,
   body: UpdateAdminUserRequest,
 ): Promise<AdminUser> {
   return apiPatch<AdminUser, UpdateAdminUserRequest>({
-    ...withToken(token),
+    api: apiBase,
     endPoint: `/admin/users/${userId}`,
     body,
   });
 }
 
-export function deactivateAdminUser(token: string, userId: string): Promise<void> {
+export function deactivateAdminUser(userId: string): Promise<void> {
   return apiDelete<void>({
-    ...withToken(token),
+    api: apiBase,
     endPoint: `/admin/users/${userId}`,
   });
 }

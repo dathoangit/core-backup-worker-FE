@@ -28,10 +28,10 @@ Related: [auth.md](./auth.md), [admin-users.md](./admin-users.md).
 ## Config
 
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:8081
+NEXT_PUBLIC_API_URL=http://localhost:8081/api/v1
 ```
 
-`getPublicApiBaseUrl()` reads that env (fallback `http://localhost:8081`).
+`getPublicApiBaseUrl()` reads that env (fallback `http://localhost:8081/api/v1`).
 
 ---
 

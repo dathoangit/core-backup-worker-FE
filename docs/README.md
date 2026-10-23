@@ -4,6 +4,7 @@ Canonical entry: [`../README.md`](../README.md) (agent table).
 
 | Doc | Topic |
 |-----|-------|
+| [luong-he-thong.md](./luong-he-thong.md) | Toàn bộ luồng FE: trang, quyền, API, polling |
 | [auth.md](./auth.md) | Login, storage, AuthGate |
 | [admin-users.md](./admin-users.md) | `/admin/users` UI |
 | [admin-backup.md](./admin-backup.md) | `/admin/backup` UI |

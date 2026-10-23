@@ -34,7 +34,7 @@ export function UserAccountMenu() {
 
   const handleLogout = useCallback(async () => {
     setOpen(false);
-    logout();
+    await logout();
     await router.replace('/login');
   }, [logout, router]);
 

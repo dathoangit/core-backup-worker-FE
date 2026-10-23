@@ -1,6 +1,5 @@
 /**
- * Browser-facing API base URL.
- * Defaults to direct backend URL in local development.
+ * Browser-facing API base URL (includes Nest global prefix `api/v1`).
  * Override with NEXT_PUBLIC_API_URL for each environment.
  */
 export function getPublicApiBaseUrl(): string {
@@ -8,5 +7,5 @@ export function getPublicApiBaseUrl(): string {
   if (url) {
     return url.replace(/\/$/, '');
   }
-  return 'http://localhost:8081';
+  return 'http://localhost:8081/api/v1';
 }

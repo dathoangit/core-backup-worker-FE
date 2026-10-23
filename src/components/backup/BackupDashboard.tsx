@@ -15,6 +15,8 @@ import {
   databaseRunStatusClass,
   reachabilityClass,
 } from 'src/components/admin/backup/backup-status';
+import { RunProgressBar } from 'src/components/backup/RunProgressBar';
+import { useBackupStream } from 'src/hooks/useBackupStream';
 import type { BackupRun, BackupSource, BackupZones } from 'src/types/backup';
 import { SETTING_SCHEDULE_ENABLED_KEY } from 'src/types/settings';
 import {
@@ -33,7 +35,7 @@ function isTruthySetting(value: string | null | undefined): boolean {
 }
 
 export function BackupDashboard() {
-  const { accessToken, role } = useAuth();
+  const { role } = useAuth();
   const [loading, setLoading] = useState(true);
   const hasLoadedRef = useRef(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,7 +46,7 @@ export function BackupDashboard() {
   const [startingKey, setStartingKey] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!accessToken || role !== 'admin') {
+    if (role !== 'admin') {
       setLoading(false);
       return;
     }
@@ -55,10 +57,10 @@ export function BackupDashboard() {
 
     const [runsResult, sourcesResult, zonesResult, settingsResult] =
       await Promise.allSettled([
-        fetchBackupRuns(accessToken, 50),
-        fetchBackupSources(accessToken),
-        fetchBackupZones(accessToken),
-        fetchSettings(accessToken, 'backup'),
+        fetchBackupRuns(50),
+        fetchBackupSources(),
+        fetchBackupZones(),
+        fetchSettings('backup'),
       ]);
 
     const failures: string[] = [];
@@ -95,36 +97,28 @@ export function BackupDashboard() {
     setError(failures.length > 0 ? failures[0] ?? null : null);
     hasLoadedRef.current = true;
     setLoading(false);
-  }, [accessToken, role]);
+  }, [role]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
+  const { progressByRunId } = useBackupStream({
+    enabled: role === 'admin',
+    onOpen: () => {
+      void load();
+    },
+    onStatus: () => {
+      void load();
+    },
+  });
+
   const hasRunningRun = runs.some((run) => run.status === 'running');
 
-  useEffect(() => {
-    if (!hasRunningRun || !accessToken || role !== 'admin') {
-      return;
-    }
-
-    const timer = window.setInterval(() => {
-      void (async () => {
-        try {
-          const [nextRuns, nextSources] = await Promise.all([
-            fetchBackupRuns(accessToken, 50),
-            fetchBackupSources(accessToken),
-          ]);
-          setRuns(nextRuns);
-          setSources(nextSources);
-        } catch {
-          // Keep current state; next manual refresh can surface the error.
-        }
-      })();
-    }, 5000);
-
-    return () => window.clearInterval(timer);
-  }, [accessToken, hasRunningRun, role]);
+  const activeProgress = runs
+    .filter((run) => run.status === 'running' || run.status === 'queued')
+    .map((run) => progressByRunId[run.runId])
+    .find(Boolean);
 
   const cards = useMemo(
     () => buildDatabaseCards(sources, runs),
@@ -132,7 +126,7 @@ export function BackupDashboard() {
   );
 
   const handleStartDatabase = async (card: DatabaseCardModel) => {
-    if (!accessToken || card.reachability !== 'ready') {
+    if (role !== 'admin' || card.reachability !== 'ready') {
       return;
     }
 
@@ -141,7 +135,7 @@ export function BackupDashboard() {
     setError(null);
 
     try {
-      await triggerBackupRun(accessToken, {
+      await triggerBackupRun({
         mode: 'incremental',
         groups: [card.group],
         databases: [card.database],
@@ -218,6 +212,11 @@ export function BackupDashboard() {
             />
           )}
         </div>
+        {activeProgress ? (
+          <div className="mt-4 rounded-lg border border-emerald-100 bg-emerald-50/60 p-3">
+            <RunProgressBar progress={activeProgress} />
+          </div>
+        ) : null}
       </div>
 
       <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">

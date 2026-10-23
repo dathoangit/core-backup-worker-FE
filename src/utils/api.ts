@@ -7,7 +7,8 @@ type QueryParams = Record<string, QueryValue>;
 type ApiRequestBase = {
   api?: string;
   endPoint: string;
-  token?: string;
+  /** Skip session logout on 401 (boot /auth/me and /auth/logout). */
+  suppressUnauthorized?: boolean;
 };
 
 type ApiGetOptions = ApiRequestBase & {
@@ -48,12 +49,25 @@ export class ApiError extends Error {
   }
 }
 
+/** Join API base (may include path like `/api/v1`) with an absolute endpoint path. */
+const joinApiPath = (api: string, endPoint: string): string => {
+  const base = api.replace(/\/$/, '');
+  const path = endPoint.startsWith('/') ? endPoint : `/${endPoint}`;
+  return `${base}${path}`;
+};
+
 const buildUrl = ({
   api = '',
   endPoint,
   params,
 }: ApiRequestBase & { params?: QueryParams }): string => {
-  const url = new URL(endPoint, api || 'http://localhost');
+  // new URL('/auth/login', 'http://host/api/v1') drops `/api/v1` — join manually.
+  const url = api
+    ? new URL(joinApiPath(api, endPoint))
+    : new URL(
+        endPoint.startsWith('/') ? endPoint : `/${endPoint}`,
+        'http://localhost',
+      );
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
@@ -120,13 +134,13 @@ const getErrorMessage = (response: Response, payload: unknown): string => {
 const throwIfNotOk = (
   response: Response,
   payload: unknown,
-  token?: string,
+  suppressUnauthorized?: boolean,
 ): void => {
   if (response.ok) {
     return;
   }
 
-  if (response.status === 401 && token) {
+  if (response.status === 401 && !suppressUnauthorized) {
     notifyUnauthorized();
   }
 
@@ -137,16 +151,16 @@ export const apiGet = async <TResponse = unknown>({
   api = process.env.NEXT_PUBLIC_API_URL || '',
   endPoint,
   params,
-  token,
+  suppressUnauthorized,
 }: ApiGetOptions): Promise<TResponse> => {
   const response = await fetch(buildUrl({ api, endPoint, params }), {
     method: 'GET',
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    credentials: 'include',
   });
 
   const payload = await parseJsonSafely(response);
 
-  throwIfNotOk(response, payload, token);
+  throwIfNotOk(response, payload, suppressUnauthorized);
 
   if (response.status === 204) {
     return null as TResponse;
@@ -159,21 +173,21 @@ export const apiPost = async <TResponse = unknown, TBody = unknown>({
   api = process.env.NEXT_PUBLIC_API_URL || '',
   endPoint,
   body,
-  token,
   params,
+  suppressUnauthorized,
 }: ApiPostOptions<TBody> & { params?: QueryParams }): Promise<TResponse> => {
   const response = await fetch(buildUrl({ api, endPoint, params }), {
     method: 'POST',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
 
   const payload = await parseJsonSafely(response);
 
-  throwIfNotOk(response, payload, token);
+  throwIfNotOk(response, payload, suppressUnauthorized);
 
   if (response.status === 204) {
     return null as TResponse;
@@ -186,20 +200,19 @@ export const apiPatch = async <TResponse = unknown, TBody = unknown>({
   api = process.env.NEXT_PUBLIC_API_URL || '',
   endPoint,
   body,
-  token,
 }: ApiPatchOptions<TBody>): Promise<TResponse> => {
   const response = await fetch(buildUrl({ api, endPoint }), {
     method: 'PATCH',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
 
   const payload = await parseJsonSafely(response);
 
-  throwIfNotOk(response, payload, token);
+  throwIfNotOk(response, payload);
 
   if (response.status === 204) {
     return null as TResponse;
@@ -212,21 +225,20 @@ export const apiPut = async <TResponse = unknown, TBody = unknown>({
   api = process.env.NEXT_PUBLIC_API_URL || '',
   endPoint,
   body,
-  token,
   params,
 }: ApiPutOptions<TBody>): Promise<TResponse> => {
   const response = await fetch(buildUrl({ api, endPoint, params }), {
     method: 'PUT',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
 
   const payload = await parseJsonSafely(response);
 
-  throwIfNotOk(response, payload, token);
+  throwIfNotOk(response, payload);
 
   if (response.status === 204) {
     return null as TResponse;
@@ -238,16 +250,15 @@ export const apiPut = async <TResponse = unknown, TBody = unknown>({
 export const apiDelete = async <TResponse = unknown>({
   api = process.env.NEXT_PUBLIC_API_URL || '',
   endPoint,
-  token,
 }: ApiDeleteOptions): Promise<TResponse> => {
   const response = await fetch(buildUrl({ api, endPoint }), {
     method: 'DELETE',
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    credentials: 'include',
   });
 
   const payload = await parseJsonSafely(response);
 
-  throwIfNotOk(response, payload, token);
+  throwIfNotOk(response, payload);
 
   if (response.status === 204) {
     return null as TResponse;

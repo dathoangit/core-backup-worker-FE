@@ -4,7 +4,13 @@ export type BackupMode = 'incremental' | 'full';
 
 export type BackupTrigger = 'cron' | 'manual';
 
-export type BackupRunStatus = 'running' | 'ok' | 'partial' | 'error';
+export type BackupRunStatus =
+  | 'queued'
+  | 'running'
+  | 'ok'
+  | 'partial'
+  | 'error'
+  | 'cancelled';
 
 export type BackupProfile = 'adempiere' | 'envers' | 'snapshot';
 
@@ -40,14 +46,63 @@ export type BackupRun = {
   backupDir?: string;
   error?: string | null;
   archiveStatus?: string | null;
+  sourceGroups?: string | null;
+  databasesFilter?: string | null;
+  queuedAt?: string | null;
   databases?: BackupDatabaseRun[];
 };
 
 export type TriggerBackupRunResult = {
   runId: string;
-  status: 'accepted';
+  status: 'queued' | 'running' | 'accepted';
   message: string;
   mode: BackupMode;
+};
+
+export type CancelBackupRunResult = {
+  runId: string;
+  status: string;
+};
+
+export type BackupQueueCounts = {
+  waiting: number;
+  active: number;
+  delayed: number;
+  failed: number;
+  completed: number;
+  prioritized: number;
+};
+
+export type BackupQueueJobView = {
+  runId: string;
+  queue: string;
+  bullState: string;
+  mode: BackupMode;
+  trigger: BackupTrigger | string;
+  sourceGroups: string[] | null;
+  databases: string[] | null;
+  timestamp: number | null;
+};
+
+export type BackupQueueSnapshot = {
+  generatedAt: string;
+  incremental: {
+    name: string;
+    counts: BackupQueueCounts;
+    jobs: BackupQueueJobView[];
+  };
+  full: {
+    name: string;
+    counts: BackupQueueCounts;
+    jobs: BackupQueueJobView[];
+  };
+  dbQueued: BackupRun[];
+  dbRunning: BackupRun[];
+};
+
+export type CancelAllQueuedResult = {
+  cancelled: string[];
+  failed: Array<{ runId: string; error: string }>;
 };
 
 export type TriggerBackupRunOptions = {

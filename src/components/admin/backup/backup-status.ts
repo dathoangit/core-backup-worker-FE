@@ -6,13 +6,45 @@ export function backupRunStatusClass(status: BackupRunStatus | string): string {
       return 'bg-emerald-50 text-emerald-700';
     case 'running':
       return 'bg-sky-50 text-sky-700';
+    case 'queued':
+      return 'bg-violet-50 text-violet-700';
     case 'partial':
       return 'bg-amber-50 text-amber-700';
     case 'error':
       return 'bg-red-50 text-red-700';
+    case 'cancelled':
+      return 'bg-slate-100 text-slate-600';
     default:
       return 'bg-slate-100 text-slate-600';
   }
+}
+
+/** Human-readable scope for a run (DB filter and/or source groups). */
+export function backupRunScopeLabel(options: {
+  databasesFilter?: string | null;
+  sourceGroups?: string | null;
+  databases?: string[] | null;
+  groups?: string[] | null;
+}): string {
+  const dbs =
+    options.databasesFilter?.trim() ||
+    (options.databases && options.databases.length > 0
+      ? options.databases.join(',')
+      : '');
+  if (dbs) {
+    return dbs;
+  }
+
+  const groups =
+    options.sourceGroups?.trim() ||
+    (options.groups && options.groups.length > 0
+      ? options.groups.join(',')
+      : '');
+  if (groups) {
+    return groups;
+  }
+
+  return 'Tất cả nguồn';
 }
 
 export function backupRunStatusLabel(status: BackupRunStatus | string): string {
@@ -21,10 +53,14 @@ export function backupRunStatusLabel(status: BackupRunStatus | string): string {
       return 'OK';
     case 'running':
       return 'Đang chạy';
+    case 'queued':
+      return 'Hàng đợi';
     case 'partial':
       return 'Một phần';
     case 'error':
       return 'Lỗi';
+    case 'cancelled':
+      return 'Đã hủy';
     default:
       return status;
   }

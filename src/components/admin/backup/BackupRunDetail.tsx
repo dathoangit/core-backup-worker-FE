@@ -1,9 +1,10 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  fetchBackupRun,
-} from 'src/auth/backup-api';
+import { cancelBackupRun, fetchBackupRun } from 'src/auth/backup-api';
 import { useAuth } from 'src/auth/context';
+import { RunLogTerminal } from 'src/components/backup/RunLogTerminal';
+import { RunProgressBar } from 'src/components/backup/RunProgressBar';
+import { useBackupStream } from 'src/hooks/useBackupStream';
 import type { BackupRun } from 'src/types/backup';
 import { formatIsoAsLocalDateTime } from 'src/utils/date-vn';
 import { resolveApiErrorMessage } from 'src/utils/resolve-api-error';
@@ -18,15 +19,21 @@ type BackupRunDetailProps = {
   runId: string;
 };
 
+function canCancel(status: BackupRun['status']): boolean {
+  return status === 'queued' || status === 'running';
+}
+
 export function BackupRunDetail({ runId }: BackupRunDetailProps) {
-  const { accessToken, role } = useAuth();
+  const { role } = useAuth();
   const [run, setRun] = useState<BackupRun | null>(null);
   const [loading, setLoading] = useState(true);
+  const [cancelling, setCancelling] = useState(false);
+  const [info, setInfo] = useState<string | null>(null);
   const loadedRunIdRef = useRef<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!accessToken || role !== 'admin') {
+    if (role !== 'admin') {
       setLoading(false);
       return;
     }
@@ -37,7 +44,7 @@ export function BackupRunDetail({ runId }: BackupRunDetailProps) {
     }
 
     try {
-      const next = await fetchBackupRun(accessToken, runId);
+      const next = await fetchBackupRun(runId);
       setRun(next);
       setError(null);
       loadedRunIdRef.current = runId;
@@ -49,23 +56,70 @@ export function BackupRunDetail({ runId }: BackupRunDetailProps) {
     } finally {
       setLoading(false);
     }
-  }, [accessToken, role, runId]);
+  }, [role, runId]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
-  useEffect(() => {
-    if (!run || run.status !== 'running') {
+  const { progressByRunId, logs } = useBackupStream({
+    enabled: role === 'admin',
+    runId,
+    onOpen: () => {
+      void load();
+    },
+    onStatus: (event) => {
+      if (event.runId !== runId) {
+        return;
+      }
+      setRun((prev) => {
+        if (!prev) {
+          void load();
+          return prev;
+        }
+        const status =
+          event.status === 'cancelling' ? 'running' : event.status;
+        return {
+          ...prev,
+          status,
+          error: event.error ?? prev.error,
+        };
+      });
+      if (
+        event.status === 'ok' ||
+        event.status === 'partial' ||
+        event.status === 'error' ||
+        event.status === 'cancelled'
+      ) {
+        void load();
+      }
+    },
+  });
+  const progress = progressByRunId[runId];
+
+  const handleCancel = async () => {
+    if (role !== 'admin') {
       return;
     }
 
-    const timer = window.setInterval(() => {
-      void load();
-    }, 5000);
+    setCancelling(true);
+    setError(null);
+    setInfo(null);
 
-    return () => window.clearInterval(timer);
-  }, [load, run]);
+    try {
+      const result = await cancelBackupRun(runId);
+      setInfo(
+        result.status === 'cancelling'
+          ? 'Đang hủy job...'
+          : 'Đã hủy job',
+      );
+      await load();
+    } catch (err) {
+      setError(resolveApiErrorMessage(err));
+    } finally {
+      setCancelling(false);
+    }
+  };
 
   return (
     <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
@@ -74,24 +128,44 @@ export function BackupRunDetail({ runId }: BackupRunDetailProps) {
           <Link
             href="/runs"
             className="text-sm font-medium text-sky-700 hover:underline">
-            ← Quay lại lịch sử
+            ← Quay lại quản lý job
           </Link>
           <h2 className="mt-2 text-lg font-semibold text-slate-900">
             Chi tiết backup run
           </h2>
           <p className="mt-1 font-mono text-xs text-slate-600">{runId}</p>
         </div>
-        <button
-          type="button"
-          onClick={() => void load()}
-          className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
-          Làm mới
-        </button>
+        <div className="flex flex-wrap gap-2">
+          {run && canCancel(run.status) ? (
+            <button
+              type="button"
+              disabled={cancelling}
+              onClick={() => void handleCancel()}
+              className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-100 disabled:opacity-50">
+              {cancelling
+                ? '...'
+                : run.status === 'queued'
+                  ? 'Hủy khỏi queue'
+                  : 'Hủy job'}
+            </button>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => void load()}
+            className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+            Làm mới
+          </button>
+        </div>
       </div>
 
       {error ? (
         <p className="mt-4 text-sm text-red-600" role="alert">
           {error}
+        </p>
+      ) : null}
+      {info ? (
+        <p className="mt-4 text-sm text-sky-700" role="status">
+          {info}
         </p>
       ) : null}
 
@@ -101,6 +175,12 @@ export function BackupRunDetail({ runId }: BackupRunDetailProps) {
 
       {run ? (
         <div className="mt-6 space-y-6">
+          {(run.status === 'running' || run.status === 'queued') && progress ? (
+            <RunProgressBar progress={progress} />
+          ) : null}
+          {(run.status === 'running' ||
+            run.status === 'queued' ||
+            logs.length > 0) && <RunLogTerminal logs={logs} />}
           <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <div>
               <dt className="text-xs font-medium text-slate-500">Status</dt>
@@ -120,6 +200,28 @@ export function BackupRunDetail({ runId }: BackupRunDetailProps) {
             <div>
               <dt className="text-xs font-medium text-slate-500">Trigger</dt>
               <dd className="mt-1 text-sm text-slate-900">{run.trigger}</dd>
+            </div>
+            <div>
+              <dt className="text-xs font-medium text-slate-500">Groups</dt>
+              <dd className="mt-1 text-sm text-slate-900">
+                {run.sourceGroups?.trim() ? run.sourceGroups : '—'}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs font-medium text-slate-500">
+                Databases filter
+              </dt>
+              <dd className="mt-1 text-sm text-slate-900">
+                {run.databasesFilter?.trim() ? run.databasesFilter : '—'}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs font-medium text-slate-500">Queued at</dt>
+              <dd className="mt-1 text-sm text-slate-900">
+                {run.queuedAt
+                  ? formatIsoAsLocalDateTime(run.queuedAt)
+                  : '—'}
+              </dd>
             </div>
             <div>
               <dt className="text-xs font-medium text-slate-500">Bắt đầu</dt>
@@ -159,7 +261,7 @@ export function BackupRunDetail({ runId }: BackupRunDetailProps) {
             <h3 className="text-sm font-semibold text-slate-900">Databases</h3>
             {!run.databases || run.databases.length === 0 ? (
               <p className="mt-2 text-sm text-slate-500">
-                Không có chi tiết database (có thể là stub từ filesystem).
+                Chưa có chi tiết database (job đang chờ/chạy hoặc stub).
               </p>
             ) : (
               <div className="mt-3 overflow-x-auto">

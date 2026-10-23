@@ -1,4 +1,10 @@
-export type SettingCategory = 'backup' | 'his' | 'emr' | 'badl' | 'lis';
+export type SettingCategory =
+  | 'backup'
+  | 'his'
+  | 'emr'
+  | 'badl'
+  | 'lis'
+  | 'alerts';
 
 export type AppSetting = {
   id: string;
@@ -63,6 +69,7 @@ export const SETTING_CATEGORY_LABELS: Record<SettingCategory, string> = {
   emr: 'EMR',
   badl: 'BADL',
   lis: 'LIS',
+  alerts: 'Cảnh báo',
 };
 
 export const ALLOWLISTED_SETTING_KEYS: Array<{
@@ -149,4 +156,20 @@ export const ALLOWLISTED_SETTING_KEYS: Array<{
   { key: 'BADL_USER', category: 'badl', isSecret: false },
   { key: 'BADL_PASSWORD', category: 'badl', isSecret: true },
   { key: 'BADL_DATABASES', category: 'badl', isSecret: false },
+  { key: 'ALERT_TELEGRAM_ENABLED', category: 'alerts', isSecret: false },
+  { key: 'ALERT_TELEGRAM_BOT_TOKEN', category: 'alerts', isSecret: true },
+  { key: 'ALERT_TELEGRAM_CHAT_ID', category: 'alerts', isSecret: false },
+  { key: 'ALERT_EMAIL_ENABLED', category: 'alerts', isSecret: false },
+  { key: 'ALERT_SMTP_HOST', category: 'alerts', isSecret: false },
+  { key: 'ALERT_SMTP_PORT', category: 'alerts', isSecret: false },
+  { key: 'ALERT_SMTP_SECURE', category: 'alerts', isSecret: false },
+  { key: 'ALERT_SMTP_USER', category: 'alerts', isSecret: false },
+  { key: 'ALERT_SMTP_PASSWORD', category: 'alerts', isSecret: true },
+  { key: 'ALERT_EMAIL_FROM', category: 'alerts', isSecret: false },
+  { key: 'ALERT_EMAIL_TO', category: 'alerts', isSecret: false },
+  {
+    key: 'ALERT_DISK_FREE_THRESHOLD_PERCENT',
+    category: 'alerts',
+    isSecret: false,
+  },
 ];

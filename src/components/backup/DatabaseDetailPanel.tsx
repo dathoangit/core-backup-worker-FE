@@ -31,7 +31,7 @@ export function DatabaseDetailPanel({
   group,
   database,
 }: DatabaseDetailPanelProps) {
-  const { accessToken, role } = useAuth();
+  const { role } = useAuth();
   const [loading, setLoading] = useState(true);
   const loadedKeyRef = useRef<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -42,7 +42,7 @@ export function DatabaseDetailPanel({
   const [planError, setPlanError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!accessToken || role !== 'admin') {
+    if (role !== 'admin') {
       setLoading(false);
       return;
     }
@@ -55,8 +55,8 @@ export function DatabaseDetailPanel({
 
     try {
       const [sources, nextRuns] = await Promise.all([
-        fetchBackupSources(accessToken),
-        fetchBackupRuns(accessToken, 50),
+        fetchBackupSources(),
+        fetchBackupRuns(50),
       ]);
       setSource(sources.find((row) => row.group === group) ?? null);
       setRuns(nextRuns);
@@ -67,7 +67,7 @@ export function DatabaseDetailPanel({
     } finally {
       setLoading(false);
     }
-  }, [accessToken, group, role]);
+  }, [group, role]);
 
   useEffect(() => {
     void load();
@@ -82,7 +82,7 @@ export function DatabaseDetailPanel({
   }, [runs, database, group]);
 
   const loadRestorePlan = useCallback(async () => {
-    if (!accessToken || role !== 'admin') {
+    if (role !== 'admin') {
       return;
     }
 
@@ -90,7 +90,7 @@ export function DatabaseDetailPanel({
     setPlanError(null);
 
     try {
-      const next = await fetchRestorePlan(accessToken, database);
+      const next = await fetchRestorePlan(database);
       setPlan(next);
     } catch (err) {
       setPlan(null);
@@ -98,7 +98,7 @@ export function DatabaseDetailPanel({
     } finally {
       setPlanLoading(false);
     }
-  }, [accessToken, database, role]);
+  }, [database, role]);
 
   useEffect(() => {
     void loadRestorePlan();

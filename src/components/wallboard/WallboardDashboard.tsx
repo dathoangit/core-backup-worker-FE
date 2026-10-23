@@ -12,7 +12,12 @@ import {
   YAxis,
 } from 'recharts';
 import { fetchPublicOverview } from 'src/auth/public-backup-api';
+import {
+  backupRunScopeLabel,
+  backupRunStatusLabel,
+} from 'src/components/admin/backup/backup-status';
 import { APP_BRAND_SHORT_NAME, APP_ORG_NAME } from 'src/constants/branding';
+import { useBackupStream } from 'src/hooks/useBackupStream';
 import type { WallboardOverview } from 'src/types/wallboard';
 import { formatIsoAsLocalDateTime } from 'src/utils/date-vn';
 import { resolveApiErrorMessage } from 'src/utils/resolve-api-error';
@@ -25,7 +30,8 @@ import {
   percent,
 } from './wallboard-format';
 
-const REFRESH_MS = 15_000;
+/** Safety net for TV displays if SSE drops; primary updates come from the stream. */
+const SAFETY_REFRESH_MS = 5 * 60_000;
 const RECENT_JOBS_VISIBLE = 6;
 
 const STATUS_COLORS = {
@@ -68,7 +74,9 @@ function runStatusTone(
     case 'partial':
       return 'warn';
     case 'running':
+    case 'queued':
       return 'running';
+    case 'cancelled':
     default:
       return 'neutral';
   }
@@ -100,9 +108,23 @@ export function WallboardDashboard() {
     void load();
     const timer = window.setInterval(() => {
       void load(true);
-    }, REFRESH_MS);
+    }, SAFETY_REFRESH_MS);
     return () => window.clearInterval(timer);
   }, [load]);
+
+  useBackupStream({
+    channel: 'public',
+    enabled: true,
+    onOpen: () => {
+      void load(true);
+    },
+    onStatus: () => {
+      void load(true);
+    },
+    onProgress: () => {
+      void load(true);
+    },
+  });
 
   const liveCount = data?.databases.filter((db) => db.live).length ?? 0;
   const offCount = data ? data.databases.length - liveCount : 0;
@@ -167,7 +189,7 @@ export function WallboardDashboard() {
         </div>
         <div className="shrink-0 text-right text-[10px] text-slate-300 xl:text-xs">
           <p>
-            {REFRESH_MS / 1000}s refresh
+            SSE + {SAFETY_REFRESH_MS / 60_000}p safety refresh
             {lastFetchedAt ? ` · ${formatRelativeTime(lastFetchedAt)}` : ''}
           </p>
           {data ? (
@@ -371,24 +393,50 @@ export function WallboardDashboard() {
                 {data.recentJobs.length === 0 ? (
                   <li className="text-xs text-slate-500">Chưa có job.</li>
                 ) : (
-                  data.recentJobs.slice(0, RECENT_JOBS_VISIBLE).map((job) => (
-                    <li
-                      key={job.runId}
-                      className="flex min-h-0 items-center gap-2 rounded-md border border-slate-100 bg-slate-50 px-2 py-1">
-                      <StatusDot tone={runStatusTone(job.status)} />
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-[11px] font-medium text-slate-900 xl:text-xs">
-                          {job.status.toUpperCase()} · {job.mode}
-                        </p>
-                        <p className="truncate text-[10px] text-slate-500">
-                          {job.runId}
-                        </p>
-                      </div>
-                      <span className="shrink-0 text-[10px] text-slate-500">
-                        {formatRelativeTime(job.startedAt)}
-                      </span>
-                    </li>
-                  ))
+                  data.recentJobs.slice(0, RECENT_JOBS_VISIBLE).map((job) => {
+                    const queuedSince = job.queuedAt ?? job.startedAt;
+                    const waitingMs =
+                      job.status === 'queued'
+                        ? Date.now() - new Date(queuedSince).getTime()
+                        : 0;
+                    const waitingWorker = waitingMs > 2 * 60_000;
+                    const scope = backupRunScopeLabel({
+                      databasesFilter: job.databasesFilter,
+                      sourceGroups: job.sourceGroups,
+                    });
+
+                    return (
+                      <li
+                        key={job.runId}
+                        className="flex min-h-0 items-center gap-2 rounded-md border border-slate-100 bg-slate-50 px-2 py-1">
+                        <StatusDot tone={runStatusTone(job.status)} />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-[11px] font-medium text-slate-900 xl:text-xs">
+                            {backupRunStatusLabel(job.status)} · {job.mode} ·{' '}
+                            {job.trigger}
+                          </p>
+                          <p className="truncate text-[10px] text-slate-700">
+                            {scope}
+                            {waitingWorker ? (
+                              <span className="ml-1 text-amber-700">
+                                · Chờ worker
+                              </span>
+                            ) : null}
+                          </p>
+                          <p className="truncate text-[10px] text-slate-500">
+                            {job.runId} ·{' '}
+                            {formatIsoAsLocalDateTime(job.startedAt)} ·{' '}
+                            {formatRelativeTime(job.startedAt)}
+                          </p>
+                          {job.status === 'error' && job.error ? (
+                            <p className="truncate text-[10px] text-red-600">
+                              {job.error}
+                            </p>
+                          ) : null}
+                        </div>
+                      </li>
+                    );
+                  })
                 )}
               </ul>
             </WallboardPanel>

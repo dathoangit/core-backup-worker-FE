@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  cancelBackupRun,
   fetchBackupRuns,
   fetchBackupZones,
   triggerBackupRun,
@@ -8,8 +9,11 @@ import {
 import { useAuth } from 'src/auth/context';
 import { fetchSettings } from 'src/auth/settings-api';
 import { BackupOverviewCards } from 'src/components/admin/backup/BackupOverviewCards';
+import { BackupQueuePanel } from 'src/components/admin/backup/BackupQueuePanel';
 import { BackupRunsTable } from 'src/components/admin/backup/BackupRunsTable';
 import { BackupZonesPanel } from 'src/components/admin/backup/BackupZonesPanel';
+import { RunProgressBar } from 'src/components/backup/RunProgressBar';
+import { useBackupStream } from 'src/hooks/useBackupStream';
 import type {
   BackupMode,
   BackupRun,
@@ -27,17 +31,20 @@ function isTruthySetting(value: string | null | undefined): boolean {
 }
 
 export function RunsHistoryPanel() {
-  const { accessToken, role } = useAuth();
+  const { role } = useAuth();
   const [loading, setLoading] = useState(true);
   const hasLoadedRef = useRef(false);
   const [error, setError] = useState<string | null>(null);
   const [triggering, setTriggering] = useState(false);
+  const [cancellingRunId, setCancellingRunId] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
   const [runs, setRuns] = useState<BackupRun[]>([]);
   const [zones, setZones] = useState<BackupZones | null>(null);
   const [scheduleEnabled, setScheduleEnabled] = useState<boolean | null>(null);
+  const [queueRefreshKey, setQueueRefreshKey] = useState(0);
 
   const load = useCallback(async () => {
-    if (!accessToken || role !== 'admin') {
+    if (role !== 'admin') {
       setLoading(false);
       return;
     }
@@ -48,9 +55,9 @@ export function RunsHistoryPanel() {
 
     try {
       const [nextRuns, nextZones, backupSettings] = await Promise.all([
-        fetchBackupRuns(accessToken, 50),
-        fetchBackupZones(accessToken),
-        fetchSettings(accessToken, 'backup'),
+        fetchBackupRuns(50),
+        fetchBackupZones(),
+        fetchSettings('backup'),
       ]);
 
       setRuns(nextRuns);
@@ -69,52 +76,94 @@ export function RunsHistoryPanel() {
       hasLoadedRef.current = true;
       setLoading(false);
     }
-  }, [accessToken, role]);
+  }, [role]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
-  const hasRunningRun = runs.some((run) => run.status === 'running');
-
-  useEffect(() => {
-    if (!hasRunningRun || !accessToken || role !== 'admin') {
-      return;
-    }
-
-    const timer = window.setInterval(() => {
-      void (async () => {
-        try {
-          const nextRuns = await fetchBackupRuns(accessToken, 50);
-          setRuns(nextRuns);
-        } catch {
-          // Keep current list.
+  const { progressByRunId } = useBackupStream({
+    enabled: role === 'admin',
+    onOpen: () => {
+      void load();
+    },
+    onStatus: (event) => {
+      setQueueRefreshKey((key) => key + 1);
+      setRuns((prev) => {
+        const index = prev.findIndex((run) => run.runId === event.runId);
+        if (index < 0) {
+          void load();
+          return prev;
         }
-      })();
-    }, 5000);
+        const next = [...prev];
+        const status =
+          event.status === 'cancelling' ? 'running' : event.status;
+        next[index] = {
+          ...next[index],
+          status,
+          error: event.error ?? next[index].error,
+        };
+        return next;
+      });
+    },
+  });
 
-    return () => window.clearInterval(timer);
-  }, [accessToken, hasRunningRun, role]);
+  const activeProgress = runs
+    .filter((run) => run.status === 'running' || run.status === 'queued')
+    .map((run) => progressByRunId[run.runId])
+    .find(Boolean);
 
   const handleTrigger = async (options: {
     mode: BackupMode;
     groups: SourceGroup[];
     databases?: string[];
   }) => {
-    if (!accessToken) {
+    if (role !== 'admin') {
       return;
     }
 
     setTriggering(true);
     setError(null);
+    setInfo(null);
 
     try {
-      await triggerBackupRun(accessToken, options);
+      const result = await triggerBackupRun(options);
+      setInfo(
+        result.status === 'queued'
+          ? `Đã xếp hàng job ${result.runId}`
+          : result.message,
+      );
+      setQueueRefreshKey((key) => key + 1);
       await load();
     } catch (err) {
       setError(resolveApiErrorMessage(err));
     } finally {
       setTriggering(false);
+    }
+  };
+
+  const handleCancel = async (runId: string) => {
+    if (role !== 'admin') {
+      return;
+    }
+
+    setCancellingRunId(runId);
+    setError(null);
+    setInfo(null);
+
+    try {
+      const result = await cancelBackupRun(runId);
+      setInfo(
+        result.status === 'cancelling'
+          ? `Đang hủy job ${runId}...`
+          : `Đã hủy job ${runId}`,
+      );
+      setQueueRefreshKey((key) => key + 1);
+      await load();
+    } catch (err) {
+      setError(resolveApiErrorMessage(err));
+    } finally {
+      setCancellingRunId(null);
     }
   };
 
@@ -124,10 +173,10 @@ export function RunsHistoryPanel() {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-xl font-semibold text-slate-900">
-              Lịch sử backup
+              Quản lý job backup
             </h1>
             <p className="mt-1 text-sm text-slate-600">
-              Theo dõi runs và kích hoạt backup thủ công.
+              Xếp hàng, theo dõi, và hủy job (BullMQ — tối đa 1 job chạy cùng lúc).
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -150,6 +199,11 @@ export function RunsHistoryPanel() {
             {error}
           </p>
         ) : null}
+        {info ? (
+          <p className="mt-4 text-sm text-sky-700" role="status">
+            {info}
+          </p>
+        ) : null}
 
         <div className="mt-6">
           {loading && !zones ? (
@@ -164,10 +218,24 @@ export function RunsHistoryPanel() {
       </div>
 
       <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+        <BackupQueuePanel
+          refreshKey={queueRefreshKey}
+          onChanged={() => {
+            void load();
+          }}
+        />
+      </div>
+
+      <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
         {error ? (
           <p className="mb-4 text-sm text-red-600" role="alert">
             {error}
           </p>
+        ) : null}
+        {activeProgress ? (
+          <div className="mb-4 rounded-lg border border-emerald-100 bg-emerald-50/60 p-3">
+            <RunProgressBar progress={activeProgress} />
+          </div>
         ) : null}
         {loading && runs.length === 0 ? (
           <p className="text-sm text-slate-600">Đang tải runs...</p>
@@ -175,7 +243,9 @@ export function RunsHistoryPanel() {
           <BackupRunsTable
             runs={runs}
             triggering={triggering}
+            cancellingRunId={cancellingRunId}
             onTrigger={handleTrigger}
+            onCancel={handleCancel}
           />
         )}
       </div>

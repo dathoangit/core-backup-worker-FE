@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  cancelBackupRun,
   fetchBackupRuns,
   fetchBackupSources,
   fetchBackupZones,
@@ -9,6 +10,7 @@ import {
 } from 'src/auth/backup-api';
 import { useAuth } from 'src/auth/context';
 import { fetchSettings } from 'src/auth/settings-api';
+import { useBackupStream } from 'src/hooks/useBackupStream';
 import type {
   BackupMode,
   BackupRun,
@@ -44,12 +46,13 @@ function isTruthySetting(value: string | null | undefined): boolean {
 }
 
 export function BackupAdminPanel() {
-  const { accessToken, role } = useAuth();
+  const { role } = useAuth();
   const [tab, setTab] = useState<BackupTab>('runs');
   const [loading, setLoading] = useState(true);
   const hasLoadedRef = useRef(false);
   const [panelError, setPanelError] = useState<string | null>(null);
   const [triggering, setTriggering] = useState(false);
+  const [cancellingRunId, setCancellingRunId] = useState<string | null>(null);
 
   const [runs, setRuns] = useState<BackupRun[]>([]);
   const [sources, setSources] = useState<BackupSource[]>([]);
@@ -61,7 +64,7 @@ export function BackupAdminPanel() {
   const [restoreError, setRestoreError] = useState<string | null>(null);
 
   const loadCore = useCallback(async () => {
-    if (!accessToken || role !== 'admin') {
+    if (role !== 'admin') {
       setLoading(false);
       return;
     }
@@ -73,10 +76,10 @@ export function BackupAdminPanel() {
     try {
       const [nextRuns, nextSources, nextZones, backupSettings] =
         await Promise.all([
-          fetchBackupRuns(accessToken, 50),
-          fetchBackupSources(accessToken),
-          fetchBackupZones(accessToken),
-          fetchSettings(accessToken, 'backup'),
+          fetchBackupRuns(50),
+          fetchBackupSources(),
+          fetchBackupZones(),
+          fetchSettings('backup'),
         ]);
 
       setRuns(nextRuns);
@@ -96,39 +99,32 @@ export function BackupAdminPanel() {
       hasLoadedRef.current = true;
       setLoading(false);
     }
-  }, [accessToken, role]);
+  }, [role]);
 
   useEffect(() => {
     void loadCore();
   }, [loadCore]);
 
-  const hasRunningRun = runs.some((run) => run.status === 'running');
+  const hasActiveQueue = runs.some(
+    (run) => run.status === 'running' || run.status === 'queued',
+  );
 
-  useEffect(() => {
-    if (!hasRunningRun || !accessToken || role !== 'admin') {
-      return;
-    }
-
-    const timer = window.setInterval(() => {
-      void (async () => {
-        try {
-          const nextRuns = await fetchBackupRuns(accessToken, 50);
-          setRuns(nextRuns);
-        } catch {
-          // Keep current list; next manual refresh can surface the error.
-        }
-      })();
-    }, 5000);
-
-    return () => window.clearInterval(timer);
-  }, [accessToken, hasRunningRun, role]);
+  useBackupStream({
+    enabled: role === 'admin' && hasActiveQueue,
+    onOpen: () => {
+      void loadCore();
+    },
+    onStatus: () => {
+      void loadCore();
+    },
+  });
 
   const handleTrigger = async (options: {
     mode: BackupMode;
     groups: SourceGroup[];
     databases?: string[];
   }) => {
-    if (!accessToken) {
+    if (role !== 'admin') {
       return;
     }
 
@@ -136,7 +132,7 @@ export function BackupAdminPanel() {
     setPanelError(null);
 
     try {
-      await triggerBackupRun(accessToken, options);
+      await triggerBackupRun(options);
       await loadCore();
     } catch (error) {
       setPanelError(resolveApiErrorMessage(error));
@@ -145,8 +141,26 @@ export function BackupAdminPanel() {
     }
   };
 
+  const handleCancel = async (runId: string) => {
+    if (role !== 'admin') {
+      return;
+    }
+
+    setCancellingRunId(runId);
+    setPanelError(null);
+
+    try {
+      await cancelBackupRun(runId);
+      await loadCore();
+    } catch (error) {
+      setPanelError(resolveApiErrorMessage(error));
+    } finally {
+      setCancellingRunId(null);
+    }
+  };
+
   const handleLoadRestorePlan = async (database: string) => {
-    if (!accessToken) {
+    if (role !== 'admin') {
       return;
     }
 
@@ -154,7 +168,7 @@ export function BackupAdminPanel() {
     setRestoreError(null);
 
     try {
-      const plan = await fetchRestorePlan(accessToken, database);
+      const plan = await fetchRestorePlan(database);
       setRestorePlan(plan);
     } catch (error) {
       setRestorePlan(null);
@@ -235,7 +249,9 @@ export function BackupAdminPanel() {
             <BackupRunsTable
               runs={runs}
               triggering={triggering}
+              cancellingRunId={cancellingRunId}
               onTrigger={handleTrigger}
+              onCancel={handleCancel}
             />
           ) : null}
 

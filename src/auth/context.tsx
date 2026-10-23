@@ -7,14 +7,9 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import {
-  clearAccessToken,
-  getAccessToken,
-  getAuthUserJson,
-  setAccessToken,
-  setAuthUserJson,
-} from './storage';
-import { login as loginApi } from './api';
+import { ApiError } from 'src/utils/api';
+import { fetchMe, login as loginApi, logout as logoutApi } from './api';
+import { clearLegacyAuthStorage } from './storage';
 import { registerUnauthorizedHandler } from './unauthorized';
 import type { AuthLoginRequest, AuthLoginResponse, AuthMeResponse, AuthRole } from './types';
 
@@ -22,57 +17,37 @@ function userFromLoginResponse(res: AuthLoginResponse): AuthMeResponse {
   return res.user;
 }
 
-function parseStoredUser(raw: string): AuthMeResponse | null {
-  try {
-    const parsed = JSON.parse(raw) as Partial<AuthMeResponse>;
-    if (
-      typeof parsed.id === 'string' &&
-      typeof parsed.createdAt === 'string' &&
-      typeof parsed.updatedAt === 'string' &&
-      typeof parsed.username === 'string' &&
-      typeof parsed.role === 'string' &&
-      typeof parsed.isActive === 'boolean'
-    ) {
-      return parsed as AuthMeResponse;
-    }
-  } catch {
-    /* ignore */
-  }
-  return null;
-}
-
 type AuthContextValue = {
   isBootstrapping: boolean;
   isAuthenticated: boolean;
-  accessToken: string | null;
   user: AuthMeResponse | null;
   role: AuthRole | null;
   login: (body: AuthLoginRequest) => Promise<AuthMeResponse>;
-  logout: () => void;
+  logout: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isBootstrapping, setIsBootstrapping] = useState(true);
-  const [accessToken, setAccessTokenState] = useState<string | null>(null);
   const [user, setUser] = useState<AuthMeResponse | null>(null);
 
-  const logout = useCallback(() => {
-    clearAccessToken();
-    setAccessTokenState(null);
+  const logout = useCallback(async () => {
+    try {
+      await logoutApi();
+    } catch {
+      /* cookie / session may already be gone */
+    }
     setUser(null);
   }, []);
 
-  useEffect(() => registerUnauthorizedHandler(logout), [logout]);
+  useEffect(() => registerUnauthorizedHandler(() => {
+    void logout();
+  }), [logout]);
 
   const login = useCallback(async (body: AuthLoginRequest) => {
     const loginRes = await loginApi(body);
     const profile = userFromLoginResponse(loginRes);
-    const { accessToken } = loginRes.token;
-    setAccessToken(accessToken);
-    setAuthUserJson(JSON.stringify(profile));
-    setAccessTokenState(accessToken);
     setUser(profile);
     return profile;
   }, []);
@@ -80,50 +55,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let active = true;
     const bootstrap = async () => {
-      const token = getAccessToken();
-      if (!token) {
+      clearLegacyAuthStorage();
+      try {
+        const profile = await fetchMe();
         if (active) {
-          setIsBootstrapping(false);
+          setUser(profile);
         }
-        return;
-      }
-
-      const rawUser = getAuthUserJson();
-      const profile = rawUser ? parseStoredUser(rawUser) : null;
-      if (!profile) {
-        clearAccessToken();
+      } catch (error) {
         if (active) {
-          setAccessTokenState(null);
           setUser(null);
+        }
+        if (!(error instanceof ApiError && error.status === 401)) {
+          /* ignore network noise during boot; gate will redirect */
+        }
+      } finally {
+        if (active) {
           setIsBootstrapping(false);
         }
-        return;
-      }
-
-      if (active) {
-        setAccessTokenState(token);
-        setUser(profile);
-        setIsBootstrapping(false);
       }
     };
 
-    bootstrap();
+    void bootstrap();
     return () => {
       active = false;
     };
-  }, [logout]);
+  }, []);
 
   const value = useMemo<AuthContextValue>(
     () => ({
       isBootstrapping,
-      isAuthenticated: Boolean(accessToken && user),
-      accessToken,
+      isAuthenticated: Boolean(user),
       user,
       role: user?.role ?? null,
       login,
       logout,
     }),
-    [accessToken, isBootstrapping, login, logout, user],
+    [isBootstrapping, login, logout, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

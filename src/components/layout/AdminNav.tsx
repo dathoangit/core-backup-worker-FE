@@ -15,6 +15,11 @@ const NAV_ITEMS = [
     match: (path: string) => path === '/runs' || path.startsWith('/runs/'),
   },
   {
+    href: '/files',
+    label: 'Tra cứu file',
+    match: (path: string) => path === '/files' || path.startsWith('/files/'),
+  },
+  {
     href: '/config',
     label: 'Cấu hình',
     match: (path: string) => path === '/config' || path.startsWith('/config'),

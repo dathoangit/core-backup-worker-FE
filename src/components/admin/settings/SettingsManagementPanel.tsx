@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { fetchBackupRuns, fetchBackupZones } from 'src/auth/backup-api';
 import { useAuth } from 'src/auth/context';
 import { fetchSettings, updateSetting } from 'src/auth/settings-api';
+import { useBackupStream } from 'src/hooks/useBackupStream';
 import type {
   AppSetting,
   SettingCategory,
@@ -16,6 +17,7 @@ import {
 } from 'src/types/settings';
 import { formatIsoAsLocalDateTime } from 'src/utils/date-vn';
 import { resolveApiErrorMessage } from 'src/utils/resolve-api-error';
+import { AlertTestPanel } from './AlertTestPanel';
 import { SettingFormModal } from './SettingFormModal';
 
 type CategoryFilter = SettingCategory | 'all';
@@ -27,6 +29,7 @@ const CATEGORY_FILTERS: Array<{ id: CategoryFilter; label: string }> = [
   { id: 'emr', label: 'EMR' },
   { id: 'badl', label: 'BADL' },
   { id: 'lis', label: 'LIS' },
+  { id: 'alerts', label: 'Cảnh báo' },
 ];
 
 const CATEGORY_FILTER_IDS = new Set<CategoryFilter>(
@@ -60,7 +63,7 @@ function displaySettingValue(setting: AppSetting): string {
 
 export function SettingsManagementPanel() {
   const router = useRouter();
-  const { accessToken, role } = useAuth();
+  const { role } = useAuth();
   const [settings, setSettings] = useState<AppSetting[]>([]);
   const [scheduleSetting, setScheduleSetting] = useState<AppSetting | null>(null);
   const [category, setCategory] = useState<CategoryFilter>('all');
@@ -86,7 +89,7 @@ export function SettingsManagementPanel() {
   }, [router.isReady, router.query.category]);
 
   const loadData = useCallback(async () => {
-    if (!accessToken || role !== 'admin') {
+    if (role !== 'admin') {
       setLoading(false);
       return;
     }
@@ -97,12 +100,12 @@ export function SettingsManagementPanel() {
 
     try {
       const [next, backupSettings, runsResult, zonesResult] = await Promise.all([
-        fetchSettings(accessToken, category === 'all' ? undefined : category),
+        fetchSettings(category === 'all' ? undefined : category),
         category === 'all' || category === 'backup'
           ? Promise.resolve(null)
-          : fetchSettings(accessToken, 'backup'),
-        fetchBackupRuns(accessToken, 5).catch(() => null),
-        fetchBackupZones(accessToken).catch(() => null),
+          : fetchSettings('backup'),
+        fetchBackupRuns(5).catch(() => null),
+        fetchBackupZones().catch(() => null),
       ]);
 
       setSettings(next);
@@ -125,23 +128,23 @@ export function SettingsManagementPanel() {
       hasLoadedRef.current = true;
       setLoading(false);
     }
-  }, [accessToken, category, role]);
+  }, [category, role]);
 
   useEffect(() => {
     void loadData();
   }, [loadData]);
 
-  useEffect(() => {
-    if (!backupInProgress || !accessToken || role !== 'admin') {
-      return;
-    }
-
-    const timer = window.setInterval(() => {
+  useBackupStream({
+    enabled: role === 'admin',
+    onOpen: () => {
+      if (backupInProgress) {
+        void loadData();
+      }
+    },
+    onStatus: () => {
       void loadData();
-    }, 5000);
-
-    return () => window.clearInterval(timer);
-  }, [accessToken, backupInProgress, loadData, role]);
+    },
+  });
 
   const selectCategory = (next: CategoryFilter) => {
     setCategory(next);
@@ -182,7 +185,7 @@ export function SettingsManagementPanel() {
   };
 
   const handleUpdate = async (key: string, payload: UpdateSettingRequest) => {
-    if (!accessToken) {
+    if (role !== 'admin') {
       return;
     }
 
@@ -206,7 +209,7 @@ export function SettingsManagementPanel() {
     setFormError(null);
 
     try {
-      await updateSetting(accessToken, key, payload);
+      await updateSetting(key, payload);
       setFormOpen(false);
       await loadData();
     } catch (error) {
@@ -217,7 +220,7 @@ export function SettingsManagementPanel() {
   };
 
   const handleToggleSchedule = async () => {
-    if (!accessToken) {
+    if (role !== 'admin') {
       return;
     }
 
@@ -235,7 +238,7 @@ export function SettingsManagementPanel() {
     setPanelError(null);
 
     try {
-      await updateSetting(accessToken, SETTING_SCHEDULE_ENABLED_KEY, {
+      await updateSetting(SETTING_SCHEDULE_ENABLED_KEY, {
         value: nextValue,
       });
       await loadData();
@@ -265,10 +268,10 @@ export function SettingsManagementPanel() {
       </div>
 
       <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-        Sửa trực tiếp trên FE (kể cả password chưa có trong DB — hiện{' '}
-        <span className="font-mono text-xs">—</span> rồi bấm Sửa để nhập). Không
-        cần sửa env. Đổi cron/timezone cần restart backend; không sửa cron khi đang
-        backup. Bật/tắt lịch qua nút bên dưới có hiệu lực ngay.
+        Cấu hình backup (đường dẫn, nguồn, cron, số ngày giữ, cảnh báo) lưu trong
+        DB — sửa tại đây; password được mã hoá. Runtime{' '}
+        <span className="font-mono text-xs">.env</span> chỉ còn DB/Redis/JWT. Không
+        sửa cron khi đang backup. Bật/tắt lịch qua nút bên dưới có hiệu lực ngay.
       </div>
 
       {backupInProgress ? (
@@ -321,6 +324,12 @@ export function SettingsManagementPanel() {
           </button>
         ))}
       </div>
+
+      {category === 'alerts' || category === 'all' ? (
+        <div className="mt-4">
+          <AlertTestPanel />
+        </div>
+      ) : null}
 
       {panelError ? (
         <p className="mt-4 text-sm text-red-600" role="alert">

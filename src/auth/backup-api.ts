@@ -1,8 +1,11 @@
 import { getPublicApiBaseUrl } from 'src/config/public-api';
 import type {
+  BackupQueueSnapshot,
   BackupRun,
   BackupSource,
   BackupZones,
+  CancelAllQueuedResult,
+  CancelBackupRunResult,
   RestorePlan,
   TriggerBackupRunOptions,
   TriggerBackupRunResult,
@@ -11,30 +14,22 @@ import { apiGet, apiPost } from 'src/utils/api';
 
 const apiBase = getPublicApiBaseUrl();
 
-function withToken(token: string) {
-  return { api: apiBase, token };
-}
-
-export function fetchBackupRuns(
-  token: string,
-  limit = 50,
-): Promise<BackupRun[]> {
+export function fetchBackupRuns(limit = 50): Promise<BackupRun[]> {
   return apiGet<BackupRun[]>({
-    ...withToken(token),
+    api: apiBase,
     endPoint: '/admin/backup/runs',
     params: { limit },
   });
 }
 
-export function fetchBackupRun(token: string, runId: string): Promise<BackupRun> {
+export function fetchBackupRun(runId: string): Promise<BackupRun> {
   return apiGet<BackupRun>({
-    ...withToken(token),
+    api: apiBase,
     endPoint: `/admin/backup/runs/${encodeURIComponent(runId)}`,
   });
 }
 
 export function triggerBackupRun(
-  token: string,
   options: TriggerBackupRunOptions = {},
 ): Promise<TriggerBackupRunResult> {
   const mode = options.mode ?? 'incremental';
@@ -48,7 +43,7 @@ export function triggerBackupRun(
       : undefined;
 
   return apiPost<TriggerBackupRunResult>({
-    ...withToken(token),
+    api: apiBase,
     endPoint: '/admin/backup/runs',
     params: {
       mode,
@@ -58,26 +53,44 @@ export function triggerBackupRun(
   });
 }
 
-export function fetchBackupSources(token: string): Promise<BackupSource[]> {
+export function cancelBackupRun(runId: string): Promise<CancelBackupRunResult> {
+  return apiPost<CancelBackupRunResult>({
+    api: apiBase,
+    endPoint: `/admin/backup/runs/${encodeURIComponent(runId)}/cancel`,
+  });
+}
+
+export function fetchBackupQueue(): Promise<BackupQueueSnapshot> {
+  return apiGet<BackupQueueSnapshot>({
+    api: apiBase,
+    endPoint: '/admin/backup/queue',
+  });
+}
+
+export function cancelAllQueuedBackupRuns(): Promise<CancelAllQueuedResult> {
+  return apiPost<CancelAllQueuedResult>({
+    api: apiBase,
+    endPoint: '/admin/backup/queue/cancel-all-queued',
+  });
+}
+
+export function fetchBackupSources(): Promise<BackupSource[]> {
   return apiGet<BackupSource[]>({
-    ...withToken(token),
+    api: apiBase,
     endPoint: '/admin/backup/sources',
   });
 }
 
-export function fetchBackupZones(token: string): Promise<BackupZones> {
+export function fetchBackupZones(): Promise<BackupZones> {
   return apiGet<BackupZones>({
-    ...withToken(token),
+    api: apiBase,
     endPoint: '/admin/backup/zones',
   });
 }
 
-export function fetchRestorePlan(
-  token: string,
-  database = 'produce',
-): Promise<RestorePlan> {
+export function fetchRestorePlan(database = 'produce'): Promise<RestorePlan> {
   return apiGet<RestorePlan>({
-    ...withToken(token),
+    api: apiBase,
     endPoint: '/admin/backup/restore-plan',
     params: { database },
   });

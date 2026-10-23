@@ -2,6 +2,7 @@ import { useRouter } from 'next/router';
 import { APP_BRAND_THEME, APP_ORG_NAME } from 'src/constants/branding';
 import { useAuth } from 'src/auth/context';
 import { AdminNav } from './AdminNav';
+import { AlertBell } from './AlertBell';
 import { AppHeaderBrandLink, UserAccountMenu } from './UserAccountMenu';
 
 export function AppHeader() {
@@ -27,7 +28,10 @@ export function AppHeader() {
 
         {role === 'admin' ? <AdminNav /> : <div className="flex-1" />}
 
-        <UserAccountMenu />
+        <div className="ml-auto flex items-center gap-2">
+          <AlertBell />
+          <UserAccountMenu />
+        </div>
       </div>
     </header>
   );

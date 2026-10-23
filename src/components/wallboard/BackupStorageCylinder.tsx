@@ -45,7 +45,7 @@ function cylinderDiameter(width: number, height: number): number {
     return 160;
   }
 
-  const plotWidth = Math.max(width - 156, 96);
+  const plotWidth = Math.max(width - 48, 96);
   const plotHeight = Math.max(height - 24, 96);
 
   return Math.round(Math.min(plotWidth * 0.82, plotHeight * 0.58));
@@ -71,6 +71,11 @@ export function BackupStorageCylinder({ disk }: BackupStorageCylinderProps) {
   const [hc, setHc] = useState<typeof Highcharts | null>(null);
   const [Chart, setChart] = useState<typeof HighchartsReactType | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+
+  const folders = useMemo(
+    () => disk.folders.filter((folder) => folder.bytes > 0),
+    [disk.folders],
+  );
 
   useEffect(() => {
     const node = boxRef.current;
@@ -123,7 +128,6 @@ export function BackupStorageCylinder({ disk }: BackupStorageCylinderProps) {
   }, []);
 
   const options = useMemo<Highcharts.Options>(() => {
-    const folders = disk.folders.filter((folder) => folder.bytes > 0);
     const total = folders.reduce((sum, folder) => sum + folder.bytes, 0);
     const stacked = [...folders].reverse();
     const diameter = cylinderDiameter(box.width, box.height);
@@ -141,8 +145,14 @@ export function BackupStorageCylinder({ disk }: BackupStorageCylinderProps) {
           depth: diameter,
           viewDistance: 18,
           frame: {
-            bottom: { size: 0, color: 'transparent' },
-            back: { size: 0, color: 'transparent' },
+            visible: 'false',
+            size: 0,
+            bottom: { size: 0, color: 'transparent', visible: false },
+            back: { size: 0, color: 'transparent', visible: false },
+            front: { size: 0, color: 'transparent', visible: false },
+            left: { size: 0, color: 'transparent', visible: false },
+            right: { size: 0, color: 'transparent', visible: false },
+            top: { size: 0, color: 'transparent', visible: false },
             side: { size: 0, color: 'transparent' },
           },
         },
@@ -171,31 +181,13 @@ export function BackupStorageCylinder({ disk }: BackupStorageCylinderProps) {
           },
         },
       },
-      legend: {
-        align: 'right',
-        verticalAlign: 'middle',
-        layout: 'vertical',
-        itemStyle: { color: '#334155', fontSize: '11px', fontWeight: '500' },
-        itemMarginBottom: 4,
-      },
-      tooltip: {
-        shared: true,
-        formatter() {
-          const points = this.points ?? [];
-
-          return points
-            .map((point) => {
-              const color = String(point.color ?? '#64748b');
-
-              return `<span style="color:${color}">●</span> ${point.series.name}: <b>${formatBytesShort(point.y ?? 0)}</b>`;
-            })
-            .join('<br/>');
-        },
-      },
+      legend: { enabled: false },
+      tooltip: { enabled: false },
       plotOptions: {
         series: {
           stacking: 'normal',
           animation: false,
+          enableMouseTracking: false,
         },
         cylinder: {
           pointWidth: diameter,
@@ -207,13 +199,12 @@ export function BackupStorageCylinder({ disk }: BackupStorageCylinderProps) {
         id: folder.id,
         name: folder.label,
         color: colorFor(folder.id),
-        legendIndex: folders.findIndex((item) => item.id === folder.id),
         data: [folder.bytes],
       })),
     };
-  }, [box.height, box.width, disk.folders]);
+  }, [box.height, box.width, folders]);
 
-  if (disk.folders.every((folder) => folder.bytes <= 0)) {
+  if (folders.length === 0) {
     return (
       <p className="flex flex-1 items-center text-xs text-slate-500">
         Ổ trống hoặc chưa đo được folder.
@@ -222,21 +213,44 @@ export function BackupStorageCylinder({ disk }: BackupStorageCylinderProps) {
   }
 
   return (
-    <div ref={boxRef} className="min-h-0 min-w-0 flex-1">
-      {loadError ? (
-        <p className="flex h-full items-center text-xs text-red-700">{loadError}</p>
-      ) : hc && Chart ? (
-        <Chart
-          highcharts={hc}
-          options={options}
-          updateArgs={CHART_UPDATE_ARGS}
-          containerProps={CHART_CONTAINER_PROPS}
-        />
-      ) : (
-        <p className="flex h-full items-center text-xs text-slate-500">
-          Đang tải chart…
-        </p>
-      )}
+    <div className="flex h-full min-h-0 min-w-0 gap-2">
+      <div ref={boxRef} className="min-h-0 min-w-0 flex-1">
+        {loadError ? (
+          <p className="flex h-full items-center text-xs text-red-700">
+            {loadError}
+          </p>
+        ) : hc && Chart ? (
+          <Chart
+            highcharts={hc}
+            options={options}
+            updateArgs={CHART_UPDATE_ARGS}
+            containerProps={CHART_CONTAINER_PROPS}
+          />
+        ) : (
+          <p className="flex h-full items-center text-xs text-slate-500">
+            Đang tải chart…
+          </p>
+        )}
+      </div>
+      <ul className="flex w-[11.5rem] shrink-0 flex-col justify-center gap-1 overflow-y-auto py-0.5 xl:w-52">
+        {folders.map((folder) => (
+          <li
+            key={folder.id}
+            className="flex items-baseline justify-between gap-2 text-[11px] leading-tight xl:text-xs">
+            <span className="flex min-w-0 items-center gap-1.5 text-slate-700">
+              <span
+                className="mt-0.5 h-2 w-2 shrink-0 rounded-full border border-slate-200"
+                style={{ backgroundColor: colorFor(folder.id) }}
+                aria-hidden
+              />
+              <span className="truncate">{folder.label}</span>
+            </span>
+            <span className="shrink-0 font-semibold tabular-nums text-slate-900">
+              {formatBytesShort(folder.bytes)}
+            </span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

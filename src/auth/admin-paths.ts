@@ -1,6 +1,12 @@
-const ADMIN_ONLY_EXACT = new Set(['/runs', '/config']);
+const ADMIN_ONLY_EXACT = new Set(['/runs', '/config', '/files']);
 
-const ADMIN_ONLY_PREFIXES = ['/admin', '/runs/', '/databases/', '/config/'];
+const ADMIN_ONLY_PREFIXES = [
+  '/admin',
+  '/runs/',
+  '/databases/',
+  '/config/',
+  '/files/',
+];
 
 /** Paths that require `role === 'admin'` (beyond general auth). */
 export function isAdminOnlyPath(pathname: string): boolean {

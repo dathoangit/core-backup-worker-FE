@@ -60,7 +60,7 @@ function UserActions({
 }
 
 export function UserManagementPanel() {
-  const { accessToken, role, user: currentUser } = useAuth();
+  const { role, user: currentUser } = useAuth();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const hasLoadedRef = useRef(false);
@@ -73,7 +73,7 @@ export function UserManagementPanel() {
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
 
   const loadData = useCallback(async () => {
-    if (!accessToken || role !== 'admin') {
+    if (role !== 'admin') {
       setLoading(false);
       return;
     }
@@ -83,7 +83,7 @@ export function UserManagementPanel() {
     }
 
     try {
-      const nextUsers = await fetchAdminUsers(accessToken);
+      const nextUsers = await fetchAdminUsers();
       setUsers(nextUsers);
       setPanelError(null);
     } catch (error) {
@@ -92,7 +92,7 @@ export function UserManagementPanel() {
       hasLoadedRef.current = true;
       setLoading(false);
     }
-  }, [accessToken, role]);
+  }, [role]);
 
   useEffect(() => {
     void loadData();
@@ -113,7 +113,7 @@ export function UserManagementPanel() {
   };
 
   const handleCreate = async (payload: CreateAdminUserRequest) => {
-    if (!accessToken) {
+    if (role !== 'admin') {
       return;
     }
 
@@ -121,7 +121,7 @@ export function UserManagementPanel() {
     setFormError(null);
 
     try {
-      await createAdminUser(accessToken, payload);
+      await createAdminUser(payload);
       setFormOpen(false);
       await loadData();
     } catch (error) {
@@ -132,7 +132,7 @@ export function UserManagementPanel() {
   };
 
   const handleUpdate = async (userId: string, payload: UpdateAdminUserRequest) => {
-    if (!accessToken) {
+    if (role !== 'admin') {
       return;
     }
 
@@ -140,7 +140,7 @@ export function UserManagementPanel() {
     setFormError(null);
 
     try {
-      await updateAdminUser(accessToken, userId, payload);
+      await updateAdminUser(userId, payload);
       setFormOpen(false);
       await loadData();
     } catch (error) {
@@ -151,7 +151,7 @@ export function UserManagementPanel() {
   };
 
   const handleDeactivate = async (user: AdminUser) => {
-    if (!accessToken) {
+    if (role !== 'admin') {
       return;
     }
 
@@ -166,7 +166,7 @@ export function UserManagementPanel() {
     setPanelError(null);
 
     try {
-      await deactivateAdminUser(accessToken, user.id);
+      await deactivateAdminUser(user.id);
       await loadData();
     } catch (error) {
       setPanelError(resolveErrorMessage(error));
