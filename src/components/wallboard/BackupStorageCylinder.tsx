@@ -26,6 +26,9 @@ const FOLDER_COLOR: Record<string, string> = {
   free: '#e8eef5',
 };
 
+const CHART_CONTAINER_PROPS = { className: 'h-full w-full' };
+const CHART_UPDATE_ARGS: [boolean, boolean, boolean] = [true, true, false];
+
 const FALLBACK_COLORS = [
   '#0369a1',
   '#6d28d9',
@@ -145,7 +148,8 @@ export function BackupStorageCylinder({ disk }: BackupStorageCylinderProps) {
         },
       },
       title: { text: undefined },
-      credits: { enabled: true },
+      accessibility: { enabled: false },
+      credits: { enabled: false },
       xAxis: {
         categories: ['Backup'],
         labels: { enabled: false },
@@ -200,6 +204,7 @@ export function BackupStorageCylinder({ disk }: BackupStorageCylinderProps) {
       },
       series: stacked.map((folder) => ({
         type: 'cylinder' as const,
+        id: folder.id,
         name: folder.label,
         color: colorFor(folder.id),
         legendIndex: folders.findIndex((item) => item.id === folder.id),
@@ -224,7 +229,8 @@ export function BackupStorageCylinder({ disk }: BackupStorageCylinderProps) {
         <Chart
           highcharts={hc}
           options={options}
-          containerProps={{ className: 'h-full w-full' }}
+          updateArgs={CHART_UPDATE_ARGS}
+          containerProps={CHART_CONTAINER_PROPS}
         />
       ) : (
         <p className="flex h-full items-center text-xs text-slate-500">

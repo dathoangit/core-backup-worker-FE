@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   fetchBackupRuns,
   fetchBackupZones,
@@ -29,6 +29,7 @@ function isTruthySetting(value: string | null | undefined): boolean {
 export function RunsHistoryPanel() {
   const { accessToken, role } = useAuth();
   const [loading, setLoading] = useState(true);
+  const hasLoadedRef = useRef(false);
   const [error, setError] = useState<string | null>(null);
   const [triggering, setTriggering] = useState(false);
   const [runs, setRuns] = useState<BackupRun[]>([]);
@@ -41,8 +42,9 @@ export function RunsHistoryPanel() {
       return;
     }
 
-    setLoading(true);
-    setError(null);
+    if (!hasLoadedRef.current) {
+      setLoading(true);
+    }
 
     try {
       const [nextRuns, nextZones, backupSettings] = await Promise.all([
@@ -60,9 +62,11 @@ export function RunsHistoryPanel() {
       setScheduleEnabled(
         scheduleSetting ? isTruthySetting(scheduleSetting.value) : null,
       );
+      setError(null);
     } catch (err) {
       setError(resolveApiErrorMessage(err));
     } finally {
+      hasLoadedRef.current = true;
       setLoading(false);
     }
   }, [accessToken, role]);
@@ -160,6 +164,11 @@ export function RunsHistoryPanel() {
       </div>
 
       <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+        {error ? (
+          <p className="mb-4 text-sm text-red-600" role="alert">
+            {error}
+          </p>
+        ) : null}
         {loading && runs.length === 0 ? (
           <p className="text-sm text-slate-600">Đang tải runs...</p>
         ) : (

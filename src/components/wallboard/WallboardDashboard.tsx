@@ -208,11 +208,17 @@ export function WallboardDashboard() {
                         {db.database}
                       </p>
                       <span
-                        className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold ${
+                        className={`inline-flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-bold ${
                           db.live
                             ? 'bg-emerald-100 text-emerald-800'
                             : 'bg-red-100 text-red-800'
                         }`}>
+                        {db.live ? (
+                          <span
+                            className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-live-dot motion-reduce:animate-none"
+                            aria-hidden="true"
+                          />
+                        ) : null}
                         {db.live ? 'LIVE' : 'OFF'}
                       </span>
                     </div>
@@ -242,7 +248,8 @@ export function WallboardDashboard() {
                         nameKey="name"
                         innerRadius="55%"
                         outerRadius="85%"
-                        paddingAngle={2}>
+                        paddingAngle={2}
+                        isAnimationActive={false}>
                         {(donutData.length > 0
                           ? donutData
                           : [{ key: 'empty', value: 1 }]
@@ -404,6 +411,7 @@ export function WallboardDashboard() {
                       stroke={STATUS_COLORS.ok}
                       strokeWidth={2}
                       dot={false}
+                      isAnimationActive={false}
                     />
                     <Line
                       type="monotone"
@@ -412,6 +420,7 @@ export function WallboardDashboard() {
                       stroke={STATUS_COLORS.error}
                       strokeWidth={2}
                       dot={false}
+                      isAnimationActive={false}
                     />
                     <Line
                       type="monotone"
@@ -420,6 +429,7 @@ export function WallboardDashboard() {
                       stroke={STATUS_COLORS.partial}
                       strokeWidth={2}
                       dot={false}
+                      isAnimationActive={false}
                     />
                   </LineChart>
                 </ResponsiveContainer>

@@ -92,7 +92,9 @@ export function SettingFormModal({
             {setting.isSecret ? (
               <p className="mt-1 text-xs text-slate-500">
                 Secret không trả về plaintext.{' '}
-                {setting.hasValue ? 'Hiện đã có giá trị.' : 'Chưa có giá trị.'}
+                {setting.hasValue
+                  ? 'Hiện đã có giá trị — nhập mới để ghi đè.'
+                  : 'Chưa có giá trị — nhập password rồi Lưu (không cần sửa env).'}
               </p>
             ) : null}
             {isRestartRequiredSettingKey(setting.key) ? (

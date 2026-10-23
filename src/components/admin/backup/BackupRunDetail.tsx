@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   fetchBackupRun,
 } from 'src/auth/backup-api';
@@ -22,6 +22,7 @@ export function BackupRunDetail({ runId }: BackupRunDetailProps) {
   const { accessToken, role } = useAuth();
   const [run, setRun] = useState<BackupRun | null>(null);
   const [loading, setLoading] = useState(true);
+  const loadedRunIdRef = useRef<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -30,15 +31,21 @@ export function BackupRunDetail({ runId }: BackupRunDetailProps) {
       return;
     }
 
-    setLoading(true);
-    setError(null);
+    const isRefresh = loadedRunIdRef.current === runId;
+    if (!isRefresh) {
+      setLoading(true);
+    }
 
     try {
       const next = await fetchBackupRun(accessToken, runId);
       setRun(next);
+      setError(null);
+      loadedRunIdRef.current = runId;
     } catch (err) {
       setError(resolveApiErrorMessage(err));
-      setRun(null);
+      if (!isRefresh) {
+        setRun(null);
+      }
     } finally {
       setLoading(false);
     }

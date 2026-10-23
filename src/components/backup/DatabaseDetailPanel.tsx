@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   fetchBackupRuns,
   fetchBackupSources,
@@ -33,6 +33,7 @@ export function DatabaseDetailPanel({
 }: DatabaseDetailPanelProps) {
   const { accessToken, role } = useAuth();
   const [loading, setLoading] = useState(true);
+  const loadedKeyRef = useRef<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [source, setSource] = useState<BackupSource | null>(null);
   const [runs, setRuns] = useState<BackupRun[]>([]);
@@ -46,8 +47,11 @@ export function DatabaseDetailPanel({
       return;
     }
 
-    setLoading(true);
-    setError(null);
+    const requestKey = `${group}:${database}`;
+    const isRefresh = loadedKeyRef.current === requestKey;
+    if (!isRefresh) {
+      setLoading(true);
+    }
 
     try {
       const [sources, nextRuns] = await Promise.all([
@@ -56,6 +60,8 @@ export function DatabaseDetailPanel({
       ]);
       setSource(sources.find((row) => row.group === group) ?? null);
       setRuns(nextRuns);
+      setError(null);
+      loadedKeyRef.current = requestKey;
     } catch (err) {
       setError(resolveApiErrorMessage(err));
     } finally {

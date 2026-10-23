@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { fetchBackupRuns, fetchBackupZones } from 'src/auth/backup-api';
 import { useAuth } from 'src/auth/context';
 import { fetchSettings, updateSetting } from 'src/auth/settings-api';
@@ -65,6 +65,7 @@ export function SettingsManagementPanel() {
   const [scheduleSetting, setScheduleSetting] = useState<AppSetting | null>(null);
   const [category, setCategory] = useState<CategoryFilter>('all');
   const [loading, setLoading] = useState(true);
+  const hasLoadedRef = useRef(false);
   const [panelError, setPanelError] = useState<string | null>(null);
   const [schedulePending, setSchedulePending] = useState(false);
   const [backupInProgress, setBackupInProgress] = useState(false);
@@ -90,8 +91,9 @@ export function SettingsManagementPanel() {
       return;
     }
 
-    setLoading(true);
-    setPanelError(null);
+    if (!hasLoadedRef.current) {
+      setLoading(true);
+    }
 
     try {
       const [next, backupSettings, runsResult, zonesResult] = await Promise.all([
@@ -116,9 +118,11 @@ export function SettingsManagementPanel() {
       );
       const lockBusy = Boolean(zonesResult?.primary.lockHeld);
       setBackupInProgress(runBusy || lockBusy);
+      setPanelError(null);
     } catch (error) {
       setPanelError(resolveApiErrorMessage(error));
     } finally {
+      hasLoadedRef.current = true;
       setLoading(false);
     }
   }, [accessToken, category, role]);
@@ -149,6 +153,7 @@ export function SettingsManagementPanel() {
           };
     void router.replace({ pathname: '/config', query }, undefined, {
       shallow: true,
+      scroll: false,
     });
   };
 
@@ -260,11 +265,10 @@ export function SettingsManagementPanel() {
       </div>
 
       <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-        Chỉ được sửa giá trị (không tạo mới / không xoá). Đổi cron/timezone cần
-        restart backend. Không cho sửa cron khi đang backup. Bật/tắt lịch qua nút
-        bên dưới (hoặc{' '}
-        <code className="font-mono text-xs">BACKUP_SCHEDULE_ENABLED</code>) có
-        hiệu lực ngay — không cần sửa env hay restart.
+        Sửa trực tiếp trên FE (kể cả password chưa có trong DB — hiện{' '}
+        <span className="font-mono text-xs">—</span> rồi bấm Sửa để nhập). Không
+        cần sửa env. Đổi cron/timezone cần restart backend; không sửa cron khi đang
+        backup. Bật/tắt lịch qua nút bên dưới có hiệu lực ngay.
       </div>
 
       {backupInProgress ? (
@@ -348,7 +352,7 @@ export function SettingsManagementPanel() {
                   </tr>
                 ) : (
                   settings.map((setting) => (
-                    <tr key={setting.id}>
+                    <tr key={setting.key}>
                       <td className="px-3 py-3 font-mono text-xs font-medium text-slate-900">
                         {setting.key}
                         {setting.isSecret ? (
@@ -393,7 +397,7 @@ export function SettingsManagementPanel() {
             ) : (
               settings.map((setting) => (
                 <article
-                  key={setting.id}
+                  key={setting.key}
                   className="rounded-lg border border-slate-200 bg-slate-50 p-4">
                   <div className="flex items-start justify-between gap-3">
                     <h3 className="break-all font-mono text-xs font-semibold text-slate-900">

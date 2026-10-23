@@ -1,9 +1,10 @@
 import Link from 'next/link';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   fetchBackupRuns,
   fetchBackupSources,
   fetchBackupZones,
+  triggerBackupRun,
 } from 'src/auth/backup-api';
 import { useAuth } from 'src/auth/context';
 import { fetchSettings } from 'src/auth/settings-api';
@@ -19,6 +20,7 @@ import { SETTING_SCHEDULE_ENABLED_KEY } from 'src/types/settings';
 import {
   buildDatabaseCards,
   databaseDetailHref,
+  type DatabaseCardModel,
 } from 'src/utils/backup-database-cards';
 import { formatIsoAsLocalDateTime } from 'src/utils/date-vn';
 import { resolveApiErrorMessage } from 'src/utils/resolve-api-error';
@@ -33,11 +35,13 @@ function isTruthySetting(value: string | null | undefined): boolean {
 export function BackupDashboard() {
   const { accessToken, role } = useAuth();
   const [loading, setLoading] = useState(true);
+  const hasLoadedRef = useRef(false);
   const [error, setError] = useState<string | null>(null);
   const [runs, setRuns] = useState<BackupRun[]>([]);
   const [sources, setSources] = useState<BackupSource[]>([]);
   const [zones, setZones] = useState<BackupZones | null>(null);
   const [scheduleEnabled, setScheduleEnabled] = useState<boolean | null>(null);
+  const [startingKey, setStartingKey] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!accessToken || role !== 'admin') {
@@ -45,8 +49,9 @@ export function BackupDashboard() {
       return;
     }
 
-    setLoading(true);
-    setError(null);
+    if (!hasLoadedRef.current) {
+      setLoading(true);
+    }
 
     const [runsResult, sourcesResult, zonesResult, settingsResult] =
       await Promise.allSettled([
@@ -88,6 +93,7 @@ export function BackupDashboard() {
     }
 
     setError(failures.length > 0 ? failures[0] ?? null : null);
+    hasLoadedRef.current = true;
     setLoading(false);
   }, [accessToken, role]);
 
@@ -124,6 +130,29 @@ export function BackupDashboard() {
     () => buildDatabaseCards(sources, runs),
     [sources, runs],
   );
+
+  const handleStartDatabase = async (card: DatabaseCardModel) => {
+    if (!accessToken || card.reachability !== 'ready') {
+      return;
+    }
+
+    const key = `${card.group}:${card.database}`;
+    setStartingKey(key);
+    setError(null);
+
+    try {
+      await triggerBackupRun(accessToken, {
+        mode: 'incremental',
+        groups: [card.group],
+        databases: [card.database],
+      });
+      await load();
+    } catch (err) {
+      setError(resolveApiErrorMessage(err));
+    } finally {
+      setStartingKey(null);
+    }
+  };
 
   if (role !== 'admin') {
     return (
@@ -194,7 +223,9 @@ export function BackupDashboard() {
       <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
         <h2 className="text-lg font-semibold text-slate-900">Databases</h2>
         <p className="mt-1 text-sm text-slate-600">
-          Chọn một database để xem chi tiết watermark, lịch sử và restore plan.
+          Bấm Start trên database <span className="font-medium">ready</span> để
+          backup incremental ngay; hoặc mở chi tiết để xem watermark / restore
+          plan.
         </p>
 
         {loading && cards.length === 0 ? (
@@ -214,12 +245,17 @@ export function BackupDashboard() {
               const href = isPlaceholder
                 ? `/config?category=${card.group.toLowerCase()}`
                 : databaseDetailHref(card.group, card.database);
+              const cardKey = `${card.group}:${card.database}`;
+              const canStart =
+                !isPlaceholder &&
+                card.reachability === 'ready' &&
+                !hasRunningRun &&
+                startingKey === null;
 
               return (
-                <Link
+                <article
                   key={`${card.group}-${card.database}-${card.host}`}
-                  href={href}
-                  className="block rounded-xl border border-slate-200 bg-slate-50 p-4 transition hover:border-sky-300 hover:bg-white hover:shadow-sm">
+                  className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
@@ -289,7 +325,31 @@ export function BackupDashboard() {
                   {card.reason ? (
                     <p className="mt-2 text-xs text-amber-700">{card.reason}</p>
                   ) : null}
-                </Link>
+
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Link
+                      href={href}
+                      className="inline-flex rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">
+                      {isPlaceholder ? 'Cấu hình' : 'Chi tiết'}
+                    </Link>
+                    {!isPlaceholder ? (
+                      <button
+                        type="button"
+                        disabled={!canStart}
+                        title={
+                          card.reachability !== 'ready'
+                            ? 'Chỉ Start khi source ready'
+                            : hasRunningRun
+                              ? 'Đang có backup chạy'
+                              : 'Backup incremental database này'
+                        }
+                        onClick={() => void handleStartDatabase(card)}
+                        className="inline-flex rounded-lg bg-sky-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50">
+                        {startingKey === cardKey ? 'Đang gửi...' : 'Start'}
+                      </button>
+                    ) : null}
+                  </div>
+                </article>
               );
             })}
           </div>

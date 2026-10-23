@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   fetchBackupRuns,
   fetchBackupSources,
@@ -47,6 +47,7 @@ export function BackupAdminPanel() {
   const { accessToken, role } = useAuth();
   const [tab, setTab] = useState<BackupTab>('runs');
   const [loading, setLoading] = useState(true);
+  const hasLoadedRef = useRef(false);
   const [panelError, setPanelError] = useState<string | null>(null);
   const [triggering, setTriggering] = useState(false);
 
@@ -65,8 +66,9 @@ export function BackupAdminPanel() {
       return;
     }
 
-    setLoading(true);
-    setPanelError(null);
+    if (!hasLoadedRef.current) {
+      setLoading(true);
+    }
 
     try {
       const [nextRuns, nextSources, nextZones, backupSettings] =
@@ -87,9 +89,11 @@ export function BackupAdminPanel() {
       setScheduleEnabled(
         scheduleSetting ? isTruthySetting(scheduleSetting.value) : null,
       );
+      setPanelError(null);
     } catch (error) {
       setPanelError(resolveApiErrorMessage(error));
     } finally {
+      hasLoadedRef.current = true;
       setLoading(false);
     }
   }, [accessToken, role]);

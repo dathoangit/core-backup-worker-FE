@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   createAdminUser,
   deactivateAdminUser,
@@ -63,6 +63,7 @@ export function UserManagementPanel() {
   const { accessToken, role, user: currentUser } = useAuth();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const hasLoadedRef = useRef(false);
   const [panelError, setPanelError] = useState<string | null>(null);
 
   const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
@@ -77,15 +78,18 @@ export function UserManagementPanel() {
       return;
     }
 
-    setLoading(true);
-    setPanelError(null);
+    if (!hasLoadedRef.current) {
+      setLoading(true);
+    }
 
     try {
       const nextUsers = await fetchAdminUsers(accessToken);
       setUsers(nextUsers);
+      setPanelError(null);
     } catch (error) {
       setPanelError(resolveErrorMessage(error));
     } finally {
+      hasLoadedRef.current = true;
       setLoading(false);
     }
   }, [accessToken, role]);
