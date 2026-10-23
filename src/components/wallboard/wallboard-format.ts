@@ -52,13 +52,3 @@ export function formatBytesShort(bytes: number): string {
   const digits = value >= 100 || unit === 0 ? 0 : 1;
   return `${value.toFixed(digits)} ${units[unit]}`;
 }
-
-export function diskBarTone(usedPercent: number): 'ok' | 'warn' | 'error' {
-  if (usedPercent >= 90) {
-    return 'error';
-  }
-  if (usedPercent >= 80) {
-    return 'warn';
-  }
-  return 'ok';
-}

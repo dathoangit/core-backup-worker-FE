@@ -10,6 +10,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "highcharts": "^13.1.1",
+    "highcharts-react-official": "^3.2.3",
     "next": "latest",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

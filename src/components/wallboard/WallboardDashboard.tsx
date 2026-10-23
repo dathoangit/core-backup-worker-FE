@@ -16,9 +16,10 @@ import { APP_BRAND_SHORT_NAME, APP_ORG_NAME } from 'src/constants/branding';
 import type { WallboardOverview } from 'src/types/wallboard';
 import { formatIsoAsLocalDateTime } from 'src/utils/date-vn';
 import { resolveApiErrorMessage } from 'src/utils/resolve-api-error';
-import { DiskCylinder } from './DiskCylinder';
+import { BackupStorageCylinder } from './BackupStorageCylinder';
 import { WallboardPanel } from './WallboardPanel';
 import {
+  formatBytesShort,
   formatRelativeTime,
   formatShortDay,
   percent,
@@ -108,13 +109,12 @@ export function WallboardDashboard() {
   const unreachableCount =
     data?.databases.filter((db) => db.reachability === 'unreachable').length ??
     0;
-  const disks = data?.disks ?? [];
-  const diskCritical = disks.filter(
-    (d) => !d.exists || d.usedPercent >= 90,
-  ).length;
-  const diskWarning = disks.filter(
-    (d) => d.exists && d.usedPercent >= 80 && d.usedPercent < 90,
-  ).length;
+  const disk = data?.disk ?? null;
+  const diskCritical = disk && (!disk.exists || disk.usedPercent >= 90) ? 1 : 0;
+  const diskWarning =
+    disk && disk.exists && disk.usedPercent >= 80 && disk.usedPercent < 90
+      ? 1
+      : 0;
 
   const donutData = useMemo(() => {
     if (!data) {
@@ -195,7 +195,7 @@ export function WallboardDashboard() {
           <div className="grid min-h-0 flex-1 grid-cols-12 grid-rows-2 gap-2 xl:gap-2.5">
             {/* Row 1 */}
             <WallboardPanel
-              className="col-span-5 row-start-1"
+              className="col-span-4 row-start-1"
               title="Databases"
               subtitle={`${liveCount} live · ${offCount} off · ${data.databases.length} tổng`}>
               <div className="grid h-full grid-cols-3 content-start gap-1.5 overflow-hidden xl:gap-2">
@@ -302,25 +302,31 @@ export function WallboardDashboard() {
             </WallboardPanel>
 
             <WallboardPanel
-              className="col-span-4 row-start-1"
-              title="Ổ cứng · Volumes"
-              subtitle={`Primary ${data.zones.primaryExists ? 'OK' : 'missing'} · lock ${data.zones.lockHeld ? 'HELD' : 'free'} · lịch ${data.scheduleEnabled === false ? 'tắt' : data.scheduleEnabled ? 'bật' : '?'}`}>
+              className="col-span-5 row-start-1"
+              title="Ổ cứng"
+              subtitle={
+                disk?.exists
+                  ? `${disk.usedPercent}% đã dùng · ${disk.path}`
+                  : `Primary ${data.zones.primaryExists ? 'OK' : 'missing'} · chưa đọc được ổ`
+              }>
               <div className="flex h-full min-h-0 flex-col gap-1">
-                <div className="flex min-h-0 flex-1 flex-wrap content-start items-stretch gap-1.5 overflow-auto">
-                  {disks.length === 0 ? (
-                    <p className="self-center text-xs text-slate-500">
-                      Chưa có dữ liệu ổ.
+                {disk?.exists ? (
+                  <>
+                    <p className="shrink-0 text-[11px] text-slate-600 xl:text-xs">
+                      <span className="font-semibold text-slate-900">
+                        {formatBytesShort(disk.usedBytes)}
+                      </span>
+                      {' / '}
+                      {formatBytesShort(disk.totalBytes)}
+                      <span className="text-slate-500"> đã dùng</span>
                     </p>
-                  ) : (
-                    disks.map((disk) => (
-                      <div
-                        key={disk.id}
-                        className="min-h-[96px] min-w-[140px] flex-1 basis-[30%] rounded-lg border border-slate-100 bg-slate-50/80 px-1.5 py-1">
-                        <DiskCylinder disk={disk} />
-                      </div>
-                    ))
-                  )}
-                </div>
+                    <BackupStorageCylinder disk={disk} />
+                  </>
+                ) : (
+                  <p className="flex flex-1 items-center text-xs text-slate-500">
+                    Chưa có dữ liệu ổ.
+                  </p>
+                )}
                 <div className="grid shrink-0 grid-cols-3 gap-1.5 text-[10px] xl:text-[11px]">
                   <div className="rounded-lg bg-slate-50 px-2 py-1">
                     <p className="text-slate-500">Runs</p>

@@ -32,4 +32,4 @@ Backend: `GET/POST/PUT/DELETE /admin/settings` (allowlisted keys). Auth gate: [a
 
 Secrets: API returns `value: null` and `hasValue`. Edit form uses password input and never shows plaintext.
 
-Banner notes: changing cron expressions requires **BE restart**; toggling `BACKUP_SCHEDULE_ENABLED` applies at runtime in the scheduler `runJob` guard.
+Banner notes: changing cron expressions / timezone requires **BE restart**; toggling `BACKUP_SCHEDULE_ENABLED` applies immediately (jobs stay registered; fire-time gate).

@@ -46,9 +46,13 @@ export type WallboardRecentJob = {
   error: string | null;
 };
 
-export type WallboardDisk = {
-  id: 'meta' | 'his' | 'emr';
+export type WallboardDiskFolder = {
+  id: string;
   label: string;
+  bytes: number;
+};
+
+export type WallboardDisk = {
   path: string;
   exists: boolean;
   totalBytes: number;
@@ -56,6 +60,7 @@ export type WallboardDisk = {
   freeBytes: number;
   availableBytes: number;
   usedPercent: number;
+  folders: WallboardDiskFolder[];
 };
 
 export type WallboardOverview = {
@@ -78,5 +83,5 @@ export type WallboardOverview = {
     isolatedConfigured: boolean;
     freeHint: string | null;
   };
-  disks: WallboardDisk[];
+  disk: WallboardDisk | null;
 };

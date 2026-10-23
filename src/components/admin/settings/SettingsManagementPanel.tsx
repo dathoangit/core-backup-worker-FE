@@ -219,8 +219,8 @@ export function SettingsManagementPanel() {
     const nextValue = scheduleEnabled ? 'false' : 'true';
     const confirmed = window.confirm(
       nextValue === 'true'
-        ? 'Bật lịch backup tự động?'
-        : 'Tắt lịch backup tự động? Job cron sẽ bỏ qua khi bị tắt.',
+        ? 'Bật lịch backup tự động? Job đã đăng ký sẽ chạy đúng lịch cron (không cần restart).'
+        : 'Tắt lịch backup tự động? Job cron vẫn giữ đăng ký nhưng sẽ bỏ qua khi tới giờ.',
     );
     if (!confirmed) {
       return;
@@ -261,9 +261,10 @@ export function SettingsManagementPanel() {
 
       <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
         Chỉ được sửa giá trị (không tạo mới / không xoá). Đổi cron/timezone cần
-        restart backend. Không cho sửa cron khi đang backup. Bật/tắt lịch qua{' '}
-        <code className="font-mono text-xs">BACKUP_SCHEDULE_ENABLED</code> có hiệu
-        lực ngay ở runtime.
+        restart backend. Không cho sửa cron khi đang backup. Bật/tắt lịch qua nút
+        bên dưới (hoặc{' '}
+        <code className="font-mono text-xs">BACKUP_SCHEDULE_ENABLED</code>) có
+        hiệu lực ngay — không cần sửa env hay restart.
       </div>
 
       {backupInProgress ? (
