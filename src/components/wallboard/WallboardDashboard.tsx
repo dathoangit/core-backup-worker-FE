@@ -229,7 +229,7 @@ export function WallboardDashboard() {
               title={t('panels.daily.title')}
               subtitle={t('panels.daily.subtitle')}>
               <div className="flex h-full min-h-0 flex-col gap-1.5">
-                <div className="relative min-h-[8.5rem] flex-[1.35] xl:min-h-[10rem]">
+                <div className="relative min-h-[6.5rem] flex-1 xl:min-h-[7.5rem]">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
@@ -240,8 +240,8 @@ export function WallboardDashboard() {
                         }
                         dataKey="value"
                         nameKey="name"
-                        innerRadius="52%"
-                        outerRadius="96%"
+                        innerRadius="68%"
+                        outerRadius="82%"
                         paddingAngle={2}
                         isAnimationActive={false}>
                         {(donutData.length > 0
@@ -267,10 +267,10 @@ export function WallboardDashboard() {
                     </PieChart>
                   </ResponsiveContainer>
                   <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                    <p className="text-2xl font-bold text-slate-900 xl:text-3xl">
+                    <p className="text-lg font-bold tabular-nums text-slate-900 xl:text-xl">
                       {successPct}%
                     </p>
-                    <p className="text-[10px] text-slate-500 xl:text-xs">
+                    <p className="text-[10px] leading-tight text-slate-500">
                       {t('legend.ok')}
                     </p>
                   </div>
