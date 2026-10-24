@@ -7,6 +7,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import type { WallboardDatabase } from 'src/types/wallboard';
 import { DatabaseLagBadge } from './DatabaseLagBadge';
+import { StatusPulseDot } from './StatusPulseDot';
 
 const COLS = 3;
 const VISIBLE_ROWS = 4;
@@ -57,12 +58,7 @@ function DatabaseCard({ db }: { db: WallboardDatabase }) {
               ? 'bg-emerald-100 text-emerald-800'
               : 'bg-red-100 text-red-800'
           }`}>
-          {db.live ? (
-            <span
-              className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-live-dot motion-reduce:animate-none"
-              aria-hidden="true"
-            />
-          ) : null}
+          {db.live ? <StatusPulseDot variant="live" /> : null}
           {db.live ? t('db.live') : t('db.off')}
         </span>
       </div>
