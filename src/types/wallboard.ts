@@ -93,6 +93,7 @@ export type WallboardActiveJob = {
   etaSeconds: number | null;
   currentDatabase: string | null;
   currentTable: string | null;
+  finishedAt?: string | null;
 };
 
 export type WallboardScheduleTarget = {

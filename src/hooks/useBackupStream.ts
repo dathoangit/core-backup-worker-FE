@@ -132,13 +132,36 @@ export function useBackupStream(
             }));
             onStatusRef.current?.(payload.status, 'snapshot');
           }
+
+          const status = payload.status?.status;
+          const completedOk = status === 'ok' || status === 'partial';
+
           if (payload.progress) {
+            const progress = completedOk
+              ? { ...payload.progress, percent: 100, etaSeconds: 0 }
+              : payload.progress;
             setProgressByRunId((prev) => ({
               ...prev,
-              [payload.runId]: payload.progress!,
+              [payload.runId]: progress,
             }));
-            onProgressRef.current?.(payload.progress);
+            onProgressRef.current?.(progress);
+          } else if (completedOk) {
+            setProgressByRunId((prev) => {
+              const existing = prev[payload.runId];
+              if (!existing) {
+                return prev;
+              }
+              return {
+                ...prev,
+                [payload.runId]: {
+                  ...existing,
+                  percent: 100,
+                  etaSeconds: 0,
+                },
+              };
+            });
           }
+
           if (payload.logs.length > 0) {
             setLogs((prev) => {
               const next = runId
@@ -152,6 +175,24 @@ export function useBackupStream(
 
         if (payload.type === 'run.status') {
           setStatusByRunId((prev) => ({ ...prev, [payload.runId]: payload }));
+
+          if (payload.status === 'ok' || payload.status === 'partial') {
+            setProgressByRunId((prev) => {
+              const existing = prev[payload.runId];
+              if (!existing) {
+                return prev;
+              }
+              return {
+                ...prev,
+                [payload.runId]: {
+                  ...existing,
+                  percent: 100,
+                  etaSeconds: 0,
+                },
+              };
+            });
+          }
+
           onStatusRef.current?.(payload, 'live');
           return;
         }

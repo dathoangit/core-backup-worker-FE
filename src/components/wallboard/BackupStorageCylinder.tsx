@@ -6,8 +6,10 @@ import type { WallboardDisk } from 'src/types/wallboard';
 import { AutoScrollRows } from './AutoScrollRows';
 import { formatBytesShort } from './wallboard-format';
 
-const LEGEND_VISIBLE_ROWS = 6;
 const LEGEND_GAP_PX = 4;
+/** Approx one legend line (text + leading) for visible-row math. */
+const LEGEND_ROW_ESTIMATE_PX = 18;
+const LEGEND_VISIBLE_MIN = 4;
 
 type BackupStorageCylinderProps = {
   disk: WallboardDisk;
@@ -73,7 +75,9 @@ function colorFor(id: string): string {
 export function BackupStorageCylinder({ disk }: BackupStorageCylinderProps) {
   const { t } = useTranslation('wallboard');
   const boxRef = useRef<HTMLDivElement>(null);
+  const legendRef = useRef<HTMLDivElement>(null);
   const [box, setBox] = useState({ width: 0, height: 0 });
+  const [legendVisible, setLegendVisible] = useState(LEGEND_VISIBLE_MIN);
   const [hc, setHc] = useState<typeof Highcharts | null>(null);
   const [Chart, setChart] = useState<typeof HighchartsReactType | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -103,6 +107,29 @@ export function BackupStorageCylinder({ disk }: BackupStorageCylinderProps) {
     });
     observer.observe(node);
 
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const node = legendRef.current;
+    if (!node) {
+      return;
+    }
+
+    const updateVisible = (height: number) => {
+      const stride = LEGEND_ROW_ESTIMATE_PX + LEGEND_GAP_PX;
+      const count = Math.max(
+        LEGEND_VISIBLE_MIN,
+        Math.floor((height + LEGEND_GAP_PX) / stride),
+      );
+      setLegendVisible((prev) => (prev === count ? prev : count));
+    };
+
+    updateVisible(node.getBoundingClientRect().height);
+    const observer = new ResizeObserver(([entry]) => {
+      updateVisible(entry.contentRect.height);
+    });
+    observer.observe(node);
     return () => observer.disconnect();
   }, []);
 
@@ -238,28 +265,32 @@ export function BackupStorageCylinder({ disk }: BackupStorageCylinderProps) {
           </p>
         )}
       </div>
-      <AutoScrollRows
-        className="flex w-[11.5rem] shrink-0 flex-col justify-center py-0.5 xl:w-52"
-        visibleCount={LEGEND_VISIBLE_ROWS}
-        gapPx={LEGEND_GAP_PX}
-        items={folders.map((folder) => (
-          <div
-            key={folder.id}
-            className="flex items-baseline justify-between gap-2 text-[11px] leading-tight xl:text-xs">
-            <span className="flex min-w-0 items-center gap-1.5 text-slate-700">
-              <span
-                className="mt-0.5 h-2 w-2 shrink-0 rounded-full border border-slate-200"
-                style={{ backgroundColor: colorFor(folder.id) }}
-                aria-hidden
-              />
-              <span className="truncate">{folder.label}</span>
-            </span>
-            <span className="shrink-0 font-semibold tabular-nums text-slate-900">
-              {formatBytesShort(folder.bytes)}
-            </span>
-          </div>
-        ))}
-      />
+      <div
+        ref={legendRef}
+        className="flex h-full min-h-0 w-[11.5rem] shrink-0 flex-col self-stretch xl:w-52">
+        <AutoScrollRows
+          className="h-full min-h-0"
+          visibleCount={legendVisible}
+          gapPx={LEGEND_GAP_PX}
+          items={folders.map((folder) => (
+            <div
+              key={folder.id}
+              className="flex items-baseline justify-between gap-2 text-[11px] leading-tight xl:text-xs">
+              <span className="flex min-w-0 items-center gap-1.5 text-slate-700">
+                <span
+                  className="mt-0.5 h-2 w-2 shrink-0 rounded-full border border-slate-200"
+                  style={{ backgroundColor: colorFor(folder.id) }}
+                  aria-hidden
+                />
+                <span className="truncate">{folder.label}</span>
+              </span>
+              <span className="shrink-0 font-semibold tabular-nums text-slate-900">
+                {formatBytesShort(folder.bytes)}
+              </span>
+            </div>
+          ))}
+        />
+      </div>
     </div>
   );
 }

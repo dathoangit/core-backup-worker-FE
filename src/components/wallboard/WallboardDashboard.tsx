@@ -33,6 +33,12 @@ import {
 /** Safety net for TV displays if SSE drops; primary updates come from the stream. */
 const SAFETY_REFRESH_MS = 5 * 60_000;
 const RECENT_JOBS_VISIBLE = 5;
+const FINISHED_JOB_STATUSES = new Set([
+  'ok',
+  'partial',
+  'error',
+  'cancelled',
+]);
 
 const STATUS_COLORS = {
   ok: '#059669',
@@ -124,16 +130,53 @@ export function WallboardDashboard() {
     },
   });
 
-  const liveProgress = useMemo((): BackupRunProgressEvent | null => {
-    const activeRunId =
-      data?.activeJob?.runId ??
-      Object.values(statusByRunId).find((s) => s.status === 'running')?.runId;
-    if (!activeRunId) {
-      const first = Object.values(progressByRunId)[0];
-      return first ?? null;
+  const displayedRunId = useMemo(() => {
+    if (data?.activeJob?.runId) {
+      return data.activeJob.runId;
     }
-    return progressByRunId[activeRunId] ?? null;
+
+    const running = Object.values(statusByRunId).find(
+      (s) => s.status === 'running',
+    );
+    if (running) {
+      return running.runId;
+    }
+
+    const finished = Object.values(statusByRunId).find(
+      (s) =>
+        s.status === 'ok' ||
+        s.status === 'partial' ||
+        s.status === 'error' ||
+        s.status === 'cancelled',
+    );
+    return finished?.runId ?? Object.keys(progressByRunId)[0] ?? null;
   }, [data?.activeJob?.runId, progressByRunId, statusByRunId]);
+
+  const liveProgress = useMemo((): BackupRunProgressEvent | null => {
+    if (!displayedRunId) {
+      return null;
+    }
+
+    return progressByRunId[displayedRunId] ?? null;
+  }, [displayedRunId, progressByRunId]);
+
+  const statusEvent = displayedRunId
+    ? statusByRunId[displayedRunId]
+    : undefined;
+  const liveStatus = displayedRunId
+    ? (statusEvent?.status ?? data?.activeJob?.status ?? null)
+    : (data?.activeJob?.status ?? null);
+  const overviewMatchesDisplayedRun =
+    Boolean(data?.activeJob) &&
+    (!displayedRunId || data?.activeJob?.runId === displayedRunId);
+  const finishedAt = overviewMatchesDisplayedRun
+    ? (data?.activeJob?.finishedAt ??
+      (statusEvent && FINISHED_JOB_STATUSES.has(statusEvent.status)
+        ? statusEvent.at
+        : null))
+    : statusEvent && FINISHED_JOB_STATUSES.has(statusEvent.status)
+      ? statusEvent.at
+      : null;
 
   const liveCount = data?.databases.filter((db) => db.live).length ?? 0;
   const offCount = data ? data.databases.length - liveCount : 0;
@@ -229,10 +272,10 @@ export function WallboardDashboard() {
               title={t('panels.daily.title')}
               subtitle={t('panels.daily.subtitle')}>
               <div className="flex h-full min-h-0 flex-col gap-1.5">
-                <div className="flex min-h-0 flex-1 items-stretch gap-2">
-                  <div className="relative min-h-[6.5rem] min-w-0 flex-1 xl:min-h-[7.5rem]">
+                <div className="flex min-h-0 flex-[1.6] items-center gap-2">
+                  <div className="relative h-full min-h-[7rem] min-w-0 flex-1">
                     <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
+                      <PieChart margin={{ top: 2, right: 2, bottom: 2, left: 2 }}>
                         <Pie
                           data={
                             donutData.length > 0
@@ -247,8 +290,8 @@ export function WallboardDashboard() {
                           }
                           dataKey="value"
                           nameKey="name"
-                          innerRadius="68%"
-                          outerRadius="82%"
+                          innerRadius="58%"
+                          outerRadius="92%"
                           paddingAngle={2}
                           isAnimationActive={false}>
                           {(donutData.length > 0
@@ -274,50 +317,56 @@ export function WallboardDashboard() {
                       </PieChart>
                     </ResponsiveContainer>
                     <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                      <p className="text-lg font-bold tabular-nums text-slate-900 xl:text-xl">
+                      <p className="text-xl font-bold tabular-nums leading-none text-slate-900 xl:text-2xl">
                         {successPct}%
                       </p>
-                      <p className="text-[10px] leading-tight text-slate-500">
+                      <p className="mt-0.5 text-[10px] leading-tight text-slate-500">
                         {t('legend.ok')}
                       </p>
                     </div>
                   </div>
-                  <ul className="flex w-[5.75rem] shrink-0 flex-col justify-center gap-1 text-[11px] xl:w-28 xl:text-xs">
-                    <li className="flex justify-between gap-2 text-emerald-700">
-                      <span>{t('legend.ok')}</span>
-                      <span className="font-semibold tabular-nums">
+                  <ul className="w-max shrink-0 space-y-1 text-[11px] leading-tight xl:text-xs">
+                    <li className="flex items-baseline justify-between gap-3 text-emerald-700">
+                      <span className="whitespace-nowrap">{t('legend.ok')}</span>
+                      <span className="min-w-[1.25rem] text-right font-semibold tabular-nums">
                         {data.jobSummary.ok}
                       </span>
                     </li>
-                    <li className="flex justify-between gap-2 text-red-700">
-                      <span>{t('legend.error')}</span>
-                      <span className="font-semibold tabular-nums">
+                    <li className="flex items-baseline justify-between gap-3 text-red-700">
+                      <span className="whitespace-nowrap">
+                        {t('legend.error')}
+                      </span>
+                      <span className="min-w-[1.25rem] text-right font-semibold tabular-nums">
                         {data.jobSummary.error}
                       </span>
                     </li>
-                    <li className="flex justify-between gap-2 text-amber-700">
-                      <span>{t('legend.partial')}</span>
-                      <span className="font-semibold tabular-nums">
+                    <li className="flex items-baseline justify-between gap-3 text-amber-700">
+                      <span className="whitespace-nowrap">
+                        {t('legend.partial')}
+                      </span>
+                      <span className="min-w-[1.25rem] text-right font-semibold tabular-nums">
                         {data.jobSummary.partial}
                       </span>
                     </li>
-                    <li className="flex justify-between gap-2 text-sky-700">
-                      <span>{t('legend.running')}</span>
-                      <span className="font-semibold tabular-nums">
+                    <li className="flex items-baseline justify-between gap-3 text-sky-700">
+                      <span className="whitespace-nowrap">
+                        {t('legend.running')}
+                      </span>
+                      <span className="min-w-[1.25rem] text-right font-semibold tabular-nums">
                         {data.jobSummary.running}
                       </span>
                     </li>
                   </ul>
                 </div>
-                {(data.activeJob?.status === 'running' || liveProgress) && (
-                  <div className="shrink-0 border-t border-slate-100 pt-1.5">
-                    <ActiveJobStream
-                      overviewJob={data.activeJob}
-                      liveProgress={liveProgress}
-                      compact
-                    />
-                  </div>
-                )}
+                <div className="shrink-0 border-t border-slate-100 pt-1.5">
+                  <ActiveJobStream
+                    overviewJob={data.activeJob}
+                    liveProgress={liveProgress}
+                    liveStatus={liveStatus}
+                    finishedAt={finishedAt}
+                    compact
+                  />
+                </div>
               </div>
             </WallboardPanel>
 
