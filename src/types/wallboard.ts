@@ -7,6 +7,13 @@ import type {
   SourceReachability,
 } from './backup';
 
+export type WallboardLagState =
+  | 'no_data'
+  | 'on_time'
+  | 'overdue'
+  | 'missed'
+  | 'error';
+
 export type WallboardDatabase = {
   group: SourceGroup;
   database: string;
@@ -20,6 +27,7 @@ export type WallboardDatabase = {
   watermark: string | null;
   /** Minutes since lastStartedAt (backup freshness lag). */
   lagMinutes: number | null;
+  lagState: WallboardLagState;
 };
 
 export type WallboardJobSummary = {

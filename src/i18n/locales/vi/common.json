@@ -67,11 +67,13 @@
     "daysAgo": "{{count}} ngày trước"
   },
   "lag": {
-    "noData": "Không có dữ liệu độ trễ",
-    "under15m": "Trễ <15p",
-    "under1h": "Trễ <1h",
-    "from1hTo6h": "Trễ 1h–6h",
-    "over6h": "Trễ >6h"
+    "noData": "Chưa có backup",
+    "onTime": "Đúng lịch",
+    "overdue": "Quá hạn lịch",
+    "overdueAgo": "Quá hạn · {{age}}",
+    "missed": "Trễ nhiều nhịp",
+    "missedAgo": "Trễ nhiều nhịp · {{age}}",
+    "lastFailed": "Lần chạy lỗi"
   },
   "badge": {
     "overflow9Plus": "9+"

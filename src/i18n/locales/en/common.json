@@ -67,11 +67,13 @@
     "daysAgo": "{{count}} days ago"
   },
   "lag": {
-    "noData": "No lag data",
-    "under15m": "Lag <15m",
-    "under1h": "Lag <1h",
-    "from1hTo6h": "Lag 1h–6h",
-    "over6h": "Lag >6h"
+    "noData": "No backup yet",
+    "onTime": "On schedule",
+    "overdue": "Past due",
+    "overdueAgo": "Past due · {{age}}",
+    "missed": "Missed cycles",
+    "missedAgo": "Missed cycles · {{age}}",
+    "lastFailed": "Last run failed"
   },
   "badge": {
     "overflow9Plus": "9+"

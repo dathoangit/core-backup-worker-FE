@@ -158,21 +158,71 @@ export function formatCompression(
 
 export type LagTone = 'ok' | 'warn' | 'error' | 'neutral';
 
-export function lagBadge(lagMinutes: number | null | undefined): {
+export type LagBadgeState =
+  | 'no_data'
+  | 'on_time'
+  | 'overdue'
+  | 'missed'
+  | 'error';
+
+function formatRelativeFromMinutes(minutes: number): string {
+  if (minutes < 1) {
+    return i18n.t('common:time.justNow');
+  }
+  if (minutes < 60) {
+    return i18n.t('common:time.minutesAgo', { count: minutes });
+  }
+  const hours = Math.round(minutes / 60);
+  if (hours < 48) {
+    return i18n.t('common:time.hoursAgo', { count: hours });
+  }
+  const days = Math.round(hours / 24);
+  return i18n.t('common:time.daysAgo', { count: days });
+}
+
+export function lagBadge(
+  lagMinutes: number | null | undefined,
+  lagState: LagBadgeState | null | undefined,
+): {
   tone: LagTone;
   label: string;
 } {
-  if (lagMinutes == null || !Number.isFinite(lagMinutes)) {
-    return { tone: 'neutral', label: i18n.t('common:lag.noData') };
+  const state = lagState ?? 'no_data';
+
+  switch (state) {
+    case 'on_time': {
+      if (lagMinutes == null || !Number.isFinite(lagMinutes)) {
+        return { tone: 'ok', label: i18n.t('common:lag.onTime') };
+      }
+      return {
+        tone: 'ok',
+        label: formatRelativeFromMinutes(lagMinutes),
+      };
+    }
+    case 'overdue':
+      return {
+        tone: 'warn',
+        label:
+          lagMinutes != null && Number.isFinite(lagMinutes)
+            ? i18n.t('common:lag.overdueAgo', {
+                age: formatRelativeFromMinutes(lagMinutes),
+              })
+            : i18n.t('common:lag.overdue'),
+      };
+    case 'missed':
+      return {
+        tone: 'error',
+        label:
+          lagMinutes != null && Number.isFinite(lagMinutes)
+            ? i18n.t('common:lag.missedAgo', {
+                age: formatRelativeFromMinutes(lagMinutes),
+              })
+            : i18n.t('common:lag.missed'),
+      };
+    case 'error':
+      return { tone: 'error', label: i18n.t('common:lag.lastFailed') };
+    case 'no_data':
+    default:
+      return { tone: 'neutral', label: i18n.t('common:lag.noData') };
   }
-  if (lagMinutes < 15) {
-    return { tone: 'ok', label: i18n.t('common:lag.under15m') };
-  }
-  if (lagMinutes < 60) {
-    return { tone: 'warn', label: i18n.t('common:lag.under1h') };
-  }
-  if (lagMinutes <= 6 * 60) {
-    return { tone: 'warn', label: i18n.t('common:lag.from1hTo6h') };
-  }
-  return { tone: 'error', label: i18n.t('common:lag.over6h') };
 }

@@ -73,7 +73,10 @@ function DatabaseCard({ db }: { db: WallboardDatabase }) {
         {t('db.watermarkPrefix', { watermark: db.watermark ?? '—' })}
       </p>
       <div className="mt-0.5">
-        <DatabaseLagBadge lagMinutes={db.lagMinutes} />
+        <DatabaseLagBadge
+          lagMinutes={db.lagMinutes}
+          lagState={db.lagState}
+        />
       </div>
     </article>
   );

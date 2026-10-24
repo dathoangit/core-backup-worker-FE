@@ -1,14 +1,19 @@
 import { useTranslation } from 'react-i18next';
+import type { WallboardLagState } from 'src/types/wallboard';
 import { lagBadge } from './wallboard-format';
 
 type DatabaseLagBadgeProps = {
   lagMinutes: number | null | undefined;
+  lagState: WallboardLagState | null | undefined;
 };
 
-export function DatabaseLagBadge({ lagMinutes }: DatabaseLagBadgeProps) {
+export function DatabaseLagBadge({
+  lagMinutes,
+  lagState,
+}: DatabaseLagBadgeProps) {
   // Re-render on locale change; label text comes from common:lag.* via lagBadge().
   useTranslation('common');
-  const badge = lagBadge(lagMinutes);
+  const badge = lagBadge(lagMinutes, lagState);
   const className =
     badge.tone === 'ok'
       ? 'bg-emerald-100 text-emerald-800'

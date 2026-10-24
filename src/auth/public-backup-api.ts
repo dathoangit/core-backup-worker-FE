@@ -26,6 +26,7 @@ export async function fetchPublicOverview(): Promise<WallboardOverview> {
     databases: (data.databases ?? []).map((db) => ({
       ...db,
       lagMinutes: db.lagMinutes ?? null,
+      lagState: db.lagState ?? 'no_data',
     })),
     disk: data.disk
       ? {
