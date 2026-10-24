@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "title": "Tra cứu file backup",
+    "description": "Duyệt file .csv.gz đã backup kèm dung lượng và checksum."
+  },
+  "title": "Tra cứu file backup",
+  "subtitle": "Cây thư mục .csv.gz theo ngày / nhóm DB. Chọn database để xem file và tính checksum.",
+  "loading": {
+    "tree": "Đang tải cây thư mục...",
+    "files": "Đang tải file..."
+  },
+  "empty": {
+    "tree": "Chưa có file backup.",
+    "files": "Không có file."
+  },
+  "prompt": {
+    "selectDb": "Chọn một database ở cây bên trái để xem danh sách file."
+  },
+  "table": {
+    "file": "File",
+    "kind": "Kind",
+    "size": "Size",
+    "rows": "Rows",
+    "sha256": "SHA-256",
+    "md5": "MD5"
+  },
+  "row": {
+    "runPrefix": "run {{runId}}"
+  },
+  "actions": {
+    "computeChecksum": "Tính checksum"
+  },
+  "tree": {
+    "fileCount": "{{count}} file · {{size}}"
+  }
+}

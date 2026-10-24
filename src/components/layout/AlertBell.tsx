@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from 'src/auth/context';
+import i18n from 'src/i18n';
 import { useToast } from 'src/components/ui/ToastProvider';
 import { useBackupStream } from 'src/hooks/useBackupStream';
 
@@ -71,6 +73,7 @@ function claimToast(runId: string, status: string): boolean {
 }
 
 export function AlertBell() {
+  const { t } = useTranslation(['layout', 'common']);
   const { role } = useAuth();
   const { pushToast } = useToast();
   const [open, setOpen] = useState(false);
@@ -103,8 +106,8 @@ export function AlertBell() {
         tone: event.status === 'error' ? 'error' : 'warning',
         title:
           event.status === 'error'
-            ? 'Backup thất bại'
-            : 'Backup hoàn tất một phần',
+            ? i18n.t('alerts.backupFailed', { ns: 'layout' })
+            : i18n.t('alerts.backupPartial', { ns: 'layout' }),
         message: `${event.runId}${event.error ? ` — ${event.error}` : ''}`,
       });
     },
@@ -138,29 +141,31 @@ export function AlertBell() {
           }
         }}
         className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-        aria-label="Cảnh báo">
+        aria-label={t('alerts.ariaBell')}>
         <svg aria-hidden viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor">
           <path d="M10 2a4.5 4.5 0 00-4.5 4.5v.7c0 .8-.25 1.58-.72 2.24L3.6 11.1A1.25 1.25 0 004.6 13h10.8a1.25 1.25 0 001-1.9l-1.18-1.66a3.9 3.9 0 01-.72-2.24v-.7A4.5 4.5 0 0010 2zm0 16a2.25 2.25 0 01-2.12-1.5h4.24A2.25 2.25 0 0110 18z" />
         </svg>
         {unreadCount > 0 ? (
           <span className="absolute -right-1 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-semibold text-white">
-            {unreadCount > 9 ? '9+' : unreadCount}
+            {unreadCount > 9 ? t('common:badge.overflow9Plus') : unreadCount}
           </span>
         ) : null}
       </button>
       {open ? (
         <div className="absolute right-0 z-50 mt-2 w-80 rounded-xl border border-slate-200 bg-white p-3 shadow-lg">
           <div className="mb-2 flex items-center justify-between">
-            <p className="text-sm font-semibold text-slate-900">Cảnh báo gần đây</p>
+            <p className="text-sm font-semibold text-slate-900">
+              {t('alerts.panelTitle')}
+            </p>
             <button
               type="button"
               className="text-xs text-slate-500 hover:text-slate-700"
               onClick={() => setOpen(false)}>
-              Đóng
+              {t('common:actions.close')}
             </button>
           </div>
           {items.length === 0 ? (
-            <p className="text-xs text-slate-500">Chưa có cảnh báo failed/partial.</p>
+            <p className="text-xs text-slate-500">{t('alerts.empty')}</p>
           ) : (
             <ul className="max-h-72 space-y-2 overflow-y-auto">
               {items.map((item) => (

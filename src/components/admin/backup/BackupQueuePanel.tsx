@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   cancelAllQueuedBackupRuns,
   cancelBackupRun,
@@ -22,19 +23,21 @@ function CountsLine({
   label: string;
   counts: BackupQueueSnapshot['incremental']['counts'];
 }) {
+  const { t } = useTranslation('runs');
+
   return (
     <p className="text-xs text-slate-600">
       <span className="font-medium text-slate-800">{label}</span>
       {' · '}
-      waiting {counts.waiting}
+      {t('queue.counts.waiting')} {counts.waiting}
       {' · '}
-      active {counts.active}
+      {t('queue.counts.active')} {counts.active}
       {' · '}
-      delayed {counts.delayed}
+      {t('queue.counts.delayed')} {counts.delayed}
       {' · '}
-      failed {counts.failed}
+      {t('queue.counts.failed')} {counts.failed}
       {' · '}
-      prioritized {counts.prioritized}
+      {t('queue.counts.prioritized')} {counts.prioritized}
     </p>
   );
 }
@@ -43,6 +46,7 @@ export function BackupQueuePanel({
   refreshKey = 0,
   onChanged,
 }: BackupQueuePanelProps) {
+  const { t } = useTranslation(['runs', 'common']);
   const [snapshot, setSnapshot] = useState<BackupQueueSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -75,8 +79,8 @@ export function BackupQueuePanel({
       const result = await cancelBackupRun(runId);
       setInfo(
         result.status === 'cancelling'
-          ? `Đang hủy ${runId}...`
-          : `Đã hủy ${runId}`,
+          ? t('runs:queue.cancellingOne', { runId })
+          : t('runs:queue.cancelledOne', { runId }),
       );
       await load();
       onChanged?.();
@@ -88,11 +92,7 @@ export function BackupQueuePanel({
   };
 
   const handleCancelAllQueued = async () => {
-    if (
-      !window.confirm(
-        'Hủy tất cả job đang ở trạng thái hàng đợi (DB queued)?',
-      )
-    ) {
+    if (!window.confirm(t('runs:queue.confirmCancelAll'))) {
       return;
     }
 
@@ -102,9 +102,9 @@ export function BackupQueuePanel({
     try {
       const result = await cancelAllQueuedBackupRuns();
       setInfo(
-        `Đã hủy ${result.cancelled.length} job` +
+        t('runs:queue.cancelledMany', { count: result.cancelled.length }) +
           (result.failed.length > 0
-            ? `; ${result.failed.length} lỗi`
+            ? t('runs:queue.failedSuffix', { count: result.failed.length })
             : ''),
       );
       await load();
@@ -126,11 +126,9 @@ export function BackupQueuePanel({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="text-lg font-semibold text-slate-900">
-            Quản lý hàng đợi
+            {t('runs:queue.title')}
           </h2>
-          <p className="mt-1 text-sm text-slate-600">
-            BullMQ (Redis) + trạng thái DB. Hủy job kẹt khi worker chưa nhận.
-          </p>
+          <p className="mt-1 text-sm text-slate-600">{t('runs:queue.subtitle')}</p>
           {snapshot ? (
             <div className="mt-2 space-y-0.5">
               <CountsLine
@@ -139,7 +137,9 @@ export function BackupQueuePanel({
               />
               <CountsLine label={snapshot.full.name} counts={snapshot.full.counts} />
               <p className="text-xs text-slate-500">
-                Cập nhật {formatIsoAsLocalDateTime(snapshot.generatedAt)}
+                {t('runs:queue.updatedAt', {
+                  time: formatIsoAsLocalDateTime(snapshot.generatedAt),
+                })}
               </p>
             </div>
           ) : null}
@@ -149,7 +149,7 @@ export function BackupQueuePanel({
             type="button"
             onClick={() => void load()}
             className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
-            Làm mới
+            {t('common:actions.refresh')}
           </button>
           <button
             type="button"
@@ -157,8 +157,8 @@ export function BackupQueuePanel({
             onClick={() => void handleCancelAllQueued()}
             className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50">
             {cancellingAll
-              ? 'Đang hủy...'
-              : `Hủy tất cả queued (${queuedCount})`}
+              ? t('runs:queue.cancellingAll')
+              : t('runs:queue.cancelAllButton', { count: queuedCount })}
           </button>
         </div>
       </div>
@@ -175,17 +175,17 @@ export function BackupQueuePanel({
       ) : null}
 
       {loading && !snapshot ? (
-        <p className="text-sm text-slate-600">Đang tải queue...</p>
+        <p className="text-sm text-slate-600">{t('runs:queue.loading')}</p>
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
           <div className="overflow-hidden rounded-lg border border-slate-200">
             <div className="border-b border-slate-100 bg-slate-50 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-600">
-              BullMQ jobs (waiting / active)
+              {t('runs:queue.bullSectionTitle')}
             </div>
             <ul className="divide-y divide-slate-100">
               {bullJobs.length === 0 ? (
                 <li className="px-3 py-3 text-sm text-slate-500">
-                  Không có job trên Redis
+                  {t('runs:queue.bullEmpty')}
                 </li>
               ) : (
                 bullJobs.map((job) => (
@@ -210,7 +210,9 @@ export function BackupQueuePanel({
                       disabled={cancellingRunId === job.runId}
                       onClick={() => void handleCancel(job.runId)}
                       className="shrink-0 rounded-md border border-red-200 px-2 py-1 font-medium text-red-700 hover:bg-red-50 disabled:opacity-50">
-                      {cancellingRunId === job.runId ? '...' : 'Hủy'}
+                      {cancellingRunId === job.runId
+                        ? t('common:ellipsis')
+                        : t('common:actions.cancel')}
                     </button>
                   </li>
                 ))
@@ -220,12 +222,12 @@ export function BackupQueuePanel({
 
           <div className="overflow-hidden rounded-lg border border-violet-200">
             <div className="border-b border-violet-100 bg-violet-50 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-violet-800">
-              DB queued ({queuedCount})
+              {t('runs:queue.dbSectionTitle', { count: queuedCount })}
             </div>
             <ul className="divide-y divide-violet-50">
               {(snapshot?.dbQueued.length ?? 0) === 0 ? (
                 <li className="px-3 py-3 text-sm text-violet-800/70">
-                  Không có run queued trong DB
+                  {t('runs:queue.dbEmpty')}
                 </li>
               ) : (
                 snapshot?.dbQueued.map((run, index) => (
@@ -249,7 +251,9 @@ export function BackupQueuePanel({
                       disabled={cancellingRunId === run.runId}
                       onClick={() => void handleCancel(run.runId)}
                       className="shrink-0 rounded-md border border-red-200 px-2 py-1 font-medium text-red-700 hover:bg-red-50 disabled:opacity-50">
-                      {cancellingRunId === run.runId ? '...' : 'Hủy'}
+                      {cancellingRunId === run.runId
+                        ? t('common:ellipsis')
+                        : t('common:actions.cancel')}
                     </button>
                   </li>
                 ))

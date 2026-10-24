@@ -1,0 +1,49 @@
+{
+  "language": {
+    "aria": "Chọn ngôn ngữ"
+  },
+  "nav": {
+    "aria": "Điều hướng chính",
+    "overview": "Tổng quan",
+    "wallboard": "Màn hình trung tâm",
+    "runs": "Lịch sử",
+    "files": "Tra cứu file",
+    "config": "Cấu hình"
+  },
+  "account": {
+    "ariaButton": "Tài khoản người dùng",
+    "ariaMenu": "Menu tài khoản",
+    "role": "Vai trò",
+    "roleValue": "Vai trò: {{role}}",
+    "email": "Email",
+    "emailValue": "Email: {{email}}",
+    "manageUsers": "Quản lý người dùng",
+    "logout": "Đăng xuất"
+  },
+  "footer": {
+    "ariaNav": "Điều hướng chân trang",
+    "home": "Trang chủ",
+    "copyrightCompact": "© {{year}} {{org}} · {{brand}}",
+    "tagline": "Base web app shell kết nối backend NestJS — sẵn sàng mở rộng module nghiệp vụ tại {{org}}.",
+    "navSection": "Điều hướng",
+    "operatorSection": "Đơn vị vận hành",
+    "facility": "Cơ sở y tế",
+    "platform": "Nền tảng",
+    "copyrightFull": "© {{year}} {{org}}. Bảo lưu mọi quyền.",
+    "internalVersion": "{{brand}} — Phiên bản nội bộ"
+  },
+  "alerts": {
+    "ariaBell": "Cảnh báo",
+    "panelTitle": "Cảnh báo gần đây",
+    "empty": "Chưa có cảnh báo failed/partial.",
+    "backupFailed": "Backup thất bại",
+    "backupPartial": "Backup hoàn tất một phần"
+  },
+  "authGate": {
+    "checkingSession": "Đang kiểm tra phiên đăng nhập...",
+    "redirectLogin": "Đang chuyển tới trang đăng nhập...",
+    "redirectHome": "Đang chuyển về trang chủ...",
+    "redirectGeneric": "Đang chuyển hướng...",
+    "checkingAccess": "Đang kiểm tra quyền truy cập..."
+  }
+}

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { BackupZones } from 'src/types/backup';
 
 type BackupOverviewCardsProps = {
@@ -54,13 +55,14 @@ export function BackupOverviewCards({
   zones,
   scheduleEnabled,
 }: BackupOverviewCardsProps) {
+  const { t } = useTranslation(['home', 'common']);
   const primary = zones?.primary;
 
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      <Card title="Lịch tự động" className="pl-6">
+      <Card title={t('home:overview.scheduleTitle')} className="pl-6">
         {scheduleEnabled === null ? (
-          <p className="text-slate-500">Chưa rõ</p>
+          <p className="text-slate-500">{t('home:overview.scheduleUnknown')}</p>
         ) : (
           <p>
             <span
@@ -69,16 +71,18 @@ export function BackupOverviewCards({
                   ? 'bg-emerald-50 text-emerald-700'
                   : 'bg-slate-100 text-slate-600'
               }`}>
-              {scheduleEnabled ? 'Đang bật' : 'Đã tắt'}
+              {scheduleEnabled
+                ? t('common:toggle.on')
+                : t('common:toggle.off')}
             </span>
           </p>
         )}
         <p className="mt-2 text-xs text-slate-500">
-          Quản lý tại mục Cấu hình.
+          {t('home:overview.scheduleHint')}
         </p>
       </Card>
 
-      <Card title="Primary zone">
+      <Card title={t('home:overview.primaryTitle')}>
         {primary ? (
           <>
             <p
@@ -89,57 +93,59 @@ export function BackupOverviewCards({
                   : primary.backupDir || undefined
               }
             >
-              {primary.volumes?.meta || primary.backupDir || '—'}
+              {primary.volumes?.meta || primary.backupDir || t('common:emDash')}
             </p>
             <p className="mt-1 text-xs text-slate-500">
-              {primary.exists ? 'Thư mục tồn tại' : 'Chưa có thư mục'} · {primary.runCount}{' '}
-              run
-              {primary.volumes
-                ? ` · HIS/EMR/LIS volumes`
-                : ''}
+              {primary.exists
+                ? t('home:overview.dirExists')
+                : t('home:overview.dirMissing')}{' '}
+              · {t('home:overview.runCount', { count: primary.runCount })}
+              {primary.volumes ? t('home:overview.volumesHint') : ''}
             </p>
             {primary.freeHint ? (
               <FreeHintText hint={primary.freeHint} />
             ) : null}
           </>
         ) : (
-          <p className="text-slate-500">Đang tải...</p>
+          <p className="text-slate-500">{t('common:loading.generic')}</p>
         )}
       </Card>
 
-      <Card title="Lock">
+      <Card title={t('home:overview.lockTitle')}>
         {primary ? (
           primary.lockHeld ? (
             <p>
               <span className="inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
-                Đang giữ lock
+                {t('home:overview.lockHeld')}
               </span>
               {primary.lockPid != null ? (
                 <span className="mt-1 block text-xs text-slate-500">
-                  PID {primary.lockPid}
+                  {t('home:overview.lockPid', { pid: primary.lockPid })}
                 </span>
               ) : null}
             </p>
           ) : (
             <span className="inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
-              Rảnh
+              {t('home:overview.lockFree')}
             </span>
           )
         ) : (
-          <p className="text-slate-500">Đang tải...</p>
+          <p className="text-slate-500">{t('common:loading.generic')}</p>
         )}
       </Card>
 
-      <Card title="Isolated copy">
+      <Card title={t('home:overview.isolatedTitle')}>
         {zones ? (
           <>
             <p className="font-medium">{zones.isolatedCopy.target}</p>
             <p className="mt-1 text-xs text-slate-500">
-              {zones.isolatedCopy.configured ? 'Đã cấu hình' : 'Chưa cấu hình'}
+              {zones.isolatedCopy.configured
+                ? t('common:configured.yes')
+                : t('common:configured.no')}
             </p>
           </>
         ) : (
-          <p className="text-slate-500">Đang tải...</p>
+          <p className="text-slate-500">{t('common:loading.generic')}</p>
         )}
       </Card>
     </div>

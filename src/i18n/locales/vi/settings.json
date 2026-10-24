@@ -1,0 +1,79 @@
+{
+  "meta": {
+    "title": "Cấu hình hệ thống",
+    "description": "Quản lý settings backup và nguồn dữ liệu."
+  },
+  "title": "Cấu hình hệ thống",
+  "subtitle": "General cho cấu hình chung; HIS/EMR/BADL cho từng nguồn dữ liệu.",
+  "category": {
+    "backup": "General",
+    "his": "HIS",
+    "emr": "EMR",
+    "badl": "BADL",
+    "lis": "LIS",
+    "alerts": "Cảnh báo"
+  },
+  "filters": {
+    "all": "Tất cả"
+  },
+  "secretMask": "••••••••",
+  "banner": {
+    "runtime": "Một số giá trị (thư mục backup, cron) có thể cần restart backend sau khi đổi. Secret không trả plaintext từ API.",
+    "backupInProgress": "Đang có backup chạy — tạm khoá sửa cron/timezone cho đến khi job kết thúc."
+  },
+  "schedule": {
+    "title": "Lịch backup tự động",
+    "currentOn": "Hiện tại: Đang bật",
+    "currentOff": "Hiện tại: Đã tắt",
+    "noDbSetting": "Chưa có setting trong DB — dùng env fallback.",
+    "updating": "Đang cập nhật...",
+    "turnOff": "Tắt lịch",
+    "turnOn": "Bật lịch"
+  },
+  "errors": {
+    "editWhileBackup": "Không thể sửa {{key}} khi đang có backup chạy. Đợi job kết thúc rồi thử lại."
+  },
+  "confirm": {
+    "restartRequired": "Đổi {{key}} cần restart backend để có hiệu lực. Tiếp tục?",
+    "scheduleOn": "Bật lịch backup tự động?",
+    "scheduleOff": "Tắt lịch backup tự động?"
+  },
+  "table": {
+    "key": "Key",
+    "category": "Category",
+    "value": "Value",
+    "updated": "Cập nhật",
+    "actions": "Thao tác"
+  },
+  "badge": {
+    "secret": "secret"
+  },
+  "empty": "Chưa có setting nào.",
+  "tooltip": {
+    "lockedCron": "Đang backup — không sửa cron/timezone"
+  },
+  "loading": "Đang tải danh sách...",
+  "modal": {
+    "title": "Sửa setting",
+    "key": "Key",
+    "value": "Giá trị",
+    "valueSecretRequired": "Giá trị mới (bắt buộc khi lưu secret)",
+    "secretPlaceholder": "•••••••• (đã có giá trị)",
+    "secretHelpHasValue": "Secret không trả về plaintext. Để trống nếu không đổi; nhập giá trị mới để ghi đè.",
+    "secretHelpEmpty": "Nhập giá trị secret mới.",
+    "restartHint": "Key này cần restart backend sau khi lưu để áp dụng.",
+    "saving": "Đang lưu...",
+    "save": "Lưu thay đổi"
+  },
+  "alertTest": {
+    "title": "Gửi thử cảnh báo",
+    "hint": "Lưu cấu hình Telegram/SMTP trước khi gửi thử.",
+    "sending": "Đang gửi...",
+    "sendTelegram": "Gửi thử Telegram",
+    "sendEmail": "Gửi thử Email",
+    "toastSuccessTitle": "Đã gửi thử",
+    "toastTelegramBody": "Tin nhắn test Telegram đã được gửi.",
+    "toastEmailBody": "Email test đã được gửi.",
+    "toastErrorTitle": "Gửi thử thất bại"
+  }
+}

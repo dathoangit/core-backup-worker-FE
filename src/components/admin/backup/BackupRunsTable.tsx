@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type {
   BackupMode,
   BackupRun,
@@ -48,6 +49,7 @@ export function BackupRunsTable({
   onTrigger,
   onCancel,
 }: BackupRunsTableProps) {
+  const { t } = useTranslation(['runs', 'common']);
   const [mode, setMode] = useState<BackupMode>('incremental');
   const [groups, setGroups] = useState<SourceGroup[]>(['HIS', 'EMR', 'LIS']);
   const [databasesRaw, setDatabasesRaw] = useState('');
@@ -103,23 +105,23 @@ export function BackupRunsTable({
     <div className="space-y-4">
       <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
         <h3 className="text-sm font-semibold text-slate-900">
-          Chạy backup thủ công (xếp hàng BullMQ)
+          {t('runs:manual.title')}
         </h3>
         <div className="mt-3 flex flex-col gap-3">
           <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
             <label className="block text-sm text-slate-700">
-              <span className="mb-1 block font-medium">Mode</span>
+              <span className="mb-1 block font-medium">{t('runs:manual.modeLabel')}</span>
               <select
                 value={mode}
                 onChange={(e) => setMode(e.target.value as BackupMode)}
                 className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm">
-                <option value="incremental">Incremental</option>
-                <option value="full">Full</option>
+                <option value="incremental">{t('common:mode.incremental')}</option>
+                <option value="full">{t('common:mode.full')}</option>
               </select>
             </label>
             <fieldset>
               <legend className="mb-1 text-sm font-medium text-slate-700">
-                Groups
+                {t('runs:manual.groupsLegend')}
               </legend>
               <div className="flex flex-wrap gap-2">
                 {SOURCE_GROUPS.map((group) => (
@@ -140,13 +142,13 @@ export function BackupRunsTable({
           </div>
           <label className="block text-sm text-slate-700">
             <span className="mb-1 block font-medium">
-              Databases (optional, CSV)
+              {t('runs:manual.databasesLabel')}
             </span>
             <input
               type="text"
               value={databasesRaw}
               onChange={(e) => setDatabasesRaw(e.target.value)}
-              placeholder="produce,signer — trống = tất cả DB trong group"
+              placeholder={t('runs:manual.databasesPlaceholder')}
               className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
             />
           </label>
@@ -156,7 +158,7 @@ export function BackupRunsTable({
               disabled={triggering || groups.length === 0}
               onClick={() => void handleTrigger()}
               className="inline-flex justify-center rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60">
-              {triggering ? 'Đang xếp hàng...' : 'Xếp hàng backup'}
+              {triggering ? t('runs:manual.queueing') : t('runs:manual.queueButton')}
             </button>
           </div>
         </div>
@@ -165,10 +167,12 @@ export function BackupRunsTable({
       {runningRuns.length > 0 || queuedRuns.length > 0 ? (
         <div className="grid gap-3 md:grid-cols-2">
           <div className="rounded-lg border border-sky-200 bg-sky-50/60 p-4">
-            <h3 className="text-sm font-semibold text-sky-900">Đang chạy</h3>
+            <h3 className="text-sm font-semibold text-sky-900">
+              {t('runs:sections.running')}
+            </h3>
             <ul className="mt-2 space-y-2">
               {runningRuns.length === 0 ? (
-                <li className="text-xs text-sky-800/80">Không có job đang chạy</li>
+                <li className="text-xs text-sky-800/80">{t('runs:sections.runningEmpty')}</li>
               ) : (
                 runningRuns.map((run) => (
                   <li
@@ -191,7 +195,9 @@ export function BackupRunsTable({
                       disabled={cancellingRunId === run.runId}
                       onClick={() => void onCancel(run.runId)}
                       className="shrink-0 rounded-md border border-red-200 px-2 py-1 font-medium text-red-700 hover:bg-red-50 disabled:opacity-50">
-                      {cancellingRunId === run.runId ? '...' : 'Hủy'}
+                      {cancellingRunId === run.runId
+                        ? t('common:ellipsis')
+                        : t('common:actions.cancel')}
                     </button>
                   </li>
                 ))
@@ -199,10 +205,12 @@ export function BackupRunsTable({
             </ul>
           </div>
           <div className="rounded-lg border border-violet-200 bg-violet-50/60 p-4">
-            <h3 className="text-sm font-semibold text-violet-900">Hàng đợi</h3>
+            <h3 className="text-sm font-semibold text-violet-900">
+              {t('runs:sections.queue')}
+            </h3>
             <ul className="mt-2 space-y-2">
               {queuedRuns.length === 0 ? (
-                <li className="text-xs text-violet-800/80">Hàng đợi trống</li>
+                <li className="text-xs text-violet-800/80">{t('runs:sections.queueEmpty')}</li>
               ) : (
                 queuedRuns.map((run, index) => (
                   <li
@@ -225,7 +233,9 @@ export function BackupRunsTable({
                       disabled={cancellingRunId === run.runId}
                       onClick={() => void onCancel(run.runId)}
                       className="shrink-0 rounded-md border border-red-200 px-2 py-1 font-medium text-red-700 hover:bg-red-50 disabled:opacity-50">
-                      {cancellingRunId === run.runId ? '...' : 'Hủy'}
+                      {cancellingRunId === run.runId
+                        ? t('common:ellipsis')
+                        : t('common:actions.cancel')}
                     </button>
                   </li>
                 ))
@@ -236,7 +246,7 @@ export function BackupRunsTable({
       ) : null}
 
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-xs font-medium text-slate-600">Lọc status:</span>
+        <span className="text-xs font-medium text-slate-600">{t('runs:filter.label')}</span>
         {STATUS_FILTERS.map((status) => (
           <button
             key={status}
@@ -247,7 +257,7 @@ export function BackupRunsTable({
                 ? 'bg-slate-900 text-white'
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
             }`}>
-            {status === 'all' ? 'Tất cả' : backupRunStatusLabel(status)}
+            {status === 'all' ? t('common:filter.all') : backupRunStatusLabel(status)}
           </button>
         ))}
       </div>
@@ -256,20 +266,20 @@ export function BackupRunsTable({
         <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead>
             <tr className="text-left text-slate-500">
-              <th className="px-3 py-2 font-medium">Run ID</th>
-              <th className="px-3 py-2 font-medium">Status</th>
-              <th className="px-3 py-2 font-medium">Mode</th>
-              <th className="px-3 py-2 font-medium">Trigger</th>
-              <th className="px-3 py-2 font-medium">Bắt đầu</th>
-              <th className="px-3 py-2 font-medium">Kết thúc</th>
-              <th className="px-3 py-2 font-medium">Thao tác</th>
+              <th className="px-3 py-2 font-medium">{t('runs:table.runId')}</th>
+              <th className="px-3 py-2 font-medium">{t('runs:table.status')}</th>
+              <th className="px-3 py-2 font-medium">{t('runs:table.mode')}</th>
+              <th className="px-3 py-2 font-medium">{t('runs:table.trigger')}</th>
+              <th className="px-3 py-2 font-medium">{t('runs:table.started')}</th>
+              <th className="px-3 py-2 font-medium">{t('runs:table.ended')}</th>
+              <th className="px-3 py-2 font-medium">{t('runs:table.actions')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {filteredRuns.length === 0 ? (
               <tr>
                 <td colSpan={7} className="px-3 py-6 text-center text-slate-500">
-                  Chưa có backup run.
+                  {t('runs:table.empty')}
                 </td>
               </tr>
             ) : (
@@ -294,14 +304,14 @@ export function BackupRunsTable({
                   <td className="px-3 py-3 text-slate-600">
                     {run.finishedAt
                       ? formatIsoAsLocalDateTime(run.finishedAt)
-                      : '—'}
+                      : t('common:emDash')}
                   </td>
                   <td className="px-3 py-3">
                     <div className="flex items-center gap-3">
                       <Link
                         href={`/runs/${encodeURIComponent(run.runId)}`}
                         className="text-sm font-medium text-sky-700 hover:underline">
-                        Xem
+                        {t('common:actions.view')}
                       </Link>
                       {canCancel(run.status) ? (
                         <button
@@ -309,7 +319,9 @@ export function BackupRunsTable({
                           disabled={cancellingRunId === run.runId}
                           onClick={() => void onCancel(run.runId)}
                           className="text-sm font-medium text-red-700 hover:underline disabled:opacity-50">
-                          {cancellingRunId === run.runId ? '...' : 'Hủy'}
+                          {cancellingRunId === run.runId
+                            ? t('common:ellipsis')
+                            : t('common:actions.cancel')}
                         </button>
                       ) : null}
                     </div>
@@ -323,7 +335,7 @@ export function BackupRunsTable({
 
       <div className="space-y-3 md:hidden">
         {filteredRuns.length === 0 ? (
-          <p className="text-sm text-slate-500">Chưa có backup run.</p>
+          <p className="text-sm text-slate-500">{t('runs:table.empty')}</p>
         ) : (
           filteredRuns.map((run) => (
             <article
@@ -342,15 +354,15 @@ export function BackupRunsTable({
               </div>
               <dl className="mt-3 space-y-1 text-xs text-slate-600">
                 <div>
-                  <dt className="inline font-medium">Mode: </dt>
+                  <dt className="inline font-medium">{t('runs:table.mode')}: </dt>
                   <dd className="inline">{run.mode}</dd>
                 </div>
                 <div>
-                  <dt className="inline font-medium">Trigger: </dt>
+                  <dt className="inline font-medium">{t('runs:table.trigger')}: </dt>
                   <dd className="inline">{run.trigger}</dd>
                 </div>
                 <div>
-                  <dt className="inline font-medium">Bắt đầu: </dt>
+                  <dt className="inline font-medium">{t('runs:mobile.startedAt')} </dt>
                   <dd className="inline">
                     {formatIsoAsLocalDateTime(run.startedAt)}
                   </dd>
@@ -360,7 +372,7 @@ export function BackupRunsTable({
                 <Link
                   href={`/runs/${encodeURIComponent(run.runId)}`}
                   className="text-sm font-medium text-sky-700 hover:underline">
-                  Xem chi tiết
+                  {t('common:actions.viewDetails')}
                 </Link>
                 {canCancel(run.status) ? (
                   <button
@@ -368,7 +380,9 @@ export function BackupRunsTable({
                     disabled={cancellingRunId === run.runId}
                     onClick={() => void onCancel(run.runId)}
                     className="text-sm font-medium text-red-700 hover:underline disabled:opacity-50">
-                    {cancellingRunId === run.runId ? '...' : 'Hủy'}
+                    {cancellingRunId === run.runId
+                      ? t('common:ellipsis')
+                      : t('common:actions.cancel')}
                   </button>
                 ) : null}
               </div>

@@ -1,5 +1,6 @@
 import { useRouter } from 'next/router';
 import { useEffect, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { isAdminOnlyPath } from 'src/auth/admin-paths';
 import { useAuth } from 'src/auth/context';
 import { getDefaultLandingPath } from 'src/auth/role-routing';
@@ -25,6 +26,7 @@ function AuthLoadingScreen({ message }: { message: string }) {
 export function AuthGate({ children }: { children: ReactNode }) {
   const router = useRouter();
   const { isAuthenticated, isBootstrapping, user } = useAuth();
+  const { t } = useTranslation('layout');
   const path = router.pathname;
   const isPublic = isPathPublic(path);
   const isProtected = isPathProtected(path);
@@ -63,19 +65,19 @@ export function AuthGate({ children }: { children: ReactNode }) {
   ]);
 
   if (isBootstrapping) {
-    return <AuthLoadingScreen message="Checking auth session..." />;
+    return <AuthLoadingScreen message={t('authGate.checkingSession')} />;
   }
 
   if (!isAuthenticated && isProtected) {
-    return <AuthLoadingScreen message="Redirecting to login..." />;
+    return <AuthLoadingScreen message={t('authGate.redirectLogin')} />;
   }
 
   if (isAuthenticated && path === '/login') {
-    return <AuthLoadingScreen message="Redirecting to home..." />;
+    return <AuthLoadingScreen message={t('authGate.redirectHome')} />;
   }
 
   if (isAuthenticated && needsAdmin && user?.role !== 'admin') {
-    return <AuthLoadingScreen message="Redirecting..." />;
+    return <AuthLoadingScreen message={t('authGate.redirectGeneric')} />;
   }
 
   return <>{children}</>;

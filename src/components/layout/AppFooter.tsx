@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { useTranslation } from 'react-i18next';
 import {
   APP_BRAND_SHORT_NAME,
   APP_BRAND_THEME,
@@ -11,6 +12,7 @@ import { HOME_PATH } from 'src/auth/role-routing';
 const footerLinkClass = `text-sm ${APP_BRAND_THEME.footer.accent} transition ${APP_BRAND_THEME.footer.linkHover}`;
 
 export function AppFooter() {
+  const { t } = useTranslation('layout');
   const year = new Date().getFullYear();
 
   return (
@@ -34,14 +36,18 @@ export function AppFooter() {
           </Link>
           <nav
             className="mt-3 flex flex-wrap gap-x-4 gap-y-1"
-            aria-label="Điều hướng chân trang">
+            aria-label={t('footer.ariaNav')}>
             <Link href={HOME_PATH} className={`text-xs ${footerLinkClass}`}>
-              Trang chủ
+              {t('footer.home')}
             </Link>
           </nav>
           <p
             className={`mt-3 text-[11px] leading-snug ${APP_BRAND_THEME.footer.muted}`}>
-            © {year} {APP_ORG_NAME} · {APP_BRAND_SHORT_NAME}
+            {t('footer.copyrightCompact', {
+              year,
+              org: APP_ORG_NAME,
+              brand: APP_BRAND_SHORT_NAME,
+            })}
           </p>
         </div>
 
@@ -63,19 +69,18 @@ export function AppFooter() {
             </Link>
             <p
               className={`mt-4 max-w-sm text-sm leading-relaxed ${APP_BRAND_THEME.footer.muted}`}>
-              Base web app shell kết nối backend NestJS — sẵn sàng mở rộng module
-              nghiệp vụ tại {APP_ORG_NAME}.
+              {t('footer.tagline', { org: APP_ORG_NAME })}
             </p>
           </div>
 
           <div className="md:col-span-3">
             <h2 className="text-xs font-semibold uppercase tracking-wider text-white">
-              Điều hướng
+              {t('footer.navSection')}
             </h2>
             <ul className="mt-4 space-y-2.5">
               <li>
                 <Link href={HOME_PATH} className={footerLinkClass}>
-                  Trang chủ
+                  {t('footer.home')}
                 </Link>
               </li>
             </ul>
@@ -83,19 +88,19 @@ export function AppFooter() {
 
           <div className="md:col-span-4">
             <h2 className="text-xs font-semibold uppercase tracking-wider text-white">
-              Đơn vị vận hành
+              {t('footer.operatorSection')}
             </h2>
             <dl
               className={`mt-4 space-y-3 text-sm ${APP_BRAND_THEME.footer.accent}`}>
               <div>
                 <dt className={`text-xs ${APP_BRAND_THEME.footer.muted}`}>
-                  Cơ sở y tế
+                  {t('footer.facility')}
                 </dt>
                 <dd className="mt-0.5 font-medium text-white">{APP_ORG_NAME}</dd>
               </div>
               <div>
                 <dt className={`text-xs ${APP_BRAND_THEME.footer.muted}`}>
-                  Nền tảng
+                  {t('footer.platform')}
                 </dt>
                 <dd className="mt-0.5 font-medium text-white">
                   {APP_BRAND_SHORT_NAME}
@@ -107,8 +112,10 @@ export function AppFooter() {
 
         <div
           className={`hidden border-t pt-6 text-xs md:mt-10 md:flex md:flex-row md:items-center md:justify-between ${APP_BRAND_THEME.footer.divider} ${APP_BRAND_THEME.footer.muted}`}>
-          <p>© {year} {APP_ORG_NAME}. Bảo lưu mọi quyền.</p>
-          <p className="md:text-right">{APP_BRAND_SHORT_NAME} — Phiên bản nội bộ</p>
+          <p>{t('footer.copyrightFull', { year, org: APP_ORG_NAME })}</p>
+          <p className="md:text-right">
+            {t('footer.internalVersion', { brand: APP_BRAND_SHORT_NAME })}
+          </p>
         </div>
       </div>
     </footer>

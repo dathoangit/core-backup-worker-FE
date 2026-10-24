@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   fetchBackupRuns,
   fetchBackupSources,
@@ -31,7 +32,19 @@ export function DatabaseDetailPanel({
   group,
   database,
 }: DatabaseDetailPanelProps) {
+  const { t } = useTranslation(['runs', 'common']);
   const { role } = useAuth();
+
+  const reachabilityLabel = (reachability: BackupSource['reachability']) => {
+    if (
+      reachability === 'ready' ||
+      reachability === 'unconfigured' ||
+      reachability === 'unreachable'
+    ) {
+      return t(`common:reachability.${reachability}`);
+    }
+    return reachability;
+  };
   const [loading, setLoading] = useState(true);
   const loadedKeyRef = useRef<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -113,7 +126,7 @@ export function DatabaseDetailPanel({
         <Link
           href="/"
           className="text-sm font-medium text-sky-700 hover:underline">
-          ← Tổng quan
+          {t('runs:databaseDetail.backLink')}
         </Link>
 
         <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -135,12 +148,12 @@ export function DatabaseDetailPanel({
               type="button"
               onClick={() => void load()}
               className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
-              Làm mới
+              {t('common:actions.refresh')}
             </button>
             <Link
               href={`/config?category=${configCategory}`}
               className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
-              Sửa cấu hình nguồn
+              {t('runs:databaseDetail.editSource')}
             </Link>
           </div>
         </div>
@@ -152,32 +165,40 @@ export function DatabaseDetailPanel({
         ) : null}
 
         {loading && !source ? (
-          <p className="mt-6 text-sm text-slate-600">Đang tải...</p>
+          <p className="mt-6 text-sm text-slate-600">{t('common:loading.generic')}</p>
         ) : (
           <dl className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <div>
-              <dt className="text-xs font-medium text-slate-500">Reachability</dt>
+              <dt className="text-xs font-medium text-slate-500">
+                {t('runs:databaseDetail.reachability')}
+              </dt>
               <dd className="mt-1">
                 {source ? (
                   <span
                     className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${reachabilityClass(
                       source.reachability,
                     )}`}>
-                    {source.reachability}
+                    {reachabilityLabel(source.reachability)}
                   </span>
                 ) : (
-                  <span className="text-sm text-slate-500">Không tìm thấy source</span>
+                  <span className="text-sm text-slate-500">
+                    {t('runs:databaseDetail.sourceNotFound')}
+                  </span>
                 )}
               </dd>
             </div>
             <div>
-              <dt className="text-xs font-medium text-slate-500">Watermark</dt>
+              <dt className="text-xs font-medium text-slate-500">
+                {t('runs:databaseDetail.watermark')}
+              </dt>
               <dd className="mt-1 break-all font-mono text-sm text-slate-900">
-                {watermark ?? '—'}
+                {watermark ?? t('common:emDash')}
               </dd>
             </div>
             <div>
-              <dt className="text-xs font-medium text-slate-500">Runs liên quan</dt>
+              <dt className="text-xs font-medium text-slate-500">
+                {t('runs:databaseDetail.relatedRuns')}
+              </dt>
               <dd className="mt-1 text-sm text-slate-900">{relatedRuns.length}</dd>
             </div>
           </dl>
@@ -189,10 +210,12 @@ export function DatabaseDetailPanel({
       </div>
 
       <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        <h2 className="text-lg font-semibold text-slate-900">Lịch sử gần đây</h2>
+        <h2 className="text-lg font-semibold text-slate-900">
+          {t('runs:databaseDetail.historyTitle')}
+        </h2>
         {relatedRuns.length === 0 ? (
           <p className="mt-3 text-sm text-slate-500">
-            Chưa có run nào ghi nhận database này trong 50 lần gần nhất.
+            {t('runs:databaseDetail.historyEmpty')}
           </p>
         ) : (
           <div className="mt-4 space-y-3">
@@ -227,7 +250,9 @@ export function DatabaseDetailPanel({
                           className={`rounded-full px-2 py-0.5 text-xs font-medium ${databaseRunStatusClass(
                             dbRow.status,
                           )}`}>
-                          db: {dbRow.status}
+                          {t('runs:databaseDetail.dbStatusPrefix', {
+                            status: dbRow.status,
+                          })}
                         </span>
                       ) : null}
                     </div>
@@ -235,7 +260,7 @@ export function DatabaseDetailPanel({
                   <Link
                     href={`/runs/${encodeURIComponent(run.runId)}`}
                     className="mt-3 inline-block text-sm font-medium text-sky-700 hover:underline">
-                    Xem chi tiết run
+                    {t('runs:databaseDetail.viewRun')}
                   </Link>
                 </article>
               );
@@ -247,9 +272,11 @@ export function DatabaseDetailPanel({
       <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">Restore plan</h2>
+            <h2 className="text-lg font-semibold text-slate-900">
+              {t('runs:databaseDetail.restoreTitle')}
+            </h2>
             <p className="mt-1 text-sm text-slate-600">
-              Kế hoạch khôi phục (chỉ xem, không thực thi).
+              {t('runs:databaseDetail.restoreSubtitle')}
             </p>
           </div>
           <button
@@ -257,7 +284,9 @@ export function DatabaseDetailPanel({
             disabled={planLoading}
             onClick={() => void loadRestorePlan()}
             className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60">
-            {planLoading ? 'Đang tải...' : 'Tải lại plan'}
+            {planLoading
+              ? t('common:loading.generic')
+              : t('runs:databaseDetail.reloadPlan')}
           </button>
         </div>
 
@@ -277,7 +306,7 @@ export function DatabaseDetailPanel({
               </ul>
             ) : null}
             {plan.steps.length === 0 ? (
-              <p className="text-sm text-slate-500">Không có bước restore.</p>
+              <p className="text-sm text-slate-500">{t('runs:databaseDetail.restoreEmpty')}</p>
             ) : (
               <ol className="space-y-2">
                 {plan.steps.map((step) => (
@@ -296,7 +325,7 @@ export function DatabaseDetailPanel({
             )}
           </div>
         ) : !planLoading && !planError ? (
-          <p className="mt-4 text-sm text-slate-500">Chưa có plan.</p>
+          <p className="mt-4 text-sm text-slate-500">{t('runs:databaseDetail.noPlan')}</p>
         ) : null}
       </div>
     </section>

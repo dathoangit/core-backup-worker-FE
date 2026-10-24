@@ -63,13 +63,14 @@ export function isRestartRequiredSettingKey(key: string): boolean {
   return /^BACKUP_INCREMENTAL_CRON_[A-Za-z][A-Za-z0-9_]*$/.test(key);
 }
 
-export const SETTING_CATEGORY_LABELS: Record<SettingCategory, string> = {
-  backup: 'General',
-  his: 'HIS',
-  emr: 'EMR',
-  badl: 'BADL',
-  lis: 'LIS',
-  alerts: 'Cảnh báo',
+/** Category ids for filters; display labels via i18n `settings:category.*`. */
+export const SETTING_CATEGORY_LABELS: Record<SettingCategory, SettingCategory> = {
+  backup: 'backup',
+  his: 'his',
+  emr: 'emr',
+  badl: 'badl',
+  lis: 'lis',
+  alerts: 'alerts',
 };
 
 export const ALLOWLISTED_SETTING_KEYS: Array<{

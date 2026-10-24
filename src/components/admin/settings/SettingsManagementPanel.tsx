@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import i18n from 'src/i18n';
 import { fetchBackupRuns, fetchBackupZones } from 'src/auth/backup-api';
 import { useAuth } from 'src/auth/context';
 import { fetchSettings, updateSetting } from 'src/auth/settings-api';
@@ -12,7 +14,6 @@ import type {
 } from 'src/types/settings';
 import {
   isRestartRequiredSettingKey,
-  SETTING_CATEGORY_LABELS,
   SETTING_SCHEDULE_ENABLED_KEY,
 } from 'src/types/settings';
 import { formatIsoAsLocalDateTime } from 'src/utils/date-vn';
@@ -22,19 +23,17 @@ import { SettingFormModal } from './SettingFormModal';
 
 type CategoryFilter = SettingCategory | 'all';
 
-const CATEGORY_FILTERS: Array<{ id: CategoryFilter; label: string }> = [
-  { id: 'all', label: 'Tất cả' },
-  { id: 'backup', label: 'General' },
-  { id: 'his', label: 'HIS' },
-  { id: 'emr', label: 'EMR' },
-  { id: 'badl', label: 'BADL' },
-  { id: 'lis', label: 'LIS' },
-  { id: 'alerts', label: 'Cảnh báo' },
+const CATEGORY_FILTER_IDS_LIST: CategoryFilter[] = [
+  'all',
+  'backup',
+  'his',
+  'emr',
+  'badl',
+  'lis',
+  'alerts',
 ];
 
-const CATEGORY_FILTER_IDS = new Set<CategoryFilter>(
-  CATEGORY_FILTERS.map((item) => item.id),
-);
+const CATEGORY_FILTER_IDS = new Set<CategoryFilter>(CATEGORY_FILTER_IDS_LIST);
 
 function parseCategoryFilter(value: unknown): CategoryFilter | null {
   if (typeof value !== 'string') {
@@ -53,17 +52,23 @@ function isTruthySetting(value: string | null | undefined): boolean {
 
 function displaySettingValue(setting: AppSetting): string {
   if (setting.isSecret) {
-    return setting.hasValue ? '••••••••' : '—';
+    return setting.hasValue
+      ? i18n.t('settings:secretMask')
+      : i18n.t('common:emDash');
   }
   if (setting.value === null || setting.value === '') {
-    return '—';
+    return i18n.t('common:emDash');
   }
   return setting.value;
 }
 
 export function SettingsManagementPanel() {
+  const { t } = useTranslation(['settings', 'common', 'layout']);
   const router = useRouter();
   const { role } = useAuth();
+
+  const categoryFilterLabel = (id: CategoryFilter) =>
+    id === 'all' ? t('settings:filters.all') : t(`settings:category.${id}`);
   const [settings, setSettings] = useState<AppSetting[]>([]);
   const [scheduleSetting, setScheduleSetting] = useState<AppSetting | null>(null);
   const [category, setCategory] = useState<CategoryFilter>('all');
@@ -173,9 +178,7 @@ export function SettingsManagementPanel() {
 
   const openEditForm = (setting: AppSetting) => {
     if (!canEditSetting(setting)) {
-      setPanelError(
-        `Không thể sửa ${setting.key} khi đang có backup chạy. Đợi backup xong rồi sửa; sau đó restart backend để cron/timezone có hiệu lực.`,
-      );
+      setPanelError(t('settings:errors.editWhileBackup', { key: setting.key }));
       return;
     }
 
@@ -190,15 +193,13 @@ export function SettingsManagementPanel() {
     }
 
     if (isRestartRequiredSettingKey(key) && backupInProgress) {
-      setFormError(
-        `Không thể sửa ${key} khi đang có backup chạy.`,
-      );
+      setFormError(t('settings:errors.editWhileBackup', { key }));
       return;
     }
 
     if (isRestartRequiredSettingKey(key)) {
       const confirmed = window.confirm(
-        `Đổi ${key} cần restart backend mới có hiệu lực. Tiếp tục lưu?`,
+        t('settings:confirm.restartRequired', { key }),
       );
       if (!confirmed) {
         return;
@@ -227,8 +228,8 @@ export function SettingsManagementPanel() {
     const nextValue = scheduleEnabled ? 'false' : 'true';
     const confirmed = window.confirm(
       nextValue === 'true'
-        ? 'Bật lịch backup tự động? Job đã đăng ký sẽ chạy đúng lịch cron (không cần restart).'
-        : 'Tắt lịch backup tự động? Job cron vẫn giữ đăng ký nhưng sẽ bỏ qua khi tới giờ.',
+        ? t('settings:confirm.scheduleOn')
+        : t('settings:confirm.scheduleOff'),
     );
     if (!confirmed) {
       return;
@@ -253,43 +254,41 @@ export function SettingsManagementPanel() {
     <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-slate-900">Cấu hình hệ thống</h2>
-          <p className="mt-1 text-sm text-slate-600">
-            General cho cấu hình chung; HIS/EMR/BADL cho từng nguồn dữ liệu.
-          </p>
+          <h2 className="text-lg font-semibold text-slate-900">{t('settings:title')}</h2>
+          <p className="mt-1 text-sm text-slate-600">{t('settings:subtitle')}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link
             href="/"
             className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
-            Tổng quan
+            {t('layout:nav.overview')}
           </Link>
         </div>
       </div>
 
       <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-        Cấu hình backup (đường dẫn, nguồn, cron, số ngày giữ, cảnh báo) lưu trong
-        DB — sửa tại đây; password được mã hoá. Runtime{' '}
-        <span className="font-mono text-xs">.env</span> chỉ còn DB/Redis/JWT. Không
-        sửa cron khi đang backup. Bật/tắt lịch qua nút bên dưới có hiệu lực ngay.
+        {t('settings:banner.runtime')}
       </div>
 
       {backupInProgress ? (
         <div
           className="mt-4 rounded-lg border border-sky-200 bg-sky-50 p-3 text-sm text-sky-900"
           role="status">
-          Đang có backup chạy — tạm khoá sửa cron/timezone. Các setting khác vẫn
-          sửa được.
+          {t('settings:banner.backupInProgress')}
         </div>
       ) : null}
 
       <div className="mt-4 flex flex-col gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-sm font-semibold text-slate-900">Lịch backup tự động</p>
+          <p className="text-sm font-semibold text-slate-900">
+            {t('settings:schedule.title')}
+          </p>
           <p className="mt-1 text-xs text-slate-600">
             {scheduleSetting
-              ? `Hiện tại: ${scheduleEnabled ? 'Đang bật' : 'Đã tắt'}`
-              : 'Chưa có setting trong DB — dùng env fallback.'}
+              ? scheduleEnabled
+                ? t('settings:schedule.currentOn')
+                : t('settings:schedule.currentOff')
+              : t('settings:schedule.noDbSetting')}
           </p>
         </div>
         <button
@@ -302,25 +301,25 @@ export function SettingsManagementPanel() {
               : 'bg-emerald-600 hover:bg-emerald-700'
           }`}>
           {schedulePending
-            ? 'Đang cập nhật...'
+            ? t('settings:schedule.updating')
             : scheduleEnabled
-              ? 'Tắt lịch'
-              : 'Bật lịch'}
+              ? t('settings:schedule.turnOff')
+              : t('settings:schedule.turnOn')}
         </button>
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2">
-        {CATEGORY_FILTERS.map((item) => (
+        {CATEGORY_FILTER_IDS_LIST.map((id) => (
           <button
-            key={item.id}
+            key={id}
             type="button"
-            onClick={() => selectCategory(item.id)}
+            onClick={() => selectCategory(id)}
             className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
-              category === item.id
+              category === id
                 ? 'bg-sky-600 text-white'
                 : 'text-slate-600 hover:bg-slate-100'
             }`}>
-            {item.label}
+            {categoryFilterLabel(id)}
           </button>
         ))}
       </div>
@@ -338,25 +337,25 @@ export function SettingsManagementPanel() {
       ) : null}
 
       {loading ? (
-        <p className="mt-6 text-sm text-slate-600">Đang tải danh sách...</p>
+        <p className="mt-6 text-sm text-slate-600">{t('settings:loading')}</p>
       ) : (
         <>
           <div className="mt-6 hidden overflow-x-auto md:block">
             <table className="min-w-full divide-y divide-slate-200 text-sm">
               <thead>
                 <tr className="text-left text-slate-500">
-                  <th className="px-3 py-2 font-medium">Key</th>
-                  <th className="px-3 py-2 font-medium">Category</th>
-                  <th className="px-3 py-2 font-medium">Value</th>
-                  <th className="px-3 py-2 font-medium">Cập nhật</th>
-                  <th className="px-3 py-2 font-medium">Thao tác</th>
+                  <th className="px-3 py-2 font-medium">{t('settings:table.key')}</th>
+                  <th className="px-3 py-2 font-medium">{t('settings:table.category')}</th>
+                  <th className="px-3 py-2 font-medium">{t('settings:table.value')}</th>
+                  <th className="px-3 py-2 font-medium">{t('settings:table.updated')}</th>
+                  <th className="px-3 py-2 font-medium">{t('settings:table.actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {settings.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="px-3 py-6 text-center text-slate-500">
-                      Chưa có setting nào.
+                      {t('settings:empty')}
                     </td>
                   </tr>
                 ) : (
@@ -366,12 +365,12 @@ export function SettingsManagementPanel() {
                         {setting.key}
                         {setting.isSecret ? (
                           <span className="ml-2 rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-600">
-                            secret
+                            {t('settings:badge.secret')}
                           </span>
                         ) : null}
                       </td>
                       <td className="px-3 py-3 text-slate-600">
-                        {SETTING_CATEGORY_LABELS[setting.category]}
+                        {t(`settings:category.${setting.category}`)}
                       </td>
                       <td className="max-w-xs truncate px-3 py-3 text-slate-600">
                         {displaySettingValue(setting)}
@@ -386,11 +385,11 @@ export function SettingsManagementPanel() {
                           title={
                             canEditSetting(setting)
                               ? undefined
-                              : 'Đang backup — không sửa cron/timezone'
+                              : t('settings:tooltip.lockedCron')
                           }
                           onClick={() => openEditForm(setting)}
                           className="rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm">
-                          Sửa
+                          {t('common:actions.edit')}
                         </button>
                       </td>
                     </tr>
@@ -402,7 +401,7 @@ export function SettingsManagementPanel() {
 
           <div className="mt-6 space-y-3 md:hidden">
             {settings.length === 0 ? (
-              <p className="text-sm text-slate-500">Chưa có setting nào.</p>
+              <p className="text-sm text-slate-500">{t('settings:empty')}</p>
             ) : (
               settings.map((setting) => (
                 <article
@@ -413,7 +412,7 @@ export function SettingsManagementPanel() {
                       {setting.key}
                     </h3>
                     <span className="shrink-0 rounded-full bg-white px-2 py-0.5 text-xs text-slate-600">
-                      {SETTING_CATEGORY_LABELS[setting.category]}
+                      {t(`settings:category.${setting.category}`)}
                     </span>
                   </div>
                   <p className="mt-2 break-all text-sm text-slate-700">
@@ -426,11 +425,11 @@ export function SettingsManagementPanel() {
                       title={
                         canEditSetting(setting)
                           ? undefined
-                          : 'Đang backup — không sửa cron/timezone'
+                          : t('settings:tooltip.lockedCron')
                       }
                       onClick={() => openEditForm(setting)}
                       className="rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-white disabled:cursor-not-allowed disabled:opacity-50">
-                      Sửa
+                      {t('common:actions.edit')}
                     </button>
                   </div>
                 </article>

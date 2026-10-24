@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { BackupRunProgressEvent } from 'src/types/backup-stream';
 import type { WallboardActiveJob } from 'src/types/wallboard';
 import {
@@ -74,6 +75,7 @@ export function ActiveJobStream({
   liveProgress,
   compact = false,
 }: ActiveJobStreamProps) {
+  const { t } = useTranslation('wallboard');
   const job = mergeJob(overviewJob, liveProgress);
   const running = Boolean(job && job.status === 'running');
 
@@ -85,9 +87,11 @@ export function ActiveJobStream({
         }`}>
         <span className="inline-block h-2 w-2 shrink-0 rounded-full bg-slate-400" />
         <div className="min-w-0">
-          <p className="text-xs font-medium text-slate-700">Idle — không có job RUNNING</p>
+          <p className="text-xs font-medium text-slate-700">
+            {t('activeJob.idleTitle')}
+          </p>
           <p className="truncate text-[10px] text-slate-500">
-            Progress / rows/s / ETA hiện khi backup chạy
+            {t('activeJob.idleHint')}
           </p>
         </div>
       </div>
@@ -113,7 +117,7 @@ export function ActiveJobStream({
 
       <div className="space-y-1">
         <div className="flex items-center justify-between text-xs text-slate-600">
-          <span>Progress</span>
+          <span>{t('activeJob.progress')}</span>
           <span className="font-semibold tabular-nums text-slate-900">
             {percent}%
           </span>
@@ -127,13 +131,16 @@ export function ActiveJobStream({
       </div>
 
       <div className="grid grid-cols-2 gap-1.5 text-[11px]">
-        <Metric label="Speed" value={formatRowsPerSec(job!.rowsPerSec)} />
-        <Metric label="Disk I/O" value={formatBytesPerSec(job!.bytesPerSec)} />
+        <Metric label={t('activeJob.speed')} value={formatRowsPerSec(job!.rowsPerSec)} />
+        <Metric label={t('activeJob.diskIo')} value={formatBytesPerSec(job!.bytesPerSec)} />
         <Metric
-          label="Rows"
-          value={`${formatCompactCount(job!.rowsProcessed)} / ${totalLabel}`}
+          label={t('activeJob.rows')}
+          value={t('activeJob.rowsProgress', {
+            processed: formatCompactCount(job!.rowsProcessed),
+            total: totalLabel,
+          })}
         />
-        <Metric label="ETA" value={formatEta(job!.etaSeconds)} emphasize />
+        <Metric label={t('activeJob.eta')} value={formatEta(job!.etaSeconds)} emphasize />
       </div>
     </div>
   );

@@ -1,11 +1,8 @@
 import type { AuthRole } from 'src/auth/types';
-
-const ROLE_LABELS: Record<AuthRole, string> = {
-  admin: 'Quản trị viên',
-  doctor: 'Bác sĩ',
-  nurse: 'Điều dưỡng',
-};
+import i18n from 'src/i18n';
 
 export function getRoleLabel(role: AuthRole): string {
-  return ROLE_LABELS[role] ?? role;
+  const key = `common:roles.${role}` as const;
+  const translated = i18n.t(key);
+  return translated === key ? role : translated;
 }

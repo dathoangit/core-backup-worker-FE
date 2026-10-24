@@ -3,6 +3,12 @@
  * Display uses the browser's default timezone ("machine" local time).
  */
 
+import i18n, { localeToBcp47 } from 'src/i18n';
+
+function activeDateLocale(): string {
+  return localeToBcp47(i18n.language);
+}
+
 /** YYYY-MM-DD for date inputs using the browser local calendar (avoids UTC day shift from `toISOString()`). */
 export function formatLocalDateInputValue(date: Date): string {
   const y = date.getFullYear();
@@ -16,7 +22,7 @@ export function formatIsoAsLocalDate(iso: string): string {
   if (Number.isNaN(t.getTime())) {
     return iso;
   }
-  return new Intl.DateTimeFormat('vi-VN', {
+  return new Intl.DateTimeFormat(activeDateLocale(), {
     dateStyle: 'short',
   }).format(t);
 }
@@ -26,7 +32,7 @@ export function formatIsoAsLocalDateTime(iso: string): string {
   if (Number.isNaN(t.getTime())) {
     return iso;
   }
-  return new Intl.DateTimeFormat('vi-VN', {
+  return new Intl.DateTimeFormat(activeDateLocale(), {
     dateStyle: 'short',
     timeStyle: 'short',
   }).format(t);

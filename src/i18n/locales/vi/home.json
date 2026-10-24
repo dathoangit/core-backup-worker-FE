@@ -1,0 +1,52 @@
+{
+  "meta": {
+    "title": "Tổng quan backup",
+    "description": "Theo dõi trạng thái backup các database."
+  },
+  "nonAdmin": {
+    "title": "Backup monitor",
+    "message": "Tài khoản của bạn không có quyền xem dashboard backup."
+  },
+  "title": "Tổng quan backup",
+  "subtitle": "Theo dõi trạng thái các database đang được backup.",
+  "actions": {
+    "runBackup": "Chạy backup"
+  },
+  "loading": {
+    "overview": "Đang tải overview..."
+  },
+  "databases": {
+    "sectionTitle": "Databases",
+    "hint": "Bấm Start trên database ready để backup incremental ngay; hoặc mở chi tiết để xem watermark / restore plan.",
+    "loading": "Đang tải danh sách...",
+    "empty": "Chưa có database nào. Thêm cấu hình nguồn tại Cấu hình.",
+    "unconfiguredPlaceholder": "(chưa cấu hình)"
+  },
+  "card": {
+    "watermark": "Watermark",
+    "lastRun": "Lần chạy gần nhất",
+    "dbStatus": "DB status",
+    "timestamp": "Thời điểm",
+    "configure": "Cấu hình",
+    "tooltipStartWhenReady": "Chỉ Start khi source ready",
+    "tooltipBackupRunning": "Đang có backup chạy",
+    "tooltipStartIncremental": "Backup incremental database này",
+    "starting": "Đang gửi...",
+    "start": "Start"
+  },
+  "overview": {
+    "scheduleTitle": "Lịch tự động",
+    "scheduleUnknown": "Chưa rõ",
+    "scheduleHint": "Quản lý tại mục Cấu hình.",
+    "primaryTitle": "Primary zone",
+    "dirExists": "Thư mục tồn tại",
+    "dirMissing": "Chưa có thư mục",
+    "runCount": "{{count}} run",
+    "volumesHint": "· HIS/EMR/LIS volumes",
+    "lockTitle": "Lock",
+    "lockHeld": "Đang giữ lock",
+    "lockPid": "PID {{pid}}",
+    "lockFree": "Rảnh",
+    "isolatedTitle": "Isolated copy"
+  }
+}

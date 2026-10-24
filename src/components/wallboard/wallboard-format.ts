@@ -1,3 +1,5 @@
+import i18n from 'src/i18n';
+
 export function formatRelativeTime(iso: string | null | undefined): string {
   if (!iso) {
     return '—';
@@ -9,18 +11,18 @@ export function formatRelativeTime(iso: string | null | undefined): string {
 
   const diffSec = Math.round((Date.now() - t.getTime()) / 1000);
   if (diffSec < 60) {
-    return 'vừa xong';
+    return i18n.t('common:time.justNow');
   }
   const diffMin = Math.round(diffSec / 60);
   if (diffMin < 60) {
-    return `${diffMin} phút trước`;
+    return i18n.t('common:time.minutesAgo', { count: diffMin });
   }
   const diffHour = Math.round(diffMin / 60);
   if (diffHour < 48) {
-    return `${diffHour} giờ trước`;
+    return i18n.t('common:time.hoursAgo', { count: diffHour });
   }
   const diffDay = Math.round(diffHour / 24);
-  return `${diffDay} ngày trước`;
+  return i18n.t('common:time.daysAgo', { count: diffDay });
 }
 
 export function formatShortDay(dateKey: string): string {
@@ -69,7 +71,9 @@ export function formatCompactCount(n: number): string {
 }
 
 export function formatRowsPerSec(rowsPerSec: number): string {
-  return `${formatCompactCount(rowsPerSec)} rows/s`;
+  return i18n.t('wallboard:format.rowsPerSec', {
+    value: formatCompactCount(rowsPerSec),
+  });
 }
 
 export function formatBytesPerSec(bytesPerSec: number): string {
@@ -115,9 +119,15 @@ export function formatCountdown(targetIso: string | null | undefined): string {
   const hours = Math.floor((totalMin % (60 * 24)) / 60);
   const minutes = totalMin % 60;
   if (days > 0) {
-    return `${days}d ${String(hours).padStart(2, '0')}h`;
+    return i18n.t('wallboard:format.countdownDaysHours', {
+      days,
+      hours: String(hours).padStart(2, '0'),
+    });
   }
-  return `${String(hours).padStart(2, '0')}h ${String(minutes).padStart(2, '0')}m`;
+  return i18n.t('wallboard:format.countdownHoursMinutes', {
+    hours: String(hours).padStart(2, '0'),
+    minutes: String(minutes).padStart(2, '0'),
+  });
 }
 
 export function formatDailyGrowth(bytesPerDay: number | null | undefined): string {
@@ -125,9 +135,11 @@ export function formatDailyGrowth(bytesPerDay: number | null | undefined): strin
     return '—';
   }
   if (bytesPerDay <= 0) {
-    return '+0 GB/day';
+    return i18n.t('wallboard:format.zeroGrowthPerDay');
   }
-  return `+${formatBytesShort(bytesPerDay)}/day`;
+  return i18n.t('wallboard:format.growthPerDay', {
+    value: formatBytesShort(bytesPerDay),
+  });
 }
 
 export function formatCompression(
@@ -151,16 +163,16 @@ export function lagBadge(lagMinutes: number | null | undefined): {
   label: string;
 } {
   if (lagMinutes == null || !Number.isFinite(lagMinutes)) {
-    return { tone: 'neutral', label: 'No lag data' };
+    return { tone: 'neutral', label: i18n.t('common:lag.noData') };
   }
   if (lagMinutes < 15) {
-    return { tone: 'ok', label: 'Lag <15m' };
+    return { tone: 'ok', label: i18n.t('common:lag.under15m') };
   }
   if (lagMinutes < 60) {
-    return { tone: 'warn', label: 'Lag <1h' };
+    return { tone: 'warn', label: i18n.t('common:lag.under1h') };
   }
   if (lagMinutes <= 6 * 60) {
-    return { tone: 'warn', label: 'Lag 1h–6h' };
+    return { tone: 'warn', label: i18n.t('common:lag.from1hTo6h') };
   }
-  return { tone: 'error', label: 'Lag >6h' };
+  return { tone: 'error', label: i18n.t('common:lag.over6h') };
 }

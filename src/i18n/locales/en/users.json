@@ -1,0 +1,45 @@
+{
+  "meta": {
+    "title": "User management",
+    "description": "Manage users, roles, and access."
+  },
+  "title": "User management",
+  "subtitle": "Add, edit, deactivate users and assign roles.",
+  "addUser": "Add user",
+  "loading": "Loading list...",
+  "actions": {
+    "edit": "Edit",
+    "deactivate": "Deactivate"
+  },
+  "confirm": {
+    "deactivate": "Deactivate account \"{{username}}\"? The user will no longer be able to sign in."
+  },
+  "table": {
+    "username": "Username",
+    "email": "Email",
+    "role": "Role",
+    "status": "Status",
+    "actions": "Actions"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "noEmail": "No email",
+  "mobile": {
+    "rolePrefix": "Role:"
+  },
+  "modal": {
+    "createTitle": "Add user",
+    "editTitle": "Edit user",
+    "username": "Username",
+    "email": "Email",
+    "password": "Password",
+    "passwordNew": "New password (leave blank to keep)",
+    "roleLabel": "System role",
+    "activeCheckbox": "Account is active",
+    "createSubmit": "Create user",
+    "editSubmit": "Save changes",
+    "saving": "Saving..."
+  }
+}

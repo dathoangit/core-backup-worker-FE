@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "title": "Backup file browser",
+    "description": "Browse backed-up .csv.gz files with size and checksum."
+  },
+  "title": "Backup file browser",
+  "subtitle": "Directory tree of .csv.gz by day / DB group. Select a database to list files and compute checksums.",
+  "loading": {
+    "tree": "Loading directory tree...",
+    "files": "Loading files..."
+  },
+  "empty": {
+    "tree": "No backup files yet.",
+    "files": "No files."
+  },
+  "prompt": {
+    "selectDb": "Select a database in the left tree to list files."
+  },
+  "table": {
+    "file": "File",
+    "kind": "Kind",
+    "size": "Size",
+    "rows": "Rows",
+    "sha256": "SHA-256",
+    "md5": "MD5"
+  },
+  "row": {
+    "runPrefix": "run {{runId}}"
+  },
+  "actions": {
+    "computeChecksum": "Compute checksum"
+  },
+  "tree": {
+    "fileCount": "{{count}} file(s) · {{size}}"
+  }
+}

@@ -1,5 +1,6 @@
 import { useRouter } from 'next/router';
 import { useEffect, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from 'src/auth/context';
 
 type AdminPageGateProps = {
@@ -10,6 +11,7 @@ type AdminPageGateProps = {
 export function AdminPageGate({ children }: AdminPageGateProps) {
   const router = useRouter();
   const { isBootstrapping, role } = useAuth();
+  const { t } = useTranslation('layout');
 
   useEffect(() => {
     if (isBootstrapping || role === 'admin') {
@@ -22,7 +24,7 @@ export function AdminPageGate({ children }: AdminPageGateProps) {
   if (isBootstrapping || role !== 'admin') {
     return (
       <main className="flex min-h-screen items-center justify-center px-6">
-        <p className="text-sm text-slate-600">Đang kiểm tra quyền truy cập...</p>
+        <p className="text-sm text-slate-600">{t('authGate.checkingAccess')}</p>
       </main>
     );
   }

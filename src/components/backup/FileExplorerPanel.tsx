@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import i18n from 'src/i18n';
 import {
   computeBackupFileChecksum,
   fetchBackupFiles,
@@ -17,7 +19,7 @@ type Selection = {
 
 function shortHash(value: string | null): string {
   if (!value) {
-    return '—';
+    return i18n.t('common:emDash');
   }
   if (value.length <= 16) {
     return value;
@@ -34,6 +36,7 @@ async function copyText(value: string): Promise<void> {
 }
 
 export function FileExplorerPanel() {
+  const { t, i18n: i18nInstance } = useTranslation(['files', 'common']);
   const { role } = useAuth();
   const [tree, setTree] = useState<BackupFilesTreeNode[]>([]);
   const [files, setFiles] = useState<BackupFileEntry[]>([]);
@@ -117,11 +120,8 @@ export function FileExplorerPanel() {
   return (
     <section className="space-y-4">
       <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        <h2 className="text-lg font-semibold text-slate-900">Tra cứu file backup</h2>
-        <p className="mt-1 text-sm text-slate-600">
-          Cây thư mục `.csv.gz` theo ngày / nhóm DB, kèm dung lượng và checksum
-          MD5/SHA-256.
-        </p>
+        <h2 className="text-lg font-semibold text-slate-900">{t('files:title')}</h2>
+        <p className="mt-1 text-sm text-slate-600">{t('files:subtitle')}</p>
         {error ? (
           <p className="mt-3 text-sm text-red-600" role="alert">
             {error}
@@ -132,9 +132,9 @@ export function FileExplorerPanel() {
       <div className="grid gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
         <aside className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
           {loadingTree ? (
-            <p className="p-2 text-sm text-slate-600">Đang tải cây thư mục...</p>
+            <p className="p-2 text-sm text-slate-600">{t('files:loading.tree')}</p>
           ) : tree.length === 0 ? (
-            <p className="p-2 text-sm text-slate-600">Chưa có file backup.</p>
+            <p className="p-2 text-sm text-slate-600">{t('files:empty.tree')}</p>
           ) : (
             <ul className="space-y-1 text-sm">
               {tree.map((node) => {
@@ -191,8 +191,10 @@ export function FileExplorerPanel() {
                                         {db.database}
                                       </span>
                                       <span className="mt-0.5 block text-xs text-slate-500">
-                                        {db.fileCount} file ·{' '}
-                                        {formatBytes(db.totalBytes)}
+                                        {t('files:tree.fileCount', {
+                                          count: db.fileCount,
+                                          size: formatBytes(db.totalBytes),
+                                        })}
                                       </span>
                                     </button>
                                   </li>
@@ -212,22 +214,20 @@ export function FileExplorerPanel() {
 
         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
           {!selection ? (
-            <p className="p-6 text-sm text-slate-600">
-              Chọn một database ở cây bên trái để xem danh sách file.
-            </p>
+            <p className="p-6 text-sm text-slate-600">{t('files:prompt.selectDb')}</p>
           ) : loadingFiles ? (
-            <p className="p-6 text-sm text-slate-600">Đang tải file...</p>
+            <p className="p-6 text-sm text-slate-600">{t('files:loading.files')}</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
                 <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                   <tr>
-                    <th className="px-4 py-3">File</th>
-                    <th className="px-4 py-3">Kind</th>
-                    <th className="px-4 py-3">Size</th>
-                    <th className="px-4 py-3">Rows</th>
-                    <th className="px-4 py-3">SHA-256</th>
-                    <th className="px-4 py-3">MD5</th>
+                    <th className="px-4 py-3">{t('files:table.file')}</th>
+                    <th className="px-4 py-3">{t('files:table.kind')}</th>
+                    <th className="px-4 py-3">{t('files:table.size')}</th>
+                    <th className="px-4 py-3">{t('files:table.rows')}</th>
+                    <th className="px-4 py-3">{t('files:table.sha256')}</th>
+                    <th className="px-4 py-3">{t('files:table.md5')}</th>
                     <th className="px-4 py-3"> </th>
                   </tr>
                 </thead>
@@ -239,7 +239,7 @@ export function FileExplorerPanel() {
                           {file.relativePath}
                         </p>
                         <p className="mt-1 text-xs text-slate-500">
-                          run {file.runId}
+                          {t('files:row.runPrefix', { runId: file.runId })}
                         </p>
                       </td>
                       <td className="px-4 py-3 text-xs uppercase text-slate-600">
@@ -249,7 +249,7 @@ export function FileExplorerPanel() {
                         {formatBytes(file.sizeBytes)}
                       </td>
                       <td className="px-4 py-3 tabular-nums text-slate-700">
-                        {file.rowCount.toLocaleString('vi-VN')}
+                        {file.rowCount.toLocaleString(i18nInstance.language)}
                       </td>
                       <td className="px-4 py-3">
                         <button
@@ -281,8 +281,8 @@ export function FileExplorerPanel() {
                             onClick={() => void handleChecksum(file.relativePath)}
                             className="rounded border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50">
                             {hashingPath === file.relativePath
-                              ? '...'
-                              : 'Tính checksum'}
+                              ? t('common:ellipsis')
+                              : t('files:actions.computeChecksum')}
                           </button>
                         ) : null}
                       </td>
@@ -291,7 +291,7 @@ export function FileExplorerPanel() {
                 </tbody>
               </table>
               {files.length === 0 ? (
-                <p className="p-6 text-sm text-slate-600">Không có file.</p>
+                <p className="p-6 text-sm text-slate-600">{t('files:empty.files')}</p>
               ) : null}
             </div>
           )}

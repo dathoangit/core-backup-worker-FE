@@ -1,0 +1,82 @@
+{
+  "actions": {
+    "refresh": "Refresh",
+    "save": "Save changes",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "close": "Close",
+    "edit": "Edit",
+    "view": "View",
+    "viewDetails": "View details",
+    "details": "Details",
+    "back": "Back"
+  },
+  "loading": {
+    "generic": "Loading..."
+  },
+  "errors": {
+    "generic": "Something went wrong."
+  },
+  "emDash": "—",
+  "ellipsis": "...",
+  "filter": {
+    "all": "All"
+  },
+  "toggle": {
+    "on": "Enabled",
+    "off": "Disabled"
+  },
+  "configured": {
+    "yes": "Configured",
+    "no": "Not configured"
+  },
+  "yesNo": {
+    "yes": "Yes",
+    "no": "No"
+  },
+  "roles": {
+    "admin": "Administrator",
+    "doctor": "Doctor",
+    "nurse": "Nurse"
+  },
+  "status": {
+    "ok": "OK",
+    "running": "Running",
+    "queued": "Queued",
+    "partial": "Partial",
+    "error": "Error",
+    "cancelled": "Cancelled",
+    "skipped": "Skipped"
+  },
+  "scope": {
+    "allSources": "All sources"
+  },
+  "reachability": {
+    "ready": "ready",
+    "unconfigured": "unconfigured",
+    "unreachable": "unreachable"
+  },
+  "mode": {
+    "incremental": "Incremental",
+    "full": "Full"
+  },
+  "time": {
+    "justNow": "just now",
+    "minutesAgo": "{{count}} minutes ago",
+    "hoursAgo": "{{count}} hours ago",
+    "daysAgo": "{{count}} days ago"
+  },
+  "lag": {
+    "noData": "No lag data",
+    "under15m": "Lag <15m",
+    "under1h": "Lag <1h",
+    "from1hTo6h": "Lag 1h–6h",
+    "over6h": "Lag >6h"
+  },
+  "badge": {
+    "overflow9Plus": "9+"
+  },
+  "notFound": {
+    "title": "404 - Page not found"
+  }
+}

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { lagBadge } from './wallboard-format';
 
 type DatabaseLagBadgeProps = {
@@ -5,6 +6,8 @@ type DatabaseLagBadgeProps = {
 };
 
 export function DatabaseLagBadge({ lagMinutes }: DatabaseLagBadgeProps) {
+  // Re-render on locale change; label text comes from common:lag.* via lagBadge().
+  useTranslation('common');
   const badge = lagBadge(lagMinutes);
   const className =
     badge.tone === 'ok'

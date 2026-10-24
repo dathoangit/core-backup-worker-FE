@@ -1,0 +1,45 @@
+{
+  "meta": {
+    "title": "Quản lý người dùng",
+    "description": "Quản lý user, vai trò và quyền truy cập."
+  },
+  "title": "Quản lý người dùng",
+  "subtitle": "Thêm, sửa, vô hiệu hóa user và gán vai trò.",
+  "addUser": "Thêm user",
+  "loading": "Đang tải danh sách...",
+  "actions": {
+    "edit": "Sửa",
+    "deactivate": "Vô hiệu hóa"
+  },
+  "confirm": {
+    "deactivate": "Vô hiệu hóa tài khoản \"{{username}}\"? Người dùng sẽ không đăng nhập được."
+  },
+  "table": {
+    "username": "Username",
+    "email": "Email",
+    "role": "Vai trò",
+    "status": "Trạng thái",
+    "actions": "Thao tác"
+  },
+  "status": {
+    "active": "Hoạt động",
+    "inactive": "Vô hiệu"
+  },
+  "noEmail": "Không có email",
+  "mobile": {
+    "rolePrefix": "Vai trò:"
+  },
+  "modal": {
+    "createTitle": "Thêm người dùng",
+    "editTitle": "Sửa người dùng",
+    "username": "Tên đăng nhập",
+    "email": "Email",
+    "password": "Mật khẩu",
+    "passwordNew": "Mật khẩu mới (để trống nếu giữ nguyên)",
+    "roleLabel": "Vai trò hệ thống",
+    "activeCheckbox": "Tài khoản đang hoạt động",
+    "createSubmit": "Tạo user",
+    "editSubmit": "Lưu thay đổi",
+    "saving": "Đang lưu..."
+  }
+}

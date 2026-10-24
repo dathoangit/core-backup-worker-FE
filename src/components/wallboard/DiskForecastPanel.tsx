@@ -1,3 +1,4 @@
+import { Trans, useTranslation } from 'react-i18next';
 import type { WallboardDisk } from 'src/types/wallboard';
 import { BackupStorageCylinder } from './BackupStorageCylinder';
 import {
@@ -15,6 +16,7 @@ export function DiskForecastPanel({
   disk,
   primaryExists,
 }: DiskForecastPanelProps) {
+  const { t } = useTranslation('wallboard');
   const forecast = disk?.forecast ?? null;
   const days = forecast?.estimatedDaysUntilFull ?? null;
   const warning = days != null && days <= 14;
@@ -23,23 +25,23 @@ export function DiskForecastPanel({
     <div className="flex h-full min-h-0 flex-col gap-1.5">
       <div className="grid shrink-0 grid-cols-3 gap-1.5">
         <ForecastMetric
-          label="Tăng trưởng / ngày"
+          label={t('forecast.growthPerDay')}
           value={formatDailyGrowth(forecast?.dailyGrowthBytes)}
-          hint="7 ngày gần nhất"
+          hint={t('forecast.last7Days')}
           emphasize
         />
         <ForecastMetric
-          label="Gzip efficiency"
+          label={t('forecast.gzipEfficiency')}
           value={formatCompression(
             forecast?.compressionRatio,
             forecast?.compressionSavingsPercent,
           )}
-          hint="ước lượng CSV→gz"
+          hint={t('forecast.csvToGz')}
         />
         <ForecastMetric
-          label="Đĩa đầy sau"
-          value={days != null ? `~${days} ngày` : '—'}
-          hint={warning ? 'Cảnh báo sớm' : 'ước lượng'}
+          label={t('forecast.daysUntilFull')}
+          value={days != null ? t('forecast.daysValue', { days }) : '—'}
+          hint={warning ? t('forecast.earlyWarning') : t('forecast.estimate')}
           tone={warning ? 'warn' : 'default'}
           emphasize
         />
@@ -47,29 +49,35 @@ export function DiskForecastPanel({
 
       {warning ? (
         <p className="shrink-0 rounded-md bg-amber-50 px-2 py-1 text-[11px] font-medium text-amber-800">
-          Cảnh báo: ước tính đĩa đầy trong ~{days} ngày — cần dọn retention /
-          mở rộng volume.
+          {t('forecast.diskFullWarning', { days })}
         </p>
       ) : null}
 
       {disk?.exists ? (
         <div className="flex min-h-0 flex-1 flex-col gap-1">
           <p className="shrink-0 text-[11px] text-slate-600 xl:text-xs">
-            <span className="font-semibold text-slate-900">
-              {formatBytesShort(disk.usedBytes)}
-            </span>
-            {' / '}
-            {formatBytesShort(disk.totalBytes)}
-            <span className="text-slate-500">
-              {' '}
-              · {disk.usedPercent}% · trống {formatBytesShort(disk.freeBytes)}
-            </span>
+            <Trans
+              t={t}
+              i18nKey="forecast.diskUsageLine"
+              values={{
+                used: formatBytesShort(disk.usedBytes),
+                total: formatBytesShort(disk.totalBytes),
+                percent: disk.usedPercent,
+                free: formatBytesShort(disk.freeBytes),
+              }}
+              components={{
+                used: <span className="font-semibold text-slate-900" />,
+                muted: <span className="text-slate-500" />,
+              }}
+            />
           </p>
           <BackupStorageCylinder disk={disk} />
         </div>
       ) : (
         <p className="flex flex-1 items-center text-xs text-slate-500">
-          Primary {primaryExists ? 'OK' : 'missing'} · chưa đọc được ổ.
+          {t('forecast.primaryUnreadable', {
+            status: primaryExists ? t('primary.ok') : t('primary.missing'),
+          })}
         </p>
       )}
     </div>

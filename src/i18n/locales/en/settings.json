@@ -1,0 +1,79 @@
+{
+  "meta": {
+    "title": "System configuration",
+    "description": "Manage backup settings and data sources."
+  },
+  "title": "System configuration",
+  "subtitle": "General for shared settings; HIS/EMR/BADL for each data source.",
+  "category": {
+    "backup": "General",
+    "his": "HIS",
+    "emr": "EMR",
+    "badl": "BADL",
+    "lis": "LIS",
+    "alerts": "Alerts"
+  },
+  "filters": {
+    "all": "All"
+  },
+  "secretMask": "••••••••",
+  "banner": {
+    "runtime": "Some values (backup directory, cron) may require a backend restart after change. Secrets are never returned as plaintext from the API.",
+    "backupInProgress": "A backup is running — cron/timezone edits are locked until the job finishes."
+  },
+  "schedule": {
+    "title": "Automatic backup schedule",
+    "currentOn": "Current: Enabled",
+    "currentOff": "Current: Disabled",
+    "noDbSetting": "No DB setting yet — using env fallback.",
+    "updating": "Updating...",
+    "turnOff": "Disable schedule",
+    "turnOn": "Enable schedule"
+  },
+  "errors": {
+    "editWhileBackup": "Cannot edit {{key}} while a backup is running. Wait for the job to finish and try again."
+  },
+  "confirm": {
+    "restartRequired": "Changing {{key}} requires a backend restart to take effect. Continue?",
+    "scheduleOn": "Enable automatic backup schedule?",
+    "scheduleOff": "Disable automatic backup schedule?"
+  },
+  "table": {
+    "key": "Key",
+    "category": "Category",
+    "value": "Value",
+    "updated": "Updated",
+    "actions": "Actions"
+  },
+  "badge": {
+    "secret": "secret"
+  },
+  "empty": "No settings yet.",
+  "tooltip": {
+    "lockedCron": "Backup in progress — cannot edit cron/timezone"
+  },
+  "loading": "Loading list...",
+  "modal": {
+    "title": "Edit setting",
+    "key": "Key",
+    "value": "Value",
+    "valueSecretRequired": "New value (required when saving a secret)",
+    "secretPlaceholder": "•••••••• (value already set)",
+    "secretHelpHasValue": "Secrets are not returned as plaintext. Leave blank to keep; enter a new value to overwrite.",
+    "secretHelpEmpty": "Enter the new secret value.",
+    "restartHint": "This key requires a backend restart after save to apply.",
+    "saving": "Saving...",
+    "save": "Save changes"
+  },
+  "alertTest": {
+    "title": "Send test alert",
+    "hint": "Save Telegram/SMTP settings before sending a test.",
+    "sending": "Sending...",
+    "sendTelegram": "Test Telegram",
+    "sendEmail": "Test Email",
+    "toastSuccessTitle": "Test sent",
+    "toastTelegramBody": "Telegram test message was sent.",
+    "toastEmailBody": "Test email was sent.",
+    "toastErrorTitle": "Test failed"
+  }
+}

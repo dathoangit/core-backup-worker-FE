@@ -1,8 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type Highcharts from 'highcharts';
 import type HighchartsReactType from 'highcharts-react-official';
 import type { WallboardDisk } from 'src/types/wallboard';
+import { AutoScrollRows } from './AutoScrollRows';
 import { formatBytesShort } from './wallboard-format';
+
+const LEGEND_VISIBLE_ROWS = 6;
+const LEGEND_GAP_PX = 4;
 
 type BackupStorageCylinderProps = {
   disk: WallboardDisk;
@@ -66,6 +71,7 @@ function colorFor(id: string): string {
 }
 
 export function BackupStorageCylinder({ disk }: BackupStorageCylinderProps) {
+  const { t } = useTranslation('wallboard');
   const boxRef = useRef<HTMLDivElement>(null);
   const [box, setBox] = useState({ width: 0, height: 0 });
   const [hc, setHc] = useState<typeof Highcharts | null>(null);
@@ -161,7 +167,7 @@ export function BackupStorageCylinder({ disk }: BackupStorageCylinderProps) {
       accessibility: { enabled: false },
       credits: { enabled: false },
       xAxis: {
-        categories: ['Backup'],
+        categories: [t('storage.chartCategory')],
         labels: { enabled: false },
         lineWidth: 0,
         tickLength: 0,
@@ -202,12 +208,12 @@ export function BackupStorageCylinder({ disk }: BackupStorageCylinderProps) {
         data: [folder.bytes],
       })),
     };
-  }, [box.height, box.width, folders]);
+  }, [box.height, box.width, folders, t]);
 
   if (folders.length === 0) {
     return (
       <p className="flex flex-1 items-center text-xs text-slate-500">
-        Ổ trống hoặc chưa đo được folder.
+        {t('storage.emptyFolders')}
       </p>
     );
   }
@@ -228,13 +234,16 @@ export function BackupStorageCylinder({ disk }: BackupStorageCylinderProps) {
           />
         ) : (
           <p className="flex h-full items-center text-xs text-slate-500">
-            Đang tải chart…
+            {t('storage.loadingChart')}
           </p>
         )}
       </div>
-      <ul className="flex w-[11.5rem] shrink-0 flex-col justify-center gap-1 overflow-y-auto py-0.5 xl:w-52">
-        {folders.map((folder) => (
-          <li
+      <AutoScrollRows
+        className="flex w-[11.5rem] shrink-0 flex-col justify-center py-0.5 xl:w-52"
+        visibleCount={LEGEND_VISIBLE_ROWS}
+        gapPx={LEGEND_GAP_PX}
+        items={folders.map((folder) => (
+          <div
             key={folder.id}
             className="flex items-baseline justify-between gap-2 text-[11px] leading-tight xl:text-xs">
             <span className="flex min-w-0 items-center gap-1.5 text-slate-700">
@@ -248,9 +257,9 @@ export function BackupStorageCylinder({ disk }: BackupStorageCylinderProps) {
             <span className="shrink-0 font-semibold tabular-nums text-slate-900">
               {formatBytesShort(folder.bytes)}
             </span>
-          </li>
+          </div>
         ))}
-      </ul>
+      />
     </div>
   );
 }

@@ -1,0 +1,185 @@
+{
+  "meta": {
+    "title": "Lịch sử backup",
+    "description": "Lịch sử backup runs và kích hoạt thủ công."
+  },
+  "page": {
+    "title": "Quản lý job backup",
+    "subtitle": "Xếp hàng, theo dõi, và hủy job (BullMQ — tối đa 1 job chạy cùng lúc)."
+  },
+  "loading": {
+    "overview": "Đang tải overview...",
+    "runs": "Đang tải runs..."
+  },
+  "info": {
+    "queued": "Đã xếp hàng job {{runId}}",
+    "cancelling": "Đang hủy job {{runId}}...",
+    "cancelled": "Đã hủy job {{runId}}"
+  },
+  "zones": {
+    "sectionTitle": "Zones",
+    "empty": "Chưa có dữ liệu zone.",
+    "primary": "Primary",
+    "isolated": "Isolated copy",
+    "metaLock": "Meta (lock)",
+    "hisVolume": "HIS volume",
+    "emrVolume": "EMR volume",
+    "lisVolume": "LIS volume",
+    "exists": "Exists",
+    "runCount": "Run count",
+    "lock": "Lock",
+    "lockHeld": "Held (PID {{pid}})",
+    "lockFree": "Free",
+    "stateDatabases": "State databases",
+    "target": "Target",
+    "configured": "Configured"
+  },
+  "manual": {
+    "title": "Chạy backup thủ công (xếp hàng BullMQ)",
+    "modeLabel": "Mode",
+    "groupsLegend": "Groups",
+    "databasesLabel": "Databases (optional, CSV)",
+    "databasesPlaceholder": "produce,signer — trống = tất cả DB trong group",
+    "queueing": "Đang xếp hàng...",
+    "queueButton": "Xếp hàng backup"
+  },
+  "sections": {
+    "running": "Đang chạy",
+    "runningEmpty": "Không có job đang chạy",
+    "queue": "Hàng đợi",
+    "queueEmpty": "Hàng đợi trống"
+  },
+  "filter": {
+    "label": "Lọc status:"
+  },
+  "table": {
+    "runId": "Run ID",
+    "status": "Status",
+    "mode": "Mode",
+    "trigger": "Trigger",
+    "started": "Bắt đầu",
+    "ended": "Kết thúc",
+    "actions": "Thao tác",
+    "empty": "Chưa có backup run."
+  },
+  "mobile": {
+    "startedAt": "Bắt đầu:"
+  },
+  "queue": {
+    "title": "Quản lý hàng đợi",
+    "subtitle": "BullMQ (Redis) + trạng thái DB. Hủy job kẹt khi worker chưa nhận.",
+    "updatedAt": "Cập nhật {{time}}",
+    "confirmCancelAll": "Hủy tất cả job đang ở trạng thái hàng đợi (DB queued)?",
+    "cancelledMany": "Đã hủy {{count}} job",
+    "failedSuffix": "; {{count}} lỗi",
+    "cancellingAll": "Đang hủy...",
+    "cancelAllButton": "Hủy tất cả queued ({{count}})",
+    "loading": "Đang tải queue...",
+    "bullSectionTitle": "BullMQ jobs (waiting / active)",
+    "bullEmpty": "Không có job trên Redis",
+    "dbSectionTitle": "DB queued ({{count}})",
+    "dbEmpty": "Không có run queued trong DB",
+    "cancellingOne": "Đang hủy {{runId}}...",
+    "cancelledOne": "Đã hủy {{runId}}",
+    "counts": {
+      "waiting": "waiting",
+      "active": "active",
+      "delayed": "delayed",
+      "failed": "failed",
+      "prioritized": "prioritized"
+    }
+  },
+  "detail": {
+    "metaTitle": "Backup run {{runId}}",
+    "metaDescription": "Chi tiết backup run {{runId}}.",
+    "backLink": "← Quay lại quản lý job",
+    "title": "Chi tiết backup run",
+    "cancelQueued": "Hủy khỏi queue",
+    "cancelRunning": "Hủy job",
+    "cancelling": "Đang hủy job...",
+    "cancelled": "Đã hủy job",
+    "fields": {
+      "status": "Status",
+      "mode": "Mode",
+      "trigger": "Trigger",
+      "groups": "Groups",
+      "databasesFilter": "Databases filter",
+      "queuedAt": "Queued at",
+      "started": "Bắt đầu",
+      "ended": "Kết thúc",
+      "archive": "Archive"
+    },
+    "databasesTitle": "Databases",
+    "databasesEmpty": "Chưa có chi tiết database (job đang chờ/chạy hoặc stub).",
+    "table": {
+      "group": "Group",
+      "database": "Database",
+      "profile": "Profile",
+      "status": "Status",
+      "chunks": "Chunks",
+      "bytes": "Bytes",
+      "rows": "Rows",
+      "error": "Error"
+    }
+  },
+  "sources": {
+    "empty": "Không có source nào.",
+    "databasesLabel": "Databases",
+    "watermarkPrefix": "watermark:"
+  },
+  "admin": {
+    "title": "Quản lý backup",
+    "subtitle": "Theo dõi runs, sources, zones và kích hoạt backup thủ công.",
+    "tabs": {
+      "runs": "Runs",
+      "sources": "Sources",
+      "zones": "Zones",
+      "restore": "Restore plan"
+    }
+  },
+  "restore": {
+    "database": "Database",
+    "placeholder": "produce",
+    "loading": "Đang tải...",
+    "loadButton": "Xem restore plan",
+    "disclaimer": "Plan only — không thực thi restore.",
+    "table": {
+      "index": "#",
+      "kind": "Kind",
+      "run": "Run",
+      "path": "Path"
+    },
+    "emptySteps": "Không có bước restore.",
+    "prompt": "Nhập tên database và tải restore plan."
+  },
+  "progress": {
+    "byTable": "{{db}} · {{done}}/{{total}} bảng",
+    "byDatabase": "{{done}}/{{total}} DB",
+    "stats": "{{rows}} dòng · {{bytes}}"
+  },
+  "log": {
+    "title": "Log hoạt động",
+    "autoScroll": "Tự cuộn",
+    "waiting": "Chờ sự kiện từ worker..."
+  },
+  "databaseDetail": {
+    "metaTitle": "{{database}} · {{group}}",
+    "metaDescription": "Chi tiết backup database {{database}} ({{group}}).",
+    "invalidGroup": "Nhóm nguồn không hợp lệ.",
+    "backLink": "← Tổng quan",
+    "editSource": "Sửa cấu hình nguồn",
+    "reachability": "Reachability",
+    "watermark": "Watermark",
+    "relatedRuns": "Runs liên quan",
+    "sourceNotFound": "Không tìm thấy source",
+    "historyTitle": "Lịch sử gần đây",
+    "historyEmpty": "Chưa có run nào ghi nhận database này trong 50 lần gần nhất.",
+    "dbStatusPrefix": "db: {{status}}",
+    "viewRun": "Xem chi tiết run",
+    "restoreTitle": "Restore plan",
+    "restoreSubtitle": "Kế hoạch khôi phục (chỉ xem, không thực thi).",
+    "reloadPlan": "Tải lại plan",
+    "restoreEmpty": "Không có bước restore.",
+    "noPlan": "Chưa có plan."
+  }
+}

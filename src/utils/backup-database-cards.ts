@@ -1,3 +1,4 @@
+import i18n from 'src/i18n';
 import type {
   BackupDatabaseRun,
   BackupRun,
@@ -6,6 +7,14 @@ import type {
   SourceGroup,
   SourceReachability,
 } from 'src/types/backup';
+
+export function unconfiguredDatabasePlaceholder(): string {
+  return i18n.t('home:databases.unconfiguredPlaceholder');
+}
+
+export function isUnconfiguredDatabaseName(database: string): boolean {
+  return database === unconfiguredDatabasePlaceholder();
+}
 
 export type DatabaseCardModel = {
   group: SourceGroup;
@@ -66,7 +75,7 @@ export function buildDatabaseCards(
     if (source.databases.length === 0) {
       cards.push({
         group: source.group,
-        database: '(chưa cấu hình)',
+        database: unconfiguredDatabasePlaceholder(),
         host: source.host || '—',
         port: source.port || 0,
         reachability: source.reachability,

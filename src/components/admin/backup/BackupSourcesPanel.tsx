@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { BackupSource } from 'src/types/backup';
 import { reachabilityClass } from './backup-status';
 
@@ -6,8 +7,21 @@ type BackupSourcesPanelProps = {
 };
 
 export function BackupSourcesPanel({ sources }: BackupSourcesPanelProps) {
+  const { t } = useTranslation(['runs', 'common']);
+
+  const reachabilityLabel = (reachability: BackupSource['reachability']) => {
+    if (
+      reachability === 'ready' ||
+      reachability === 'unconfigured' ||
+      reachability === 'unreachable'
+    ) {
+      return t(`common:reachability.${reachability}`);
+    }
+    return reachability;
+  };
+
   if (sources.length === 0) {
-    return <p className="text-sm text-slate-500">Không có source nào.</p>;
+    return <p className="text-sm text-slate-500">{t('runs:sources.empty')}</p>;
   }
 
   return (
@@ -27,21 +41,23 @@ export function BackupSourcesPanel({ sources }: BackupSourcesPanelProps) {
               className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${reachabilityClass(
                 source.reachability,
               )}`}>
-              {source.reachability}
+              {reachabilityLabel(source.reachability)}
             </span>
           </div>
           {source.reason ? (
             <p className="mt-2 text-xs text-amber-700">{source.reason}</p>
           ) : null}
           <div className="mt-3">
-            <p className="text-xs font-medium text-slate-500">Databases</p>
+            <p className="text-xs font-medium text-slate-500">
+              {t('runs:sources.databasesLabel')}
+            </p>
             <ul className="mt-1 space-y-1 text-sm text-slate-700">
               {source.databases.map((database) => (
                 <li key={database} className="flex flex-wrap gap-2">
                   <span className="font-medium">{database}</span>
                   <span className="text-slate-500">
-                    watermark:{' '}
-                    {source.watermarks[database] ?? '—'}
+                    {t('runs:sources.watermarkPrefix')}{' '}
+                    {source.watermarks[database] ?? t('common:emDash')}
                   </span>
                 </li>
               ))}

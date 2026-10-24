@@ -1,0 +1,185 @@
+{
+  "meta": {
+    "title": "Backup history",
+    "description": "Backup run history and manual triggers."
+  },
+  "page": {
+    "title": "Backup job management",
+    "subtitle": "Queue, monitor, and cancel jobs (BullMQ — at most 1 job running at a time)."
+  },
+  "loading": {
+    "overview": "Loading overview...",
+    "runs": "Loading runs..."
+  },
+  "info": {
+    "queued": "Queued job {{runId}}",
+    "cancelling": "Cancelling job {{runId}}...",
+    "cancelled": "Cancelled job {{runId}}"
+  },
+  "zones": {
+    "sectionTitle": "Zones",
+    "empty": "No zone data yet.",
+    "primary": "Primary",
+    "isolated": "Isolated copy",
+    "metaLock": "Meta (lock)",
+    "hisVolume": "HIS volume",
+    "emrVolume": "EMR volume",
+    "lisVolume": "LIS volume",
+    "exists": "Exists",
+    "runCount": "Run count",
+    "lock": "Lock",
+    "lockHeld": "Held (PID {{pid}})",
+    "lockFree": "Free",
+    "stateDatabases": "State databases",
+    "target": "Target",
+    "configured": "Configured"
+  },
+  "manual": {
+    "title": "Run backup manually (BullMQ queue)",
+    "modeLabel": "Mode",
+    "groupsLegend": "Groups",
+    "databasesLabel": "Databases (optional, CSV)",
+    "databasesPlaceholder": "produce,signer — empty = all DBs in group",
+    "queueing": "Queueing...",
+    "queueButton": "Queue backup"
+  },
+  "sections": {
+    "running": "Running",
+    "runningEmpty": "No running job",
+    "queue": "Queue",
+    "queueEmpty": "Queue is empty"
+  },
+  "filter": {
+    "label": "Filter status:"
+  },
+  "table": {
+    "runId": "Run ID",
+    "status": "Status",
+    "mode": "Mode",
+    "trigger": "Trigger",
+    "started": "Started",
+    "ended": "Ended",
+    "actions": "Actions",
+    "empty": "No backup runs yet."
+  },
+  "mobile": {
+    "startedAt": "Started:"
+  },
+  "queue": {
+    "title": "Queue management",
+    "subtitle": "BullMQ (Redis) + DB status. Cancel stuck jobs when the worker has not picked them up.",
+    "updatedAt": "Updated {{time}}",
+    "confirmCancelAll": "Cancel all jobs currently in queued state (DB queued)?",
+    "cancelledMany": "Cancelled {{count}} job(s)",
+    "failedSuffix": "; {{count}} failed",
+    "cancellingAll": "Cancelling...",
+    "cancelAllButton": "Cancel all queued ({{count}})",
+    "loading": "Loading queue...",
+    "bullSectionTitle": "BullMQ jobs (waiting / active)",
+    "bullEmpty": "No jobs on Redis",
+    "dbSectionTitle": "DB queued ({{count}})",
+    "dbEmpty": "No queued runs in DB",
+    "cancellingOne": "Cancelling {{runId}}...",
+    "cancelledOne": "Cancelled {{runId}}",
+    "counts": {
+      "waiting": "waiting",
+      "active": "active",
+      "delayed": "delayed",
+      "failed": "failed",
+      "prioritized": "prioritized"
+    }
+  },
+  "detail": {
+    "metaTitle": "Backup run {{runId}}",
+    "metaDescription": "Details for backup run {{runId}}.",
+    "backLink": "← Back to job management",
+    "title": "Backup run details",
+    "cancelQueued": "Cancel from queue",
+    "cancelRunning": "Cancel job",
+    "cancelling": "Cancelling job...",
+    "cancelled": "Job cancelled",
+    "fields": {
+      "status": "Status",
+      "mode": "Mode",
+      "trigger": "Trigger",
+      "groups": "Groups",
+      "databasesFilter": "Databases filter",
+      "queuedAt": "Queued at",
+      "started": "Started",
+      "ended": "Ended",
+      "archive": "Archive"
+    },
+    "databasesTitle": "Databases",
+    "databasesEmpty": "No database details yet (job waiting/running or stub).",
+    "table": {
+      "group": "Group",
+      "database": "Database",
+      "profile": "Profile",
+      "status": "Status",
+      "chunks": "Chunks",
+      "bytes": "Bytes",
+      "rows": "Rows",
+      "error": "Error"
+    }
+  },
+  "sources": {
+    "empty": "No sources.",
+    "databasesLabel": "Databases",
+    "watermarkPrefix": "watermark:"
+  },
+  "admin": {
+    "title": "Backup management",
+    "subtitle": "Monitor runs, sources, zones, and trigger backups manually.",
+    "tabs": {
+      "runs": "Runs",
+      "sources": "Sources",
+      "zones": "Zones",
+      "restore": "Restore plan"
+    }
+  },
+  "restore": {
+    "database": "Database",
+    "placeholder": "produce",
+    "loading": "Loading...",
+    "loadButton": "View restore plan",
+    "disclaimer": "Plan only — does not execute restore.",
+    "table": {
+      "index": "#",
+      "kind": "Kind",
+      "run": "Run",
+      "path": "Path"
+    },
+    "emptySteps": "No restore steps.",
+    "prompt": "Enter a database name and load the restore plan."
+  },
+  "progress": {
+    "byTable": "{{db}} · {{done}}/{{total}} tables",
+    "byDatabase": "{{done}}/{{total}} DB",
+    "stats": "{{rows}} rows · {{bytes}}"
+  },
+  "log": {
+    "title": "Activity log",
+    "autoScroll": "Auto-scroll",
+    "waiting": "Waiting for worker events..."
+  },
+  "databaseDetail": {
+    "metaTitle": "{{database}} · {{group}}",
+    "metaDescription": "Backup details for database {{database}} ({{group}}).",
+    "invalidGroup": "Invalid source group.",
+    "backLink": "← Overview",
+    "editSource": "Edit source settings",
+    "reachability": "Reachability",
+    "watermark": "Watermark",
+    "relatedRuns": "Related runs",
+    "sourceNotFound": "Source not found",
+    "historyTitle": "Recent history",
+    "historyEmpty": "No runs recorded this database in the last 50 runs.",
+    "dbStatusPrefix": "db: {{status}}",
+    "viewRun": "View run details",
+    "restoreTitle": "Restore plan",
+    "restoreSubtitle": "Restore plan (view only, not executed).",
+    "reloadPlan": "Reload plan",
+    "restoreEmpty": "No restore steps.",
+    "noPlan": "No plan yet."
+  }
+}

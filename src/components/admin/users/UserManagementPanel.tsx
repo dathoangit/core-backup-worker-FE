@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import i18n from 'src/i18n';
 import {
   createAdminUser,
   deactivateAdminUser,
@@ -24,7 +26,7 @@ function resolveErrorMessage(error: unknown): string {
     return error.message;
   }
 
-  return 'Đã xảy ra lỗi.';
+  return i18n.t('common:errors.generic');
 }
 
 function UserActions({
@@ -38,6 +40,7 @@ function UserActions({
   onEdit: (user: AdminUser) => void;
   onDeactivate: (user: AdminUser) => void;
 }) {
+  const { t } = useTranslation(['users', 'common']);
   const isSelf = user.id === currentUserId;
 
   return (
@@ -46,20 +49,21 @@ function UserActions({
         type="button"
         onClick={() => onEdit(user)}
         className="rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 sm:text-sm">
-        Sửa
+        {t('users:actions.edit')}
       </button>
       <button
         type="button"
         disabled={!user.isActive || isSelf}
         onClick={() => onDeactivate(user)}
         className="rounded-lg border border-red-200 px-2.5 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm">
-        Vô hiệu hóa
+        {t('users:actions.deactivate')}
       </button>
     </div>
   );
 }
 
 export function UserManagementPanel() {
+  const { t } = useTranslation(['users', 'common']);
   const { role, user: currentUser } = useAuth();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -156,7 +160,7 @@ export function UserManagementPanel() {
     }
 
     const confirmed = window.confirm(
-      `Vô hiệu hóa tài khoản "${user.username}"? Người dùng sẽ không đăng nhập được.`,
+      t('users:confirm.deactivate', { username: user.username }),
     );
 
     if (!confirmed) {
@@ -177,16 +181,14 @@ export function UserManagementPanel() {
     <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-slate-900">Quản lý người dùng</h2>
-          <p className="mt-1 text-sm text-slate-600">
-            Thêm, sửa, vô hiệu hóa user và gán vai trò.
-          </p>
+          <h2 className="text-lg font-semibold text-slate-900">{t('users:title')}</h2>
+          <p className="mt-1 text-sm text-slate-600">{t('users:subtitle')}</p>
         </div>
         <button
           type="button"
           onClick={openCreateForm}
           className="inline-flex justify-center rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700">
-          Thêm user
+          {t('users:addUser')}
         </button>
       </div>
 
@@ -197,25 +199,27 @@ export function UserManagementPanel() {
       ) : null}
 
       {loading ? (
-        <p className="mt-6 text-sm text-slate-600">Đang tải danh sách...</p>
+        <p className="mt-6 text-sm text-slate-600">{t('users:loading')}</p>
       ) : (
         <>
           <div className="mt-6 hidden overflow-x-auto md:block">
             <table className="min-w-full divide-y divide-slate-200 text-sm">
               <thead>
                 <tr className="text-left text-slate-500">
-                  <th className="px-3 py-2 font-medium">Username</th>
-                  <th className="px-3 py-2 font-medium">Email</th>
-                  <th className="px-3 py-2 font-medium">Vai trò</th>
-                  <th className="px-3 py-2 font-medium">Trạng thái</th>
-                  <th className="px-3 py-2 font-medium">Thao tác</th>
+                  <th className="px-3 py-2 font-medium">{t('users:table.username')}</th>
+                  <th className="px-3 py-2 font-medium">{t('users:table.email')}</th>
+                  <th className="px-3 py-2 font-medium">{t('users:table.role')}</th>
+                  <th className="px-3 py-2 font-medium">{t('users:table.status')}</th>
+                  <th className="px-3 py-2 font-medium">{t('users:table.actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {users.map((user) => (
                   <tr key={user.id}>
                     <td className="px-3 py-3 font-medium text-slate-900">{user.username}</td>
-                    <td className="px-3 py-3 text-slate-600">{user.email ?? '—'}</td>
+                    <td className="px-3 py-3 text-slate-600">
+                      {user.email ?? t('common:emDash')}
+                    </td>
                     <td className="px-3 py-3 text-slate-600">{getRoleLabel(user.role)}</td>
                     <td className="px-3 py-3">
                       <span
@@ -224,7 +228,9 @@ export function UserManagementPanel() {
                             ? 'bg-emerald-50 text-emerald-700'
                             : 'bg-slate-100 text-slate-600'
                         }`}>
-                        {user.isActive ? 'Hoạt động' : 'Vô hiệu'}
+                        {user.isActive
+                          ? t('users:status.active')
+                          : t('users:status.inactive')}
                       </span>
                     </td>
                     <td className="px-3 py-3">
@@ -249,7 +255,9 @@ export function UserManagementPanel() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <h3 className="truncate font-semibold text-slate-900">{user.username}</h3>
-                    <p className="mt-1 text-xs text-slate-600">{user.email ?? 'Không có email'}</p>
+                    <p className="mt-1 text-xs text-slate-600">
+                      {user.email ?? t('users:noEmail')}
+                    </p>
                   </div>
                   <span
                     className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
@@ -257,12 +265,14 @@ export function UserManagementPanel() {
                         ? 'bg-emerald-50 text-emerald-700'
                         : 'bg-slate-200 text-slate-600'
                     }`}>
-                    {user.isActive ? 'Hoạt động' : 'Vô hiệu'}
+                    {user.isActive
+                      ? t('users:status.active')
+                      : t('users:status.inactive')}
                   </span>
                 </div>
                 <dl className="mt-3 space-y-1 text-xs text-slate-600">
                   <div>
-                    <dt className="inline font-medium">Vai trò: </dt>
+                    <dt className="inline font-medium">{t('users:mobile.rolePrefix')} </dt>
                     <dd className="inline">{getRoleLabel(user.role)}</dd>
                   </div>
                 </dl>

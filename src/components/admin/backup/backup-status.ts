@@ -1,4 +1,5 @@
 import type { BackupRunStatus, DatabaseRunStatus, SourceReachability } from 'src/types/backup';
+import i18n from 'src/i18n';
 
 export function backupRunStatusClass(status: BackupRunStatus | string): string {
   switch (status) {
@@ -44,23 +45,23 @@ export function backupRunScopeLabel(options: {
     return groups;
   }
 
-  return 'Tất cả nguồn';
+  return i18n.t('common:scope.allSources');
 }
 
 export function backupRunStatusLabel(status: BackupRunStatus | string): string {
   switch (status) {
     case 'ok':
-      return 'OK';
+      return i18n.t('common:status.ok');
     case 'running':
-      return 'Đang chạy';
+      return i18n.t('common:status.running');
     case 'queued':
-      return 'Hàng đợi';
+      return i18n.t('common:status.queued');
     case 'partial':
-      return 'Một phần';
+      return i18n.t('common:status.partial');
     case 'error':
-      return 'Lỗi';
+      return i18n.t('common:status.error');
     case 'cancelled':
-      return 'Đã hủy';
+      return i18n.t('common:status.cancelled');
     default:
       return status;
   }
@@ -94,7 +95,7 @@ export function reachabilityClass(reachability: SourceReachability): string {
 
 export function formatBytes(value: string | number | undefined | null): string {
   if (value === undefined || value === null || value === '') {
-    return '—';
+    return i18n.t('common:emDash');
   }
 
   const n = typeof value === 'number' ? value : Number.parseInt(String(value), 10);

@@ -1,0 +1,49 @@
+{
+  "language": {
+    "aria": "Select language"
+  },
+  "nav": {
+    "aria": "Main navigation",
+    "overview": "Overview",
+    "wallboard": "Wallboard",
+    "runs": "History",
+    "files": "File browser",
+    "config": "Settings"
+  },
+  "account": {
+    "ariaButton": "User account",
+    "ariaMenu": "Account menu",
+    "role": "Role",
+    "roleValue": "Role: {{role}}",
+    "email": "Email",
+    "emailValue": "Email: {{email}}",
+    "manageUsers": "Manage users",
+    "logout": "Log out"
+  },
+  "footer": {
+    "ariaNav": "Footer navigation",
+    "home": "Home",
+    "copyrightCompact": "© {{year}} {{org}} · {{brand}}",
+    "tagline": "Base web app shell connected to a NestJS backend — ready to extend business modules at {{org}}.",
+    "navSection": "Navigation",
+    "operatorSection": "Operator",
+    "facility": "Healthcare facility",
+    "platform": "Platform",
+    "copyrightFull": "© {{year}} {{org}}. All rights reserved.",
+    "internalVersion": "{{brand}} — Internal build"
+  },
+  "alerts": {
+    "ariaBell": "Alerts",
+    "panelTitle": "Recent alerts",
+    "empty": "No failed/partial alerts yet.",
+    "backupFailed": "Backup failed",
+    "backupPartial": "Backup completed partially"
+  },
+  "authGate": {
+    "checkingSession": "Checking auth session...",
+    "redirectLogin": "Redirecting to login...",
+    "redirectHome": "Redirecting to home...",
+    "redirectGeneric": "Redirecting...",
+    "checkingAccess": "Checking access..."
+  }
+}

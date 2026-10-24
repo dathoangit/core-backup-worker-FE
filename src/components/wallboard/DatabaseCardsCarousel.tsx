@@ -4,6 +4,7 @@ import {
   useState,
   type TransitionEvent,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { WallboardDatabase } from 'src/types/wallboard';
 import { DatabaseLagBadge } from './DatabaseLagBadge';
 
@@ -43,6 +44,7 @@ function rowWindow(
 }
 
 function DatabaseCard({ db }: { db: WallboardDatabase }) {
+  const { t } = useTranslation('wallboard');
   return (
     <article className="min-w-0 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5">
       <div className="flex items-start justify-between gap-1">
@@ -61,14 +63,14 @@ function DatabaseCard({ db }: { db: WallboardDatabase }) {
               aria-hidden="true"
             />
           ) : null}
-          {db.live ? 'LIVE' : 'OFF'}
+          {db.live ? t('db.live') : t('db.off')}
         </span>
       </div>
       <p className="truncate text-[10px] text-slate-500">
         {db.group} · {db.host}
       </p>
       <p className="mt-0.5 truncate font-mono text-[10px] text-slate-600">
-        WM {db.watermark ?? '—'}
+        {t('db.watermarkPrefix', { watermark: db.watermark ?? '—' })}
       </p>
       <div className="mt-0.5">
         <DatabaseLagBadge lagMinutes={db.lagMinutes} />

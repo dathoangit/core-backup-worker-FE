@@ -1,0 +1,52 @@
+{
+  "meta": {
+    "title": "Backup overview",
+    "description": "Monitor backup status across databases."
+  },
+  "nonAdmin": {
+    "title": "Backup monitor",
+    "message": "Your account does not have permission to view the backup dashboard."
+  },
+  "title": "Backup overview",
+  "subtitle": "Monitor databases currently covered by backup.",
+  "actions": {
+    "runBackup": "Run backup"
+  },
+  "loading": {
+    "overview": "Loading overview..."
+  },
+  "databases": {
+    "sectionTitle": "Databases",
+    "hint": "Click Start on a ready database for an incremental backup now; or open details for watermark / restore plan.",
+    "loading": "Loading list...",
+    "empty": "No databases yet. Add source settings under Configuration.",
+    "unconfiguredPlaceholder": "(not configured)"
+  },
+  "card": {
+    "watermark": "Watermark",
+    "lastRun": "Last run",
+    "dbStatus": "DB status",
+    "timestamp": "Timestamp",
+    "configure": "Configure",
+    "tooltipStartWhenReady": "Start only when source is ready",
+    "tooltipBackupRunning": "A backup is already running",
+    "tooltipStartIncremental": "Run incremental backup for this database",
+    "starting": "Submitting...",
+    "start": "Start"
+  },
+  "overview": {
+    "scheduleTitle": "Automatic schedule",
+    "scheduleUnknown": "Unknown",
+    "scheduleHint": "Manage under Configuration.",
+    "primaryTitle": "Primary zone",
+    "dirExists": "Directory exists",
+    "dirMissing": "Directory missing",
+    "runCount": "{{count}} run(s)",
+    "volumesHint": "· HIS/EMR/LIS volumes",
+    "lockTitle": "Lock",
+    "lockHeld": "Lock held",
+    "lockPid": "PID {{pid}}",
+    "lockFree": "Free",
+    "isolatedTitle": "Isolated copy"
+  }
+}

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Cell,
   Pie,
@@ -10,6 +11,7 @@ import {
   backupRunScopeLabel,
   backupRunStatusLabel,
 } from 'src/components/admin/backup/backup-status';
+import { LanguageSwitcher } from 'src/components/layout/LanguageSwitcher';
 import { APP_BRAND_SHORT_NAME, APP_ORG_NAME } from 'src/constants/branding';
 import { useBackupStream } from 'src/hooks/useBackupStream';
 import type { BackupRunProgressEvent } from 'src/types/backup-stream';
@@ -81,6 +83,7 @@ function runStatusTone(
 }
 
 export function WallboardDashboard() {
+  const { t } = useTranslation('wallboard');
   const [data, setData] = useState<WallboardOverview | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -150,12 +153,12 @@ export function WallboardDashboard() {
     }
     const { jobSummary } = data;
     return [
-      { name: 'Thành công', key: 'ok', value: jobSummary.ok },
-      { name: 'Lỗi', key: 'error', value: jobSummary.error },
-      { name: 'Một phần', key: 'partial', value: jobSummary.partial },
-      { name: 'Đang chạy', key: 'running', value: jobSummary.running },
+      { name: t('chart.success'), key: 'ok', value: jobSummary.ok },
+      { name: t('chart.error'), key: 'error', value: jobSummary.error },
+      { name: t('chart.partial'), key: 'partial', value: jobSummary.partial },
+      { name: t('chart.running'), key: 'running', value: jobSummary.running },
     ].filter((row) => row.value > 0);
-  }, [data]);
+  }, [data, t]);
 
   const successPct = data
     ? percent(data.jobSummary.ok, data.jobSummary.total)
@@ -169,19 +172,28 @@ export function WallboardDashboard() {
             {APP_ORG_NAME}
           </p>
           <h1 className="truncate text-base font-semibold xl:text-lg">
-            {APP_BRAND_SHORT_NAME} · Backup Wallboard
+            {t('header.title', { brand: APP_BRAND_SHORT_NAME })}
           </h1>
         </div>
-        <div className="shrink-0 text-right text-[10px] text-slate-300 xl:text-xs">
-          <p>
-            SSE + {SAFETY_REFRESH_MS / 60_000}p safety refresh
-            {lastFetchedAt ? ` · ${formatRelativeTime(lastFetchedAt)}` : ''}
-          </p>
-          {data ? (
-            <p className="text-slate-400">
-              {formatIsoAsLocalDateTime(data.generatedAt)}
+        <div className="flex shrink-0 items-center gap-3">
+          <div className="text-right text-[10px] text-slate-300 xl:text-xs">
+            <p>
+              {lastFetchedAt
+                ? t('header.refreshWithRelative', {
+                    minutes: SAFETY_REFRESH_MS / 60_000,
+                    relative: formatRelativeTime(lastFetchedAt),
+                  })
+                : t('header.refreshLine', {
+                    minutes: SAFETY_REFRESH_MS / 60_000,
+                  })}
             </p>
-          ) : null}
+            {data ? (
+              <p className="text-slate-400">
+                {formatIsoAsLocalDateTime(data.generatedAt)}
+              </p>
+            ) : null}
+          </div>
+          <LanguageSwitcher variant="dark" />
         </div>
       </header>
 
@@ -196,36 +208,40 @@ export function WallboardDashboard() {
 
         {loading && !data ? (
           <p className="flex flex-1 items-center justify-center text-slate-600">
-            Đang tải wallboard…
+            {t('loading')}
           </p>
         ) : data ? (
           <div className="grid min-h-0 flex-1 grid-cols-12 grid-rows-2 gap-2 xl:gap-2.5">
-            {/* Row 1: Databases | Daily backups | Dự báo tăng trưởng */}
+            {/* Row 1: Databases | Daily backups | Data growth forecast */}
             <WallboardPanel
               className="col-span-4 row-start-1"
-              title="Databases"
-              subtitle={`${liveCount} live · ${offCount} off · ${data.databases.length} tổng`}>
+              title={t('panels.databases.title')}
+              subtitle={t('panels.databases.subtitle', {
+                live: liveCount,
+                off: offCount,
+                total: data.databases.length,
+              })}>
               <DatabaseCardsCarousel databases={data.databases} />
             </WallboardPanel>
 
             <WallboardPanel
               className="col-span-3 row-start-1"
-              title="Daily backups"
-              subtitle="24h / mẫu gần nhất">
+              title={t('panels.daily.title')}
+              subtitle={t('panels.daily.subtitle')}>
               <div className="flex h-full min-h-0 flex-col gap-1.5">
-                <div className="relative min-h-0 flex-1">
+                <div className="relative min-h-[8.5rem] flex-[1.35] xl:min-h-[10rem]">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
                         data={
                           donutData.length > 0
                             ? donutData
-                            : [{ name: 'Trống', value: 1, key: 'empty' }]
+                            : [{ name: t('chart.emptySlice'), value: 1, key: 'empty' }]
                         }
                         dataKey="value"
                         nameKey="name"
-                        innerRadius="55%"
-                        outerRadius="85%"
+                        innerRadius="52%"
+                        outerRadius="96%"
                         paddingAngle={2}
                         isAnimationActive={false}>
                         {(donutData.length > 0
@@ -251,31 +267,33 @@ export function WallboardDashboard() {
                     </PieChart>
                   </ResponsiveContainer>
                   <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                    <p className="text-xl font-bold text-slate-900 xl:text-2xl">
+                    <p className="text-2xl font-bold text-slate-900 xl:text-3xl">
                       {successPct}%
                     </p>
-                    <p className="text-[10px] text-slate-500">OK</p>
+                    <p className="text-[10px] text-slate-500 xl:text-xs">
+                      {t('legend.ok')}
+                    </p>
                   </div>
                 </div>
                 <ul className="shrink-0 space-y-0.5 text-[11px] xl:text-xs">
                   <li className="flex justify-between text-emerald-700">
-                    <span>OK</span>
+                    <span>{t('legend.ok')}</span>
                     <span className="font-semibold">{data.jobSummary.ok}</span>
                   </li>
                   <li className="flex justify-between text-red-700">
-                    <span>Lỗi</span>
+                    <span>{t('legend.error')}</span>
                     <span className="font-semibold">
                       {data.jobSummary.error}
                     </span>
                   </li>
                   <li className="flex justify-between text-amber-700">
-                    <span>Partial</span>
+                    <span>{t('legend.partial')}</span>
                     <span className="font-semibold">
                       {data.jobSummary.partial}
                     </span>
                   </li>
                   <li className="flex justify-between text-sky-700">
-                    <span>Running</span>
+                    <span>{t('legend.running')}</span>
                     <span className="font-semibold">
                       {data.jobSummary.running}
                     </span>
@@ -295,11 +313,18 @@ export function WallboardDashboard() {
 
             <WallboardPanel
               className="col-span-5 row-start-1"
-              title="Dự báo tăng trưởng dữ liệu"
+              title={t('panels.forecast.title')}
               subtitle={
                 disk?.exists
-                  ? `${disk.usedPercent}% đã dùng · ${disk.path}`
-                  : `Primary ${data.zones.primaryExists ? 'OK' : 'missing'}`
+                  ? t('panels.forecast.subtitleDisk', {
+                      usedPercent: disk.usedPercent,
+                      path: disk.path,
+                    })
+                  : t('panels.forecast.subtitlePrimary', {
+                      status: data.zones.primaryExists
+                        ? t('primary.ok')
+                        : t('primary.missing'),
+                    })
               }>
               <DiskForecastPanel
                 disk={disk}
@@ -307,14 +332,19 @@ export function WallboardDashboard() {
               />
             </WallboardPanel>
 
-            {/* Row 2: Recent jobs | History 14 ngày | Alerts + Countdown */}
+            {/* Row 2: Recent jobs | 14-day history | Alerts + Countdown */}
             <WallboardPanel
               className="col-span-3 row-start-2"
-              title="Recent jobs"
-              subtitle={`${Math.min(RECENT_JOBS_VISIBLE, data.recentJobs.length)} / ${data.recentJobs.length}`}>
+              title={t('panels.recentJobs.title')}
+              subtitle={t('panels.recentJobs.subtitle', {
+                visible: Math.min(RECENT_JOBS_VISIBLE, data.recentJobs.length),
+                total: data.recentJobs.length,
+              })}>
               <ul className="flex h-full flex-col justify-start gap-1 overflow-hidden">
                 {data.recentJobs.length === 0 ? (
-                  <li className="text-xs text-slate-500">Chưa có job.</li>
+                  <li className="text-xs text-slate-500">
+                    {t('panels.recentJobs.empty')}
+                  </li>
                 ) : (
                   data.recentJobs.slice(0, RECENT_JOBS_VISIBLE).map((job) => {
                     const queuedSince = job.queuedAt ?? job.startedAt;
@@ -342,7 +372,7 @@ export function WallboardDashboard() {
                             {scope}
                             {waitingWorker ? (
                               <span className="ml-1 text-amber-700">
-                                · Chờ worker
+                                {t('recentJob.waitingWorker')}
                               </span>
                             ) : null}
                           </p>
@@ -360,8 +390,8 @@ export function WallboardDashboard() {
 
             <WallboardPanel
               className="col-span-5 row-start-2"
-              title="History 14 ngày"
-              subtitle="Jobs + volume GB/ngày · Asia/Ho_Chi_Minh">
+              title={t('panels.history.title')}
+              subtitle={t('panels.history.subtitle')}>
               <HistorySparklineCard
                 historyByDay={data.historyByDay}
                 recentJobs={data.recentJobs}
@@ -371,11 +401,11 @@ export function WallboardDashboard() {
             <div className="col-span-4 row-start-2 flex min-h-0 flex-col gap-2 xl:gap-2.5">
               <WallboardPanel
                 className="min-h-0 flex-1"
-                title="Next Job Countdown"
+                title={t('panels.countdown.title')}
                 subtitle={
                   data.scheduleEnabled === false
-                    ? 'Schedule tắt · vẫn hiện mốc cron'
-                    : 'Lịch sắp tới'
+                    ? t('panels.countdown.subtitleScheduleOff')
+                    : t('panels.countdown.subtitleUpcoming')
                 }>
                 <NextJobCountdown
                   schedule={data.schedule}
@@ -385,8 +415,8 @@ export function WallboardDashboard() {
 
               <WallboardPanel
                 className="min-h-0 flex-1"
-                title="Alerts"
-                subtitle="Chỉ hiện vấn đề cần xử lý">
+                title={t('panels.alerts.title')}
+                subtitle={t('panels.alerts.subtitle')}>
                 <WallboardAlertsPanel
                   data={data}
                   unreachableCount={unreachableCount}

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cancelBackupRun, fetchBackupRun } from 'src/auth/backup-api';
 import { useAuth } from 'src/auth/context';
 import { RunLogTerminal } from 'src/components/backup/RunLogTerminal';
@@ -24,7 +25,15 @@ function canCancel(status: BackupRun['status']): boolean {
 }
 
 export function BackupRunDetail({ runId }: BackupRunDetailProps) {
+  const { t } = useTranslation(['runs', 'common']);
   const { role } = useAuth();
+
+  const labelForDbStatus = (status: string) => {
+    if (status === 'ok' || status === 'error' || status === 'skipped') {
+      return t(`common:status.${status}`);
+    }
+    return status;
+  };
   const [run, setRun] = useState<BackupRun | null>(null);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
@@ -110,8 +119,8 @@ export function BackupRunDetail({ runId }: BackupRunDetailProps) {
       const result = await cancelBackupRun(runId);
       setInfo(
         result.status === 'cancelling'
-          ? 'Đang hủy job...'
-          : 'Đã hủy job',
+          ? t('runs:detail.cancelling')
+          : t('runs:detail.cancelled'),
       );
       await load();
     } catch (err) {
@@ -128,10 +137,10 @@ export function BackupRunDetail({ runId }: BackupRunDetailProps) {
           <Link
             href="/runs"
             className="text-sm font-medium text-sky-700 hover:underline">
-            ← Quay lại quản lý job
+            {t('runs:detail.backLink')}
           </Link>
           <h2 className="mt-2 text-lg font-semibold text-slate-900">
-            Chi tiết backup run
+            {t('runs:detail.title')}
           </h2>
           <p className="mt-1 font-mono text-xs text-slate-600">{runId}</p>
         </div>
@@ -143,17 +152,17 @@ export function BackupRunDetail({ runId }: BackupRunDetailProps) {
               onClick={() => void handleCancel()}
               className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-100 disabled:opacity-50">
               {cancelling
-                ? '...'
+                ? t('common:ellipsis')
                 : run.status === 'queued'
-                  ? 'Hủy khỏi queue'
-                  : 'Hủy job'}
+                  ? t('runs:detail.cancelQueued')
+                  : t('runs:detail.cancelRunning')}
             </button>
           ) : null}
           <button
             type="button"
             onClick={() => void load()}
             className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
-            Làm mới
+            {t('common:actions.refresh')}
           </button>
         </div>
       </div>
@@ -170,7 +179,7 @@ export function BackupRunDetail({ runId }: BackupRunDetailProps) {
       ) : null}
 
       {loading && !run ? (
-        <p className="mt-6 text-sm text-slate-600">Đang tải...</p>
+        <p className="mt-6 text-sm text-slate-600">{t('common:loading.generic')}</p>
       ) : null}
 
       {run ? (
@@ -183,7 +192,9 @@ export function BackupRunDetail({ runId }: BackupRunDetailProps) {
             logs.length > 0) && <RunLogTerminal logs={logs} />}
           <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <div>
-              <dt className="text-xs font-medium text-slate-500">Status</dt>
+              <dt className="text-xs font-medium text-slate-500">
+                {t('runs:detail.fields.status')}
+              </dt>
               <dd className="mt-1">
                 <span
                   className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${backupRunStatusClass(
@@ -194,53 +205,69 @@ export function BackupRunDetail({ runId }: BackupRunDetailProps) {
               </dd>
             </div>
             <div>
-              <dt className="text-xs font-medium text-slate-500">Mode</dt>
+              <dt className="text-xs font-medium text-slate-500">
+                {t('runs:detail.fields.mode')}
+              </dt>
               <dd className="mt-1 text-sm text-slate-900">{run.mode}</dd>
             </div>
             <div>
-              <dt className="text-xs font-medium text-slate-500">Trigger</dt>
+              <dt className="text-xs font-medium text-slate-500">
+                {t('runs:detail.fields.trigger')}
+              </dt>
               <dd className="mt-1 text-sm text-slate-900">{run.trigger}</dd>
             </div>
             <div>
-              <dt className="text-xs font-medium text-slate-500">Groups</dt>
+              <dt className="text-xs font-medium text-slate-500">
+                {t('runs:detail.fields.groups')}
+              </dt>
               <dd className="mt-1 text-sm text-slate-900">
-                {run.sourceGroups?.trim() ? run.sourceGroups : '—'}
+                {run.sourceGroups?.trim() ? run.sourceGroups : t('common:emDash')}
               </dd>
             </div>
             <div>
               <dt className="text-xs font-medium text-slate-500">
-                Databases filter
+                {t('runs:detail.fields.databasesFilter')}
               </dt>
               <dd className="mt-1 text-sm text-slate-900">
-                {run.databasesFilter?.trim() ? run.databasesFilter : '—'}
+                {run.databasesFilter?.trim()
+                  ? run.databasesFilter
+                  : t('common:emDash')}
               </dd>
             </div>
             <div>
-              <dt className="text-xs font-medium text-slate-500">Queued at</dt>
+              <dt className="text-xs font-medium text-slate-500">
+                {t('runs:detail.fields.queuedAt')}
+              </dt>
               <dd className="mt-1 text-sm text-slate-900">
                 {run.queuedAt
                   ? formatIsoAsLocalDateTime(run.queuedAt)
-                  : '—'}
+                  : t('common:emDash')}
               </dd>
             </div>
             <div>
-              <dt className="text-xs font-medium text-slate-500">Bắt đầu</dt>
+              <dt className="text-xs font-medium text-slate-500">
+                {t('runs:detail.fields.started')}
+              </dt>
               <dd className="mt-1 text-sm text-slate-900">
                 {formatIsoAsLocalDateTime(run.startedAt)}
               </dd>
             </div>
             <div>
-              <dt className="text-xs font-medium text-slate-500">Kết thúc</dt>
+              <dt className="text-xs font-medium text-slate-500">
+                {t('runs:detail.fields.ended')}
+              </dt>
               <dd className="mt-1 text-sm text-slate-900">
                 {run.finishedAt
                   ? formatIsoAsLocalDateTime(run.finishedAt)
-                  : '—'}
+                  : t('common:emDash')}
               </dd>
             </div>
             <div>
-              <dt className="text-xs font-medium text-slate-500">Archive</dt>
+              <dt className="text-xs font-medium text-slate-500">
+                {t('runs:detail.fields.archive')}
+              </dt>
               <dd className="mt-1 text-sm text-slate-900">
-                {run.archiveStatus ?? '—'}
+                {run.archiveStatus ?? t('common:emDash')}
               </dd>
             </div>
           </dl>
@@ -258,24 +285,42 @@ export function BackupRunDetail({ runId }: BackupRunDetailProps) {
           ) : null}
 
           <div>
-            <h3 className="text-sm font-semibold text-slate-900">Databases</h3>
+            <h3 className="text-sm font-semibold text-slate-900">
+              {t('runs:detail.databasesTitle')}
+            </h3>
             {!run.databases || run.databases.length === 0 ? (
               <p className="mt-2 text-sm text-slate-500">
-                Chưa có chi tiết database (job đang chờ/chạy hoặc stub).
+                {t('runs:detail.databasesEmpty')}
               </p>
             ) : (
               <div className="mt-3 overflow-x-auto">
                 <table className="min-w-full divide-y divide-slate-200 text-sm">
                   <thead>
                     <tr className="text-left text-slate-500">
-                      <th className="px-3 py-2 font-medium">Group</th>
-                      <th className="px-3 py-2 font-medium">Database</th>
-                      <th className="px-3 py-2 font-medium">Profile</th>
-                      <th className="px-3 py-2 font-medium">Status</th>
-                      <th className="px-3 py-2 font-medium">Chunks</th>
-                      <th className="px-3 py-2 font-medium">Bytes</th>
-                      <th className="px-3 py-2 font-medium">Rows</th>
-                      <th className="px-3 py-2 font-medium">Error</th>
+                      <th className="px-3 py-2 font-medium">
+                        {t('runs:detail.table.group')}
+                      </th>
+                      <th className="px-3 py-2 font-medium">
+                        {t('runs:detail.table.database')}
+                      </th>
+                      <th className="px-3 py-2 font-medium">
+                        {t('runs:detail.table.profile')}
+                      </th>
+                      <th className="px-3 py-2 font-medium">
+                        {t('runs:detail.table.status')}
+                      </th>
+                      <th className="px-3 py-2 font-medium">
+                        {t('runs:detail.table.chunks')}
+                      </th>
+                      <th className="px-3 py-2 font-medium">
+                        {t('runs:detail.table.bytes')}
+                      </th>
+                      <th className="px-3 py-2 font-medium">
+                        {t('runs:detail.table.rows')}
+                      </th>
+                      <th className="px-3 py-2 font-medium">
+                        {t('runs:detail.table.error')}
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -293,20 +338,20 @@ export function BackupRunDetail({ runId }: BackupRunDetailProps) {
                             className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${databaseRunStatusClass(
                               db.status,
                             )}`}>
-                            {db.status}
+                            {labelForDbStatus(db.status)}
                           </span>
                         </td>
                         <td className="px-3 py-3 text-slate-600">
-                          {db.chunkCount ?? '—'}
+                          {db.chunkCount ?? t('common:emDash')}
                         </td>
                         <td className="px-3 py-3 text-slate-600">
                           {formatBytes(db.bytesTotal)}
                         </td>
                         <td className="px-3 py-3 text-slate-600">
-                          {db.rowCountTotal ?? '—'}
+                          {db.rowCountTotal ?? t('common:emDash')}
                         </td>
                         <td className="max-w-xs truncate px-3 py-3 text-xs text-red-600">
-                          {db.error ?? '—'}
+                          {db.error ?? t('common:emDash')}
                         </td>
                       </tr>
                     ))}

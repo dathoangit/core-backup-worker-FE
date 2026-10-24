@@ -1,0 +1,82 @@
+{
+  "actions": {
+    "refresh": "Làm mới",
+    "save": "Lưu thay đổi",
+    "saving": "Đang lưu...",
+    "cancel": "Hủy",
+    "close": "Đóng",
+    "edit": "Sửa",
+    "view": "Xem",
+    "viewDetails": "Xem chi tiết",
+    "details": "Chi tiết",
+    "back": "Quay lại"
+  },
+  "loading": {
+    "generic": "Đang tải..."
+  },
+  "errors": {
+    "generic": "Đã xảy ra lỗi."
+  },
+  "emDash": "—",
+  "ellipsis": "...",
+  "filter": {
+    "all": "Tất cả"
+  },
+  "toggle": {
+    "on": "Đang bật",
+    "off": "Đã tắt"
+  },
+  "configured": {
+    "yes": "Đã cấu hình",
+    "no": "Chưa cấu hình"
+  },
+  "yesNo": {
+    "yes": "Có",
+    "no": "Không"
+  },
+  "roles": {
+    "admin": "Quản trị viên",
+    "doctor": "Bác sĩ",
+    "nurse": "Điều dưỡng"
+  },
+  "status": {
+    "ok": "OK",
+    "running": "Đang chạy",
+    "queued": "Hàng đợi",
+    "partial": "Một phần",
+    "error": "Lỗi",
+    "cancelled": "Đã hủy",
+    "skipped": "Bỏ qua"
+  },
+  "scope": {
+    "allSources": "Tất cả nguồn"
+  },
+  "reachability": {
+    "ready": "ready",
+    "unconfigured": "unconfigured",
+    "unreachable": "unreachable"
+  },
+  "mode": {
+    "incremental": "Incremental",
+    "full": "Full"
+  },
+  "time": {
+    "justNow": "vừa xong",
+    "minutesAgo": "{{count}} phút trước",
+    "hoursAgo": "{{count}} giờ trước",
+    "daysAgo": "{{count}} ngày trước"
+  },
+  "lag": {
+    "noData": "Không có dữ liệu độ trễ",
+    "under15m": "Trễ <15p",
+    "under1h": "Trễ <1h",
+    "from1hTo6h": "Trễ 1h–6h",
+    "over6h": "Trễ >6h"
+  },
+  "badge": {
+    "overflow9Plus": "9+"
+  },
+  "notFound": {
+    "title": "404 - Không tìm thấy trang"
+  }
+}

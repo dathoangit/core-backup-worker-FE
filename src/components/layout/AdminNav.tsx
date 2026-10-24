@@ -1,27 +1,28 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { useTranslation } from 'react-i18next';
 import { APP_BRAND_THEME } from 'src/constants/branding';
 
 const NAV_ITEMS = [
-  { href: '/', label: 'Tổng quan', match: (path: string) => path === '/' },
+  { href: '/', labelKey: 'nav.overview', match: (path: string) => path === '/' },
   {
     href: '/dashboard',
-    label: 'Màn hình trung tâm',
+    labelKey: 'nav.wallboard',
     match: (path: string) => path === '/dashboard',
   },
   {
     href: '/runs',
-    label: 'Lịch sử',
+    labelKey: 'nav.runs',
     match: (path: string) => path === '/runs' || path.startsWith('/runs/'),
   },
   {
     href: '/files',
-    label: 'Tra cứu file',
+    labelKey: 'nav.files',
     match: (path: string) => path === '/files' || path.startsWith('/files/'),
   },
   {
     href: '/config',
-    label: 'Cấu hình',
+    labelKey: 'nav.config',
     match: (path: string) => path === '/config' || path.startsWith('/config'),
   },
 ] as const;
@@ -29,10 +30,11 @@ const NAV_ITEMS = [
 export function AdminNav() {
   const router = useRouter();
   const path = router.pathname;
+  const { t } = useTranslation('layout');
 
   return (
     <nav
-      aria-label="Điều hướng chính"
+      aria-label={t('nav.aria')}
       className="flex min-w-0 flex-1 items-center justify-center gap-1 sm:gap-2">
       {NAV_ITEMS.map((item) => {
         const active = item.match(path);
@@ -45,7 +47,7 @@ export function AdminNav() {
                 ? 'bg-white/20 text-white'
                 : `${APP_BRAND_THEME.header.subtle} hover:bg-white/10 hover:text-white`
             }`}>
-            {item.label}
+            {t(item.labelKey)}
           </Link>
         );
       })}

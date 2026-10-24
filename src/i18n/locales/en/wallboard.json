@@ -1,0 +1,184 @@
+{
+  "meta": {
+    "title": "Backup Wallboard",
+    "description": "Central realtime backup monitoring screen."
+  },
+  "header": {
+    "title": "{{brand}} · Backup Wallboard",
+    "refreshLine": "SSE + {{minutes}}m safety refresh",
+    "refreshWithRelative": "SSE + {{minutes}}m safety refresh · {{relative}}"
+  },
+  "loading": "Loading wallboard…",
+  "panels": {
+    "databases": {
+      "title": "Databases",
+      "subtitle": "{{live}} live · {{off}} off · {{total}} total"
+    },
+    "daily": {
+      "title": "Daily backups",
+      "subtitle": "24h / latest sample"
+    },
+    "forecast": {
+      "title": "Data growth forecast",
+      "subtitleDisk": "{{usedPercent}}% used · {{path}}",
+      "subtitlePrimary": "Primary {{status}}"
+    },
+    "recentJobs": {
+      "title": "Recent jobs",
+      "subtitle": "{{visible}} / {{total}}",
+      "empty": "No jobs yet."
+    },
+    "history": {
+      "title": "14-day history",
+      "subtitle": "Jobs + volume GB/day · Asia/Ho_Chi_Minh"
+    },
+    "countdown": {
+      "title": "Next Job Countdown",
+      "subtitleScheduleOff": "Schedule off · cron marks still shown",
+      "subtitleUpcoming": "Upcoming schedule"
+    },
+    "alerts": {
+      "title": "Alerts",
+      "subtitle": "Only issues that need attention"
+    }
+  },
+  "chart": {
+    "success": "Success",
+    "error": "Error",
+    "partial": "Partial",
+    "running": "Running",
+    "emptySlice": "Empty"
+  },
+  "legend": {
+    "ok": "OK",
+    "partial": "Partial",
+    "running": "Running",
+    "error": "Error"
+  },
+  "primary": {
+    "missing": "missing",
+    "ok": "OK"
+  },
+  "recentJob": {
+    "waitingWorker": "· Waiting for worker"
+  },
+  "db": {
+    "live": "LIVE",
+    "off": "OFF",
+    "watermarkPrefix": "WM {{watermark}}"
+  },
+  "activeJob": {
+    "idleTitle": "Idle — no RUNNING job",
+    "idleHint": "Progress / rows/s / ETA appear when a backup runs",
+    "progress": "Progress",
+    "speed": "Speed",
+    "diskIo": "Disk I/O",
+    "rows": "Rows",
+    "rowsProgress": "{{processed}} / {{total}}",
+    "eta": "ETA"
+  },
+  "forecast": {
+    "growthPerDay": "Growth / day",
+    "last7Days": "Last 7 days",
+    "gzipEfficiency": "Gzip efficiency",
+    "csvToGz": "CSV→gz estimate",
+    "daysUntilFull": "Disk full in",
+    "daysValue": "~{{days}} days",
+    "earlyWarning": "Early warning",
+    "estimate": "estimate",
+    "diskFullWarning": "Warning: disk estimated full in ~{{days}} days — clean retention / expand volume.",
+    "diskUsageLine": "<used>{{used}}</used> / {{total}}<muted> · {{percent}}% · free {{free}}</muted>",
+    "primaryUnreadable": "Primary {{status}} · disk unreadable."
+  },
+  "storage": {
+    "chartCategory": "Backup",
+    "emptyFolders": "Disk empty or folders not measured yet.",
+    "loadingChart": "Loading chart…"
+  },
+  "countdown": {
+    "noTargets": "No DB / groups attached",
+    "groupsPrefix": "Groups: {{groups}}",
+    "dbCount": "{{count}} DB(s) will run",
+    "incrementalTitle": "Next Incremental",
+    "incrementalNoCron": "No incremental cron",
+    "fullTitle": "Next Weekly Full",
+    "fullNoCron": "No full cron"
+  },
+  "alerts": {
+    "freshnessStaleTitle": "Backup freshness stale",
+    "freshnessStaleDetailAge": "Data age ~{{hours}}h (max {{max}}h)",
+    "freshnessStaleDetailThreshold": "Over {{max}}h threshold",
+    "unreachableTitle": "{{count}} host(s) unreachable",
+    "unreachableDetail": "Cannot reach backup source",
+    "lockHeldTitle": "Primary lock held",
+    "lockHeldDetail": "A job may be running or the lock is stuck",
+    "diskCriticalTitle": "Disk critical",
+    "diskUsageDetail": "{{percent}}% used · free {{free}}",
+    "diskUnreadable": "Cannot read disk capacity",
+    "diskWarningTitle": "Disk nearly full",
+    "unconfiguredTitle": "{{count}} DB(s) not configured",
+    "unconfiguredDetail": "Missing host / credentials in settings",
+    "scheduleOffTitle": "Automatic schedule is off",
+    "scheduleOffDetail": "Cron will not enqueue — manual only",
+    "severityCrit": "CRIT",
+    "severityWarn": "WARN",
+    "severityOk": "OK",
+    "allClear": "All clear",
+    "criticalCount": "{{count}} critical",
+    "warningCount": "{{count}} warning",
+    "checksCount": "{{count}} checks",
+    "issuesCount": "{{count}} issue(s)"
+  },
+  "checks": {
+    "freshnessOkTitle": "Freshness OK",
+    "freshnessOkDetailAge": "Age ~{{hours}}h · max {{max}}h",
+    "freshnessOkDetailWithin": "Within {{max}}h threshold",
+    "hostsOkTitle": "Hosts ready",
+    "hostsOkDetail": "{{live}}/{{total}} live · {{unreachable}} unreachable",
+    "diskOkTitle": "Disk within threshold",
+    "diskUnreadable": "Disk not readable yet",
+    "lockHeldTitle": "Lock held",
+    "lockFreeTitle": "Primary lock free",
+    "lockHeldDetail": "Job running or lock stuck",
+    "lockFreeDetail": "Ready for a new job",
+    "scheduleOffTitle": "Schedule off",
+    "scheduleOnTitle": "Automatic schedule on",
+    "scheduleUnknownTitle": "Schedule unknown",
+    "manualOnlyDetail": "Manual only",
+    "scheduleOnDetail": "Cron will enqueue per configuration"
+  },
+  "format": {
+    "growthPerDay": "+{{value}}/day",
+    "zeroGrowthPerDay": "+0 GB/day",
+    "rowsPerSec": "{{value}} rows/s",
+    "countdownDaysHours": "{{days}}d {{hours}}h",
+    "countdownHoursMinutes": "{{hours}}h {{minutes}}m"
+  },
+  "history": {
+    "okPercent14d": "14-Day OK%",
+    "okFail": "OK / Fail",
+    "volume14d": "Volume 14d",
+    "durationAvg": "Duration avg",
+    "durationMinutes": "{{value}}m",
+    "legendJobs": "Jobs",
+    "legendGbPerDay": "GB/day",
+    "streak": "Streak {{days}}d",
+    "todayVsAvg": "Today {{sign}}{{percent}}% vs avg volume",
+    "bestDay": "Best {{label}} ({{percent}}%)",
+    "worstDay": "Worst {{label}} (E{{error}}/P{{partial}})",
+    "modeMix": "Inc {{inc}}% · Full {{full}}%",
+    "heatstripTitle": "{{label}}: {{volume}} · {{duration}}{{failedSuffix}}",
+    "hasFailure": " · has failures",
+    "tooltipOk": "OK",
+    "tooltipError": "Error",
+    "tooltipPartial": "Partial",
+    "tooltipVolume": "Volume",
+    "tooltipDuration": "Duration avg",
+    "tooltipRows": "Rows",
+    "tooltipTotalJobs": "Total jobs",
+    "seriesOk": "OK",
+    "seriesPartial": "Partial",
+    "seriesError": "Error",
+    "seriesGb": "GB"
+  }
+}

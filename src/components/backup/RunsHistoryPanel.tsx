@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   cancelBackupRun,
   fetchBackupRuns,
@@ -31,6 +32,7 @@ function isTruthySetting(value: string | null | undefined): boolean {
 }
 
 export function RunsHistoryPanel() {
+  const { t } = useTranslation(['runs', 'common', 'layout']);
   const { role } = useAuth();
   const [loading, setLoading] = useState(true);
   const hasLoadedRef = useRef(false);
@@ -130,7 +132,7 @@ export function RunsHistoryPanel() {
       const result = await triggerBackupRun(options);
       setInfo(
         result.status === 'queued'
-          ? `Đã xếp hàng job ${result.runId}`
+          ? t('runs:info.queued', { runId: result.runId })
           : result.message,
       );
       setQueueRefreshKey((key) => key + 1);
@@ -155,8 +157,8 @@ export function RunsHistoryPanel() {
       const result = await cancelBackupRun(runId);
       setInfo(
         result.status === 'cancelling'
-          ? `Đang hủy job ${runId}...`
-          : `Đã hủy job ${runId}`,
+          ? t('runs:info.cancelling', { runId })
+          : t('runs:info.cancelled', { runId }),
       );
       setQueueRefreshKey((key) => key + 1);
       await load();
@@ -173,10 +175,10 @@ export function RunsHistoryPanel() {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-xl font-semibold text-slate-900">
-              Quản lý job backup
+              {t('runs:page.title')}
             </h1>
             <p className="mt-1 text-sm text-slate-600">
-              Xếp hàng, theo dõi, và hủy job (BullMQ — tối đa 1 job chạy cùng lúc).
+              {t('runs:page.subtitle')}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -184,12 +186,12 @@ export function RunsHistoryPanel() {
               type="button"
               onClick={() => void load()}
               className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
-              Làm mới
+              {t('common:actions.refresh')}
             </button>
             <Link
               href="/config"
               className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
-              Cấu hình
+              {t('layout:nav.config')}
             </Link>
           </div>
         </div>
@@ -207,7 +209,7 @@ export function RunsHistoryPanel() {
 
         <div className="mt-6">
           {loading && !zones ? (
-            <p className="text-sm text-slate-600">Đang tải overview...</p>
+            <p className="text-sm text-slate-600">{t('runs:loading.overview')}</p>
           ) : (
             <BackupOverviewCards
               zones={zones}
@@ -238,7 +240,7 @@ export function RunsHistoryPanel() {
           </div>
         ) : null}
         {loading && runs.length === 0 ? (
-          <p className="text-sm text-slate-600">Đang tải runs...</p>
+          <p className="text-sm text-slate-600">{t('runs:loading.runs')}</p>
         ) : (
           <BackupRunsTable
             runs={runs}
@@ -251,10 +253,12 @@ export function RunsHistoryPanel() {
       </div>
 
       <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        <h2 className="text-lg font-semibold text-slate-900">Zones</h2>
+        <h2 className="text-lg font-semibold text-slate-900">
+          {t('runs:zones.sectionTitle')}
+        </h2>
         <div className="mt-4">
           {loading && !zones ? (
-            <p className="text-sm text-slate-600">Đang tải...</p>
+            <p className="text-sm text-slate-600">{t('common:loading.generic')}</p>
           ) : (
             <BackupZonesPanel zones={zones} />
           )}

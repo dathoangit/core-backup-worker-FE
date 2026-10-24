@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from 'src/auth/context';
 import {
   APP_BRAND_SHORT_NAME,
@@ -28,6 +29,7 @@ function ChevronDownIcon({ open }: { open: boolean }) {
 
 export function UserAccountMenu() {
   const router = useRouter();
+  const { t } = useTranslation('layout');
   const { user, role, logout } = useAuth();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -82,7 +84,7 @@ export function UserAccountMenu() {
         type="button"
         aria-expanded={open}
         aria-haspopup="menu"
-        aria-label="Tài khoản người dùng"
+        aria-label={t('account.ariaButton')}
         onClick={() => setOpen((value) => !value)}
         className={`inline-flex max-w-[min(100vw-8rem,14rem)] items-center gap-1.5 rounded-lg border border-white/30 bg-white/10 px-2.5 py-1.5 text-sm font-medium ${APP_BRAND_THEME.header.text} transition hover:bg-white/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 sm:max-w-none sm:gap-2 sm:px-3 sm:py-2`}>
         <span className="truncate">{user.username}</span>
@@ -92,7 +94,7 @@ export function UserAccountMenu() {
       {open ? (
         <div
           role="menu"
-          aria-label="Menu tài khoản"
+          aria-label={t('account.ariaMenu')}
           className="absolute right-0 z-50 mt-2 w-[min(calc(100vw-1.5rem),18rem)] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg sm:w-72">
           <div className="border-b border-slate-100 px-4 py-3">
             <p className="truncate text-base font-semibold text-slate-900">
@@ -100,13 +102,15 @@ export function UserAccountMenu() {
             </p>
             <dl className="mt-2 space-y-1 text-sm text-slate-600">
               <div>
-                <dt className="sr-only">Vai trò</dt>
-                <dd>Vai trò: {roleLabel}</dd>
+                <dt className="sr-only">{t('account.role')}</dt>
+                <dd>{t('account.roleValue', { role: roleLabel })}</dd>
               </div>
               {user.email ? (
                 <div>
-                  <dt className="sr-only">Email</dt>
-                  <dd className="truncate">Email: {user.email}</dd>
+                  <dt className="sr-only">{t('account.email')}</dt>
+                  <dd className="truncate">
+                    {t('account.emailValue', { email: user.email })}
+                  </dd>
                 </div>
               ) : null}
             </dl>
@@ -119,7 +123,7 @@ export function UserAccountMenu() {
                 role="menuitem"
                 onClick={() => setOpen(false)}
                 className="block w-full rounded-lg border border-slate-200 px-3 py-2 text-center text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300">
-                Quản lý người dùng
+                {t('account.manageUsers')}
               </Link>
             ) : null}
             <button
@@ -127,7 +131,7 @@ export function UserAccountMenu() {
               role="menuitem"
               onClick={() => void handleLogout()}
               className="w-full rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300">
-              Đăng xuất
+              {t('account.logout')}
             </button>
           </div>
         </div>

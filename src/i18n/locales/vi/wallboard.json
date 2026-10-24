@@ -1,0 +1,184 @@
+{
+  "meta": {
+    "title": "Bảng theo dõi backup",
+    "description": "Màn hình trung tâm theo dõi backup theo thời gian thực."
+  },
+  "header": {
+    "title": "{{brand}} · Bảng theo dõi backup",
+    "refreshLine": "SSE + tự làm mới dự phòng mỗi {{minutes}} phút",
+    "refreshWithRelative": "SSE + tự làm mới dự phòng mỗi {{minutes}} phút · {{relative}}"
+  },
+  "loading": "Đang tải bảng theo dõi…",
+  "panels": {
+    "databases": {
+      "title": "Cơ sở dữ liệu",
+      "subtitle": "{{live}} bật · {{off}} tắt · {{total}} tổng"
+    },
+    "daily": {
+      "title": "Backup theo ngày",
+      "subtitle": "24h / mẫu gần nhất"
+    },
+    "forecast": {
+      "title": "Dự báo tăng trưởng dữ liệu",
+      "subtitleDisk": "{{usedPercent}}% đã dùng · {{path}}",
+      "subtitlePrimary": "Primary {{status}}"
+    },
+    "recentJobs": {
+      "title": "Job gần đây",
+      "subtitle": "{{visible}} / {{total}}",
+      "empty": "Chưa có job."
+    },
+    "history": {
+      "title": "Lịch sử 14 ngày",
+      "subtitle": "Job + dung lượng GB/ngày · Asia/Ho_Chi_Minh"
+    },
+    "countdown": {
+      "title": "Đếm ngược job tiếp theo",
+      "subtitleScheduleOff": "Lịch tắt · vẫn hiện mốc cron",
+      "subtitleUpcoming": "Lịch sắp tới"
+    },
+    "alerts": {
+      "title": "Cảnh báo",
+      "subtitle": "Chỉ hiện vấn đề cần xử lý"
+    }
+  },
+  "chart": {
+    "success": "Thành công",
+    "error": "Lỗi",
+    "partial": "Một phần",
+    "running": "Đang chạy",
+    "emptySlice": "Trống"
+  },
+  "legend": {
+    "ok": "OK",
+    "partial": "Một phần",
+    "running": "Đang chạy",
+    "error": "Lỗi"
+  },
+  "primary": {
+    "missing": "thiếu",
+    "ok": "OK"
+  },
+  "recentJob": {
+    "waitingWorker": "· Chờ worker"
+  },
+  "db": {
+    "live": "BẬT",
+    "off": "TẮT",
+    "watermarkPrefix": "WM {{watermark}}"
+  },
+  "activeJob": {
+    "idleTitle": "Nghỉ — không có job đang chạy",
+    "idleHint": "Tiến độ / dòng/giây / thời gian còn lại hiện khi backup chạy",
+    "progress": "Tiến độ",
+    "speed": "Tốc độ",
+    "diskIo": "I/O đĩa",
+    "rows": "Số dòng",
+    "rowsProgress": "{{processed}} / {{total}}",
+    "eta": "Còn lại"
+  },
+  "forecast": {
+    "growthPerDay": "Tăng trưởng / ngày",
+    "last7Days": "7 ngày gần nhất",
+    "gzipEfficiency": "Hiệu quả nén gzip",
+    "csvToGz": "ước lượng CSV→gz",
+    "daysUntilFull": "Đĩa đầy sau",
+    "daysValue": "~{{days}} ngày",
+    "earlyWarning": "Cảnh báo sớm",
+    "estimate": "ước lượng",
+    "diskFullWarning": "Cảnh báo: ước tính đĩa đầy trong ~{{days}} ngày — cần dọn retention / mở rộng volume.",
+    "diskUsageLine": "<used>{{used}}</used> / {{total}}<muted> · {{percent}}% · trống {{free}}</muted>",
+    "primaryUnreadable": "Primary {{status}} · chưa đọc được ổ."
+  },
+  "storage": {
+    "chartCategory": "Backup",
+    "emptyFolders": "Ổ trống hoặc chưa đo được thư mục.",
+    "loadingChart": "Đang tải biểu đồ…"
+  },
+  "countdown": {
+    "noTargets": "Chưa gắn DB / nhóm",
+    "groupsPrefix": "Nhóm: {{groups}}",
+    "dbCount": "{{count}} DB sẽ chạy",
+    "incrementalTitle": "Backup tăng dần tiếp theo",
+    "incrementalNoCron": "Chưa có cron backup tăng dần",
+    "fullTitle": "Backup full tuần tiếp theo",
+    "fullNoCron": "Chưa có cron backup full"
+  },
+  "alerts": {
+    "freshnessStaleTitle": "Dữ liệu backup đã cũ",
+    "freshnessStaleDetailAge": "Tuổi dữ liệu ~{{hours}}h (tối đa {{max}}h)",
+    "freshnessStaleDetailThreshold": "Vượt ngưỡng {{max}}h",
+    "unreachableTitle": "{{count}} máy chủ không kết nối được",
+    "unreachableDetail": "Không kết nối được nguồn backup",
+    "lockHeldTitle": "Khóa primary đang được giữ",
+    "lockHeldDetail": "Có thể đang có job chạy hoặc khóa bị treo",
+    "diskCriticalTitle": "Ổ đĩa nguy cấp",
+    "diskUsageDetail": "{{percent}}% đã dùng · trống {{free}}",
+    "diskUnreadable": "Không đọc được dung lượng ổ",
+    "diskWarningTitle": "Ổ đĩa sắp đầy",
+    "unconfiguredTitle": "{{count}} DB chưa cấu hình",
+    "unconfiguredDetail": "Thiếu host / thông tin đăng nhập trong cài đặt",
+    "scheduleOffTitle": "Lịch tự động đang tắt",
+    "scheduleOffDetail": "Cron không đưa job vào hàng đợi — chỉ chạy thủ công",
+    "severityCrit": "KHẨN",
+    "severityWarn": "CHÚ Ý",
+    "severityOk": "OK",
+    "allClear": "Ổn định",
+    "criticalCount": "{{count}} khẩn cấp",
+    "warningCount": "{{count}} cảnh báo",
+    "checksCount": "{{count}} mục kiểm tra",
+    "issuesCount": "{{count}} vấn đề"
+  },
+  "checks": {
+    "freshnessOkTitle": "Dữ liệu còn mới",
+    "freshnessOkDetailAge": "Tuổi ~{{hours}}h · tối đa {{max}}h",
+    "freshnessOkDetailWithin": "Trong ngưỡng {{max}}h",
+    "hostsOkTitle": "Máy chủ sẵn sàng",
+    "hostsOkDetail": "{{live}}/{{total}} bật · {{unreachable}} không kết nối được",
+    "diskOkTitle": "Đĩa trong ngưỡng",
+    "diskUnreadable": "Chưa đọc được ổ",
+    "lockHeldTitle": "Khóa đang được giữ",
+    "lockFreeTitle": "Khóa primary trống",
+    "lockHeldDetail": "Job đang chạy hoặc khóa bị treo",
+    "lockFreeDetail": "Sẵn sàng nhận job mới",
+    "scheduleOffTitle": "Lịch đang tắt",
+    "scheduleOnTitle": "Lịch tự động bật",
+    "scheduleUnknownTitle": "Lịch chưa xác định",
+    "manualOnlyDetail": "Chỉ chạy thủ công",
+    "scheduleOnDetail": "Cron sẽ đưa job vào hàng đợi theo cấu hình"
+  },
+  "format": {
+    "growthPerDay": "+{{value}}/ngày",
+    "zeroGrowthPerDay": "+0 GB/ngày",
+    "rowsPerSec": "{{value}} dòng/giây",
+    "countdownDaysHours": "{{days}} ngày {{hours}}g",
+    "countdownHoursMinutes": "{{hours}}g {{minutes}}p"
+  },
+  "history": {
+    "okPercent14d": "Tỷ lệ OK 14 ngày",
+    "okFail": "OK / Lỗi",
+    "volume14d": "Dung lượng 14 ngày",
+    "durationAvg": "Thời lượng TB",
+    "durationMinutes": "{{value}}p",
+    "legendJobs": "Job",
+    "legendGbPerDay": "GB/ngày",
+    "streak": "Chuỗi {{days}} ngày",
+    "todayVsAvg": "Hôm nay {{sign}}{{percent}}% so với TB dung lượng",
+    "bestDay": "Tốt nhất {{label}} ({{percent}}%)",
+    "worstDay": "Tệ nhất {{label}} (Lỗi {{error}}/Một phần {{partial}})",
+    "modeMix": "Tăng dần {{inc}}% · Full {{full}}%",
+    "heatstripTitle": "{{label}}: {{volume}} · {{duration}}{{failedSuffix}}",
+    "hasFailure": " · có lỗi",
+    "tooltipOk": "OK",
+    "tooltipError": "Lỗi",
+    "tooltipPartial": "Một phần",
+    "tooltipVolume": "Dung lượng",
+    "tooltipDuration": "Thời lượng TB",
+    "tooltipRows": "Số dòng",
+    "tooltipTotalJobs": "Tổng job",
+    "seriesOk": "OK",
+    "seriesPartial": "Một phần",
+    "seriesError": "Lỗi",
+    "seriesGb": "GB"
+  }
+}

@@ -1,4 +1,5 @@
 import { ApiError, formatApiErrorPayload } from 'src/utils/api';
+import i18n from 'src/i18n';
 
 export function resolveApiErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
@@ -9,5 +10,5 @@ export function resolveApiErrorMessage(error: unknown): string {
     return error.message;
   }
 
-  return 'Đã xảy ra lỗi.';
+  return i18n.t('common:errors.generic');
 }

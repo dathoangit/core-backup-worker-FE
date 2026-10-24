@@ -1,5 +1,6 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
+import { useTranslation } from 'react-i18next';
 import { DatabaseDetailPanel } from 'src/components/backup/DatabaseDetailPanel';
 import { AdminPageGate } from 'src/components/layout/AdminPageGate';
 import { AppShell } from 'src/components/layout/AppShell';
@@ -12,6 +13,7 @@ function isSourceGroup(value: string): value is SourceGroup {
 }
 
 export default function DatabaseDetailPage() {
+  const { t } = useTranslation(['runs', 'common']);
   const router = useRouter();
   const groupParam = router.query.group;
   const databaseParam = router.query.database;
@@ -22,7 +24,7 @@ export default function DatabaseDetailPage() {
   if (!router.isReady || !group || !database) {
     return (
       <main className="flex min-h-screen items-center justify-center px-6">
-        <p className="text-sm text-slate-600">Đang tải...</p>
+        <p className="text-sm text-slate-600">{t('common:loading.generic')}</p>
       </main>
     );
   }
@@ -30,7 +32,7 @@ export default function DatabaseDetailPage() {
   if (!isSourceGroup(group)) {
     return (
       <main className="flex min-h-screen items-center justify-center px-6">
-        <p className="text-sm text-slate-600">Nhóm nguồn không hợp lệ.</p>
+        <p className="text-sm text-slate-600">{t('runs:databaseDetail.invalidGroup')}</p>
       </main>
     );
   }
@@ -38,12 +40,10 @@ export default function DatabaseDetailPage() {
   return (
     <AdminPageGate>
       <Head>
-        <title>
-          {database} · {group}
-        </title>
+        <title>{t('runs:databaseDetail.metaTitle', { database, group })}</title>
         <meta
           name="description"
-          content={`Chi tiết backup database ${database} (${group}).`}
+          content={t('runs:databaseDetail.metaDescription', { database, group })}
         />
       </Head>
       <AppShell>

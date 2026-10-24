@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   fetchBackupRuns,
   fetchBackupSources,
@@ -22,6 +23,7 @@ import { SETTING_SCHEDULE_ENABLED_KEY } from 'src/types/settings';
 import {
   buildDatabaseCards,
   databaseDetailHref,
+  isUnconfiguredDatabaseName,
   type DatabaseCardModel,
 } from 'src/utils/backup-database-cards';
 import { formatIsoAsLocalDateTime } from 'src/utils/date-vn';
@@ -35,6 +37,7 @@ function isTruthySetting(value: string | null | undefined): boolean {
 }
 
 export function BackupDashboard() {
+  const { t, i18n } = useTranslation(['home', 'layout', 'common']);
   const { role } = useAuth();
   const [loading, setLoading] = useState(true);
   const hasLoadedRef = useRef(false);
@@ -122,7 +125,7 @@ export function BackupDashboard() {
 
   const cards = useMemo(
     () => buildDatabaseCards(sources, runs),
-    [sources, runs],
+    [sources, runs, i18n.language],
   );
 
   const handleStartDatabase = async (card: DatabaseCardModel) => {
@@ -151,9 +154,11 @@ export function BackupDashboard() {
   if (role !== 'admin') {
     return (
       <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h1 className="text-lg font-semibold text-slate-900">Backup monitor</h1>
+        <h1 className="text-lg font-semibold text-slate-900">
+          {t('home:nonAdmin.title')}
+        </h1>
         <p className="mt-2 text-sm text-slate-600">
-          Tài khoản của bạn không có quyền xem dashboard backup.
+          {t('home:nonAdmin.message')}
         </p>
       </section>
     );
@@ -165,33 +170,31 @@ export function BackupDashboard() {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-xl font-semibold text-slate-900">
-              Tổng quan backup
+              {t('home:title')}
             </h1>
-            <p className="mt-1 text-sm text-slate-600">
-              Theo dõi trạng thái các database đang được backup.
-            </p>
+            <p className="mt-1 text-sm text-slate-600">{t('home:subtitle')}</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={() => void load()}
               className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
-              Làm mới
+              {t('common:actions.refresh')}
             </button>
             <Link
               href="/runs"
               className="rounded-lg bg-sky-600 px-3 py-2 text-sm font-semibold text-white hover:bg-sky-700">
-              Chạy backup
+              {t('home:actions.runBackup')}
             </Link>
             <Link
               href="/config"
               className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
-              Cấu hình
+              {t('layout:nav.config')}
             </Link>
             <Link
               href="/dashboard"
               className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
-              Màn hình trung tâm
+              {t('layout:nav.wallboard')}
             </Link>
           </div>
         </div>
@@ -204,7 +207,7 @@ export function BackupDashboard() {
 
         <div className="mt-6">
           {loading && !zones ? (
-            <p className="text-sm text-slate-600">Đang tải overview...</p>
+            <p className="text-sm text-slate-600">{t('home:loading.overview')}</p>
           ) : (
             <BackupOverviewCards
               zones={zones}
@@ -220,27 +223,23 @@ export function BackupDashboard() {
       </div>
 
       <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        <h2 className="text-lg font-semibold text-slate-900">Databases</h2>
-        <p className="mt-1 text-sm text-slate-600">
-          Bấm Start trên database <span className="font-medium">ready</span> để
-          backup incremental ngay; hoặc mở chi tiết để xem watermark / restore
-          plan.
-        </p>
+        <h2 className="text-lg font-semibold text-slate-900">
+          {t('home:databases.sectionTitle')}
+        </h2>
+        <p className="mt-1 text-sm text-slate-600">{t('home:databases.hint')}</p>
 
         {loading && cards.length === 0 ? (
-          <p className="mt-6 text-sm text-slate-600">Đang tải danh sách...</p>
+          <p className="mt-6 text-sm text-slate-600">
+            {t('home:databases.loading')}
+          </p>
         ) : cards.length === 0 ? (
           <p className="mt-6 text-sm text-slate-500">
-            Chưa có database nào. Thêm cấu hình nguồn tại{' '}
-            <Link href="/config" className="font-medium text-sky-700 hover:underline">
-              Cấu hình
-            </Link>
-            .
+            {t('home:databases.empty')}
           </p>
         ) : (
           <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {cards.map((card) => {
-              const isPlaceholder = card.database === '(chưa cấu hình)';
+              const isPlaceholder = isUnconfiguredDatabaseName(card.database);
               const href = isPlaceholder
                 ? `/config?category=${card.group.toLowerCase()}`
                 : databaseDetailHref(card.group, card.database);
@@ -278,13 +277,13 @@ export function BackupDashboard() {
 
                   <dl className="mt-3 space-y-1.5 text-xs text-slate-600">
                     <div className="flex justify-between gap-2">
-                      <dt>Watermark</dt>
+                      <dt>{t('home:card.watermark')}</dt>
                       <dd className="truncate font-mono text-slate-800">
-                        {card.watermark ?? '—'}
+                        {card.watermark ?? t('common:emDash')}
                       </dd>
                     </div>
                     <div className="flex items-center justify-between gap-2">
-                      <dt>Lần chạy gần nhất</dt>
+                      <dt>{t('home:card.lastRun')}</dt>
                       <dd>
                         {card.lastRunStatus ? (
                           <span
@@ -294,13 +293,13 @@ export function BackupDashboard() {
                             {backupRunStatusLabel(card.lastRunStatus)}
                           </span>
                         ) : (
-                          '—'
+                          t('common:emDash')
                         )}
                       </dd>
                     </div>
                     {card.lastDbStatus ? (
                       <div className="flex items-center justify-between gap-2">
-                        <dt>DB status</dt>
+                        <dt>{t('home:card.dbStatus')}</dt>
                         <dd>
                           <span
                             className={`inline-flex rounded-full px-2 py-0.5 font-medium ${databaseRunStatusClass(
@@ -313,7 +312,7 @@ export function BackupDashboard() {
                     ) : null}
                     {card.lastStartedAt ? (
                       <div className="flex justify-between gap-2">
-                        <dt>Thời điểm</dt>
+                        <dt>{t('home:card.timestamp')}</dt>
                         <dd className="text-right">
                           {formatIsoAsLocalDateTime(card.lastStartedAt)}
                         </dd>
@@ -329,7 +328,9 @@ export function BackupDashboard() {
                     <Link
                       href={href}
                       className="inline-flex rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">
-                      {isPlaceholder ? 'Cấu hình' : 'Chi tiết'}
+                      {isPlaceholder
+                        ? t('home:card.configure')
+                        : t('common:actions.details')}
                     </Link>
                     {!isPlaceholder ? (
                       <button
@@ -337,14 +338,16 @@ export function BackupDashboard() {
                         disabled={!canStart}
                         title={
                           card.reachability !== 'ready'
-                            ? 'Chỉ Start khi source ready'
+                            ? t('home:card.tooltipStartWhenReady')
                             : hasRunningRun
-                              ? 'Đang có backup chạy'
-                              : 'Backup incremental database này'
+                              ? t('home:card.tooltipBackupRunning')
+                              : t('home:card.tooltipStartIncremental')
                         }
                         onClick={() => void handleStartDatabase(card)}
                         className="inline-flex rounded-lg bg-sky-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50">
-                        {startingKey === cardKey ? 'Đang gửi...' : 'Start'}
+                        {startingKey === cardKey
+                          ? t('home:card.starting')
+                          : t('home:card.start')}
                       </button>
                     ) : null}
                   </div>

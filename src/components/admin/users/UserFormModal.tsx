@@ -1,12 +1,10 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { AuthRole } from 'src/auth/types';
+import { getRoleLabel } from 'src/constants/role-labels';
 import type { AdminUser, CreateAdminUserRequest, UpdateAdminUserRequest } from 'src/types/admin';
 
-const ROLE_OPTIONS: Array<{ value: AuthRole; label: string }> = [
-  { value: 'admin', label: 'Quản trị viên' },
-  { value: 'doctor', label: 'Bác sĩ' },
-  { value: 'nurse', label: 'Điều dưỡng' },
-];
+const ROLE_OPTIONS: AuthRole[] = ['admin', 'doctor', 'nurse'];
 
 type UserFormModalProps = {
   mode: 'create' | 'edit';
@@ -29,6 +27,7 @@ export function UserFormModal({
   onSubmitCreate,
   onSubmitUpdate,
 }: UserFormModalProps) {
+  const { t } = useTranslation(['users', 'common']);
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -106,20 +105,20 @@ export function UserFormModal({
         className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-slate-200 bg-white p-5 shadow-xl sm:p-6">
         <div className="flex items-start justify-between gap-3">
           <h2 id="user-form-title" className="text-lg font-semibold text-slate-900">
-            {mode === 'create' ? 'Thêm người dùng' : 'Sửa người dùng'}
+            {mode === 'create' ? t('users:modal.createTitle') : t('users:modal.editTitle')}
           </h2>
           <button
             type="button"
             onClick={onClose}
             className="rounded-lg px-2 py-1 text-sm text-slate-500 hover:bg-slate-100">
-            Đóng
+            {t('common:actions.close')}
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           <div>
             <label htmlFor="admin-user-username" className="block text-sm font-medium text-slate-700">
-              Tên đăng nhập
+              {t('users:modal.username')}
             </label>
             <input
               id="admin-user-username"
@@ -132,7 +131,7 @@ export function UserFormModal({
 
           <div>
             <label htmlFor="admin-user-email" className="block text-sm font-medium text-slate-700">
-              Email
+              {t('users:modal.email')}
             </label>
             <input
               id="admin-user-email"
@@ -146,7 +145,9 @@ export function UserFormModal({
 
           <div>
             <label htmlFor="admin-user-password" className="block text-sm font-medium text-slate-700">
-              {mode === 'create' ? 'Mật khẩu' : 'Mật khẩu mới (để trống nếu không đổi)'}
+              {mode === 'create'
+                ? t('users:modal.password')
+                : t('users:modal.passwordNew')}
             </label>
             <input
               id="admin-user-password"
@@ -160,7 +161,7 @@ export function UserFormModal({
 
           <div>
             <label htmlFor="admin-user-role" className="block text-sm font-medium text-slate-700">
-              Vai trò hệ thống
+              {t('users:modal.roleLabel')}
             </label>
             <select
               id="admin-user-role"
@@ -168,8 +169,8 @@ export function UserFormModal({
               onChange={(e) => setRole(e.target.value as AuthRole)}
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
               {ROLE_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
+                <option key={option} value={option}>
+                  {getRoleLabel(option)}
                 </option>
               ))}
             </select>
@@ -182,7 +183,7 @@ export function UserFormModal({
               onChange={(e) => setIsActive(e.target.checked)}
               className="rounded border-slate-300"
             />
-            Tài khoản đang hoạt động
+            {t('users:modal.activeCheckbox')}
           </label>
 
           {error ? (
@@ -196,13 +197,17 @@ export function UserFormModal({
               type="button"
               onClick={onClose}
               className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
-              Hủy
+              {t('common:actions.cancel')}
             </button>
             <button
               type="submit"
               disabled={pending}
               className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700 disabled:opacity-60">
-              {pending ? 'Đang lưu...' : mode === 'create' ? 'Tạo user' : 'Lưu thay đổi'}
+              {pending
+                ? t('users:modal.saving')
+                : mode === 'create'
+                  ? t('users:modal.createSubmit')
+                  : t('users:modal.editSubmit')}
             </button>
           </div>
         </form>
