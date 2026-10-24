@@ -204,25 +204,27 @@ const SEVERITY_STYLES: Record<
   },
 };
 
-function AlertRow({ alert }: { alert: AlertItem }) {
+function AlertCard({ alert }: { alert: AlertItem }) {
   const { t } = useTranslation('wallboard');
   const style = SEVERITY_STYLES[alert.severity];
   return (
-    <div className="flex min-w-0 overflow-hidden rounded-md border border-slate-200/80 bg-white">
-      <span className={`w-1 shrink-0 ${style.bar}`} aria-hidden="true" />
-      <div className="flex min-w-0 flex-1 items-start gap-2 px-2 py-1.5">
+    <div
+      className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-md border border-slate-200/80 bg-white"
+      title={alert.detail ? `${alert.title} — ${alert.detail}` : alert.title}>
+      <span className={`h-0.5 w-full shrink-0 ${style.bar}`} aria-hidden="true" />
+      <div className="flex min-h-0 flex-1 flex-col gap-0.5 px-1.5 py-1">
         <span
-          className={`mt-0.5 shrink-0 rounded px-1 py-px text-[9px] font-bold leading-none ${style.badge}`}>
+          className={`w-fit rounded px-1 py-px text-[9px] font-bold leading-none ${style.badge}`}>
           {t(style.labelKey)}
         </span>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-[11px] font-semibold text-slate-900 xl:text-xs">
-            {alert.title}
+        <p className="line-clamp-2 text-[10px] font-semibold leading-tight text-slate-900 xl:text-[11px]">
+          {alert.title}
+        </p>
+        {alert.detail ? (
+          <p className="line-clamp-2 text-[9px] leading-tight text-slate-500">
+            {alert.detail}
           </p>
-          {alert.detail ? (
-            <p className="truncate text-[10px] text-slate-500">{alert.detail}</p>
-          ) : null}
-        </div>
+        ) : null}
       </div>
     </div>
   );
@@ -277,10 +279,14 @@ export function WallboardAlertsPanel({
         </span>
       </div>
 
-      <ul className="min-h-0 flex-1 space-y-1 overflow-y-auto">
+      <ul
+        className="grid min-h-0 flex-1 gap-1.5 overflow-hidden"
+        style={{
+          gridTemplateColumns: `repeat(${Math.max(rows.length, 1)}, minmax(0, 1fr))`,
+        }}>
         {rows.map((alert) => (
-          <li key={alert.id}>
-            <AlertRow alert={alert} />
+          <li key={alert.id} className="min-h-0 min-w-0">
+            <AlertCard alert={alert} />
           </li>
         ))}
       </ul>

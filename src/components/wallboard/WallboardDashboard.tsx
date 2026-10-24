@@ -229,76 +229,86 @@ export function WallboardDashboard() {
               title={t('panels.daily.title')}
               subtitle={t('panels.daily.subtitle')}>
               <div className="flex h-full min-h-0 flex-col gap-1.5">
-                <div className="relative min-h-[6.5rem] flex-1 xl:min-h-[7.5rem]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={
-                          donutData.length > 0
+                <div className="flex min-h-0 flex-1 items-stretch gap-2">
+                  <div className="relative min-h-[6.5rem] min-w-0 flex-1 xl:min-h-[7.5rem]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={
+                            donutData.length > 0
+                              ? donutData
+                              : [
+                                  {
+                                    name: t('chart.emptySlice'),
+                                    value: 1,
+                                    key: 'empty',
+                                  },
+                                ]
+                          }
+                          dataKey="value"
+                          nameKey="name"
+                          innerRadius="68%"
+                          outerRadius="82%"
+                          paddingAngle={2}
+                          isAnimationActive={false}>
+                          {(donutData.length > 0
                             ? donutData
-                            : [{ name: t('chart.emptySlice'), value: 1, key: 'empty' }]
-                        }
-                        dataKey="value"
-                        nameKey="name"
-                        innerRadius="68%"
-                        outerRadius="82%"
-                        paddingAngle={2}
-                        isAnimationActive={false}>
-                        {(donutData.length > 0
-                          ? donutData
-                          : [{ key: 'empty', value: 1 }]
-                        ).map((entry) => (
-                          <Cell
-                            key={entry.key}
-                            fill={
-                              entry.key === 'ok'
-                                ? STATUS_COLORS.ok
-                                : entry.key === 'error'
-                                  ? STATUS_COLORS.error
-                                  : entry.key === 'partial'
-                                    ? STATUS_COLORS.partial
-                                    : entry.key === 'running'
-                                      ? STATUS_COLORS.running
-                                      : '#cbd5e1'
-                            }
-                          />
-                        ))}
-                      </Pie>
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                    <p className="text-lg font-bold tabular-nums text-slate-900 xl:text-xl">
-                      {successPct}%
-                    </p>
-                    <p className="text-[10px] leading-tight text-slate-500">
-                      {t('legend.ok')}
-                    </p>
+                            : [{ key: 'empty', value: 1 }]
+                          ).map((entry) => (
+                            <Cell
+                              key={entry.key}
+                              fill={
+                                entry.key === 'ok'
+                                  ? STATUS_COLORS.ok
+                                  : entry.key === 'error'
+                                    ? STATUS_COLORS.error
+                                    : entry.key === 'partial'
+                                      ? STATUS_COLORS.partial
+                                      : entry.key === 'running'
+                                        ? STATUS_COLORS.running
+                                        : '#cbd5e1'
+                              }
+                            />
+                          ))}
+                        </Pie>
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+                      <p className="text-lg font-bold tabular-nums text-slate-900 xl:text-xl">
+                        {successPct}%
+                      </p>
+                      <p className="text-[10px] leading-tight text-slate-500">
+                        {t('legend.ok')}
+                      </p>
+                    </div>
                   </div>
+                  <ul className="flex w-[5.75rem] shrink-0 flex-col justify-center gap-1 text-[11px] xl:w-28 xl:text-xs">
+                    <li className="flex justify-between gap-2 text-emerald-700">
+                      <span>{t('legend.ok')}</span>
+                      <span className="font-semibold tabular-nums">
+                        {data.jobSummary.ok}
+                      </span>
+                    </li>
+                    <li className="flex justify-between gap-2 text-red-700">
+                      <span>{t('legend.error')}</span>
+                      <span className="font-semibold tabular-nums">
+                        {data.jobSummary.error}
+                      </span>
+                    </li>
+                    <li className="flex justify-between gap-2 text-amber-700">
+                      <span>{t('legend.partial')}</span>
+                      <span className="font-semibold tabular-nums">
+                        {data.jobSummary.partial}
+                      </span>
+                    </li>
+                    <li className="flex justify-between gap-2 text-sky-700">
+                      <span>{t('legend.running')}</span>
+                      <span className="font-semibold tabular-nums">
+                        {data.jobSummary.running}
+                      </span>
+                    </li>
+                  </ul>
                 </div>
-                <ul className="shrink-0 space-y-0.5 text-[11px] xl:text-xs">
-                  <li className="flex justify-between text-emerald-700">
-                    <span>{t('legend.ok')}</span>
-                    <span className="font-semibold">{data.jobSummary.ok}</span>
-                  </li>
-                  <li className="flex justify-between text-red-700">
-                    <span>{t('legend.error')}</span>
-                    <span className="font-semibold">
-                      {data.jobSummary.error}
-                    </span>
-                  </li>
-                  <li className="flex justify-between text-amber-700">
-                    <span>{t('legend.partial')}</span>
-                    <span className="font-semibold">
-                      {data.jobSummary.partial}
-                    </span>
-                  </li>
-                  <li className="flex justify-between text-sky-700">
-                    <span>{t('legend.running')}</span>
-                    <span className="font-semibold">
-                      {data.jobSummary.running}
-                    </span>
-                  </li>
-                </ul>
                 {(data.activeJob?.status === 'running' || liveProgress) && (
                   <div className="shrink-0 border-t border-slate-100 pt-1.5">
                     <ActiveJobStream
