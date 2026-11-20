@@ -18,6 +18,7 @@ import {
   APP_ORG_NAME,
 } from 'src/constants/branding';
 import { useBackupStream } from 'src/hooks/useBackupStream';
+import { localeToBcp47 } from 'src/i18n';
 import type { BackupRunProgressEvent } from 'src/types/backup-stream';
 import type { WallboardOverview } from 'src/types/wallboard';
 import { formatIsoAsLocalDateTime } from 'src/utils/date-vn';
@@ -32,15 +33,13 @@ import { WallboardChartBoundary } from './WallboardChartBoundary';
 import { WallboardPanel } from './WallboardPanel';
 import { WallboardThemeProvider } from './WallboardThemeContext';
 import { WallboardThemeToggle } from './WallboardThemeToggle';
-import {
-  formatRelativeTime,
-  percent,
-} from './wallboard-format';
+import { percent } from './wallboard-format';
 import { useWallboardTheme } from './useWallboardTheme';
 import { paletteFor, wbClass } from './wallboard-theme';
 
 /** Safety net for TV displays if SSE drops; primary updates come from the stream. */
 const SAFETY_REFRESH_MS = 5 * 60_000;
+const CLOCK_TZ = 'Asia/Ho_Chi_Minh';
 const RECENT_JOBS_VISIBLE = 5;
 const FINISHED_JOB_STATUSES = new Set([
   'ok',
@@ -48,6 +47,44 @@ const FINISHED_JOB_STATUSES = new Set([
   'error',
   'cancelled',
 ]);
+
+function WallboardClock() {
+  const { i18n } = useTranslation('wallboard');
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setNow(new Date());
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const locale = localeToBcp47(i18n.language);
+  const time = new Intl.DateTimeFormat(locale, {
+    timeZone: CLOCK_TZ,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23',
+  }).format(now);
+  const date = new Intl.DateTimeFormat(locale, {
+    timeZone: CLOCK_TZ,
+    weekday: 'long',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(now);
+
+  return (
+    <div className="text-right leading-tight">
+      <p className="font-mono text-base font-semibold tabular-nums tracking-wide text-white xl:text-lg">
+        {time}
+      </p>
+      <p className="text-[10px] text-sky-100 xl:text-xs">{date}</p>
+    </div>
+  );
+}
 
 function StatusDot({
   tone,
@@ -98,7 +135,6 @@ export function WallboardDashboard() {
   const [data, setData] = useState<WallboardOverview | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [lastFetchedAt, setLastFetchedAt] = useState<string | null>(null);
 
   const load = useCallback(async (silent = false) => {
     if (!silent) {
@@ -108,7 +144,6 @@ export function WallboardDashboard() {
       const overview = await fetchPublicOverview();
       setData(overview);
       setError(null);
-      setLastFetchedAt(new Date().toISOString());
     } catch (err) {
       setError(resolveApiErrorMessage(err));
     } finally {
@@ -244,23 +279,7 @@ export function WallboardDashboard() {
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-3">
-          <div className="text-right text-[10px] text-sky-100 xl:text-xs">
-            <p>
-              {lastFetchedAt
-                ? t('header.refreshWithRelative', {
-                    minutes: SAFETY_REFRESH_MS / 60_000,
-                    relative: formatRelativeTime(lastFetchedAt),
-                  })
-                : t('header.refreshLine', {
-                    minutes: SAFETY_REFRESH_MS / 60_000,
-                  })}
-            </p>
-            {data ? (
-              <p className="font-mono text-white/70">
-                {formatIsoAsLocalDateTime(data.generatedAt)}
-              </p>
-            ) : null}
-          </div>
+          <WallboardClock />
           <WallboardThemeToggle theme={theme} onChange={setTheme} />
           <LanguageSwitcher variant="header" />
         </div>

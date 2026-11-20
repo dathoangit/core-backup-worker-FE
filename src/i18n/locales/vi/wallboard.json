@@ -4,9 +4,7 @@
     "description": "Màn hình trung tâm theo dõi backup theo thời gian thực."
   },
   "header": {
-    "title": "{{brand}} · Bảng theo dõi backup",
-    "refreshLine": "SSE + tự làm mới dự phòng mỗi {{minutes}} phút",
-    "refreshWithRelative": "SSE + tự làm mới dự phòng mỗi {{minutes}} phút · {{relative}}"
+    "title": "{{brand}} · Bảng theo dõi backup"
   },
   "theme": {
     "aria": "Giao diện sáng hoặc tối",

@@ -8,6 +8,7 @@
     "jobs": "Operations",
     "runs": "History",
     "files": "Backup folders",
+    "lookup": "Record lookup",
     "config": "Settings",
     "wallboard": "Wallboard"
   },

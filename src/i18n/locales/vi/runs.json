@@ -149,11 +149,20 @@
     }
   },
   "lookup": {
+    "metaTitle": "Tra cứu hồ sơ",
+    "metaDescription": "Lấy toàn bộ thông tin một hồ sơ từ bản backup HIS mới nhất.",
+    "title": "Tra cứu hồ sơ",
+    "subtitle": "Nhập mã HSBA, mã người bệnh hoặc ID. Kết quả lấy từ bản backup mới nhất.",
     "queryLabel": "Mã HSBA / mã NB / ID",
     "placeholder": "2611196106",
     "submit": "Tra cứu backup",
     "loading": "Đang tra cứu...",
-    "hint": "Tìm trên bản HIS backup mới nhất (his_patienthistory), so sánh với live.",
+    "hint": "Lấy toàn bộ cột của hồ sơ trên bản HIS backup mới nhất (his_patienthistory), so sánh với live.",
+    "fieldFilter": "Lọc trường",
+    "fieldFilterPlaceholder": "Tên cột, ví dụ address",
+    "hideEmpty": "Ẩn trường trống",
+    "fieldCount": "Đang hiện {{shown}} trường · {{filled}} có dữ liệu / {{total}} cột trên bản backup",
+    "noFields": "Không có trường nào khớp bộ lọc.",
     "savedBanner": "Lưu backup lúc {{savedAt}} · run {{runId}} · hồ sơ cập nhật tới {{rowUpdatedAt}}",
     "matchedBy": "Khớp theo {{matchedBy}}",
     "table": {
@@ -162,7 +171,7 @@
       "live": "Live"
     },
     "diffCount": "{{count}} trường lệch so với live",
-    "noDiff": "Khớp live (trong phạm vi các trường hiển thị), hoặc không đọc được live."
+    "noDiff": "Khớp live trên mọi cột đã có, hoặc không đọc được live."
   },
   "restore": {
     "database": "Database",

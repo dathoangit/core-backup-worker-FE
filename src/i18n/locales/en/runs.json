@@ -149,11 +149,20 @@
     }
   },
   "lookup": {
+    "metaTitle": "Record lookup",
+    "metaDescription": "Load a full record from the latest HIS backup.",
+    "title": "Record lookup",
+    "subtitle": "Enter an HSBA code, patient code, or ID. Results come from the latest backup.",
     "queryLabel": "HSBA / patient code / ID",
     "placeholder": "2611196106",
     "submit": "Lookup backup",
     "loading": "Looking up...",
-    "hint": "Search the latest HIS backup (his_patienthistory) and compare with live.",
+    "hint": "Load every column of the record from the latest HIS backup (his_patienthistory) and compare with live.",
+    "fieldFilter": "Filter fields",
+    "fieldFilterPlaceholder": "Column name, e.g. address",
+    "hideEmpty": "Hide empty fields",
+    "fieldCount": "Showing {{shown}} fields · {{filled}} with data / {{total}} columns on the backup",
+    "noFields": "No fields match the filter.",
     "savedBanner": "Saved on backup at {{savedAt}} · run {{runId}} · row updated through {{rowUpdatedAt}}",
     "matchedBy": "Matched by {{matchedBy}}",
     "table": {
@@ -162,7 +171,7 @@
       "live": "Live"
     },
     "diffCount": "{{count}} fields differ from live",
-    "noDiff": "Matches live (for displayed fields), or live was unavailable."
+    "noDiff": "Matches live on every stored column, or live was unavailable."
   },
   "restore": {
     "database": "Database",

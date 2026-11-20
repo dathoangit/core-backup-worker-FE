@@ -21,6 +21,11 @@ const NAV_ITEMS = [
     match: (path: string) => path === '/files' || path.startsWith('/files/'),
   },
   {
+    href: '/lookup',
+    labelKey: 'nav.lookup',
+    match: (path: string) => path === '/lookup' || path.startsWith('/lookup/'),
+  },
+  {
     href: '/config',
     labelKey: 'nav.config',
     match: (path: string) => path === '/config' || path.startsWith('/config'),

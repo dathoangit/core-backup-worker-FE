@@ -4,9 +4,7 @@
     "description": "Central realtime backup monitoring screen."
   },
   "header": {
-    "title": "{{brand}} · Backup Wallboard",
-    "refreshLine": "SSE + {{minutes}}m safety refresh",
-    "refreshWithRelative": "SSE + {{minutes}}m safety refresh · {{relative}}"
+    "title": "{{brand}} · Backup Wallboard"
   },
   "theme": {
     "aria": "Light or dark appearance",

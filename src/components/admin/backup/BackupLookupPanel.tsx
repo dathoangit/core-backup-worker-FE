@@ -40,6 +40,8 @@ const FIELD_ORDER = [
 export function BackupLookupPanel() {
   const { t } = useTranslation(['runs', 'common']);
   const [query, setQuery] = useState('');
+  const [fieldFilter, setFieldFilter] = useState('');
+  const [hideEmpty, setHideEmpty] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<BackupLookupResponse | null>(null);
@@ -67,14 +69,31 @@ export function BackupLookupPanel() {
 
   const diffFields = new Set(result?.diff.map((d) => d.field) ?? []);
 
-  const fieldKeys = result
-    ? [
-        ...FIELD_ORDER.filter((key) => key in result.backup.fields),
-        ...Object.keys(result.backup.fields).filter(
-          (key) => !(FIELD_ORDER as readonly string[]).includes(key),
-        ),
-      ]
+  const allFieldKeys = result
+    ? mergeFieldKeys(result.backup.fields, result.live?.fields)
     : [];
+  const filledCount = result
+    ? allFieldKeys.filter(
+        (field) =>
+          hasValue(result.backup.fields[field]) ||
+          hasValue(result.live?.fields[field]),
+      ).length
+    : 0;
+  const needle = fieldFilter.trim().toLowerCase();
+  const fieldKeys = allFieldKeys.filter((field) => {
+    if (needle && !field.toLowerCase().includes(needle)) {
+      return false;
+    }
+
+    if (!result || !hideEmpty) {
+      return true;
+    }
+
+    return (
+      hasValue(result.backup.fields[field]) ||
+      hasValue(result.live?.fields[field])
+    );
+  });
 
   return (
     <div className="space-y-4">
@@ -124,9 +143,39 @@ export function BackupLookupPanel() {
             </p>
           </div>
 
-          <div className="overflow-x-auto rounded-lg border border-slate-200">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <label className="block flex-1 text-sm text-slate-700">
+              <span className="mb-1 block font-medium">
+                {t('runs:lookup.fieldFilter')}
+              </span>
+              <input
+                value={fieldFilter}
+                onChange={(e) => setFieldFilter(e.target.value)}
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                placeholder={t('runs:lookup.fieldFilterPlaceholder')}
+              />
+            </label>
+            <label className="flex items-center gap-2 pb-2 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                checked={hideEmpty}
+                onChange={(e) => setHideEmpty(e.target.checked)}
+              />
+              {t('runs:lookup.hideEmpty')}
+            </label>
+          </div>
+
+          <p className="text-xs text-slate-500">
+            {t('runs:lookup.fieldCount', {
+              shown: fieldKeys.length,
+              filled: filledCount,
+              total: allFieldKeys.length,
+            })}
+          </p>
+
+          <div className="max-h-[70vh] overflow-auto rounded-lg border border-slate-200">
             <table className="min-w-full divide-y divide-slate-200 text-sm">
-              <thead className="bg-slate-50">
+              <thead className="sticky top-0 bg-slate-50">
                 <tr>
                   <th className="px-3 py-2 text-left font-medium text-slate-700">
                     {t('runs:lookup.table.field')}
@@ -149,10 +198,10 @@ export function BackupLookupPanel() {
                       <td className="px-3 py-2 font-mono text-xs text-slate-700">
                         {field}
                       </td>
-                      <td className="px-3 py-2 text-slate-800">
+                      <td className="max-w-md whitespace-pre-wrap break-words px-3 py-2 text-slate-800">
                         {result.backup.fields[field] ?? '—'}
                       </td>
-                      <td className="px-3 py-2 text-slate-800">
+                      <td className="max-w-md whitespace-pre-wrap break-words px-3 py-2 text-slate-800">
                         {result.live?.fields[field] ?? '—'}
                       </td>
                     </tr>
@@ -160,6 +209,11 @@ export function BackupLookupPanel() {
                 })}
               </tbody>
             </table>
+            {fieldKeys.length === 0 ? (
+              <p className="px-3 py-4 text-sm text-slate-500">
+                {t('runs:lookup.noFields')}
+              </p>
+            ) : null}
           </div>
 
           {result.diff.length > 0 ? (
@@ -175,4 +229,29 @@ export function BackupLookupPanel() {
       ) : null}
     </div>
   );
+}
+
+function hasValue(value: string | null | undefined): boolean {
+  return value !== undefined && value !== null && value !== '';
+}
+
+function mergeFieldKeys(
+  backup: Record<string, string | null>,
+  live: Record<string, string | null> | undefined,
+): string[] {
+  const rest = new Set<string>([
+    ...Object.keys(backup),
+    ...Object.keys(live ?? {}),
+  ]);
+
+  const ordered = FIELD_ORDER.filter((key) => {
+    if (!rest.has(key)) {
+      return false;
+    }
+
+    rest.delete(key);
+    return true;
+  });
+
+  return [...ordered, ...rest];
 }
