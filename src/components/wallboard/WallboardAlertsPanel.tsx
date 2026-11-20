@@ -3,6 +3,7 @@ import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import type { WallboardOverview } from 'src/types/wallboard';
 import { formatBytesShort } from './wallboard-format';
+import { wbClass } from './wallboard-theme';
 
 type AlertSeverity = 'critical' | 'warning' | 'ok';
 
@@ -188,18 +189,18 @@ const SEVERITY_STYLES: Record<
   { bar: string; badge: string; labelKey: string }
 > = {
   critical: {
-    bar: 'bg-red-500',
-    badge: 'bg-red-600 text-white',
+    bar: wbClass.dotErr,
+    badge: wbClass.pillErr,
     labelKey: 'alerts.severityCrit',
   },
   warning: {
-    bar: 'bg-amber-500',
-    badge: 'bg-amber-500 text-white',
+    bar: wbClass.dotWarn,
+    badge: wbClass.pillWarn,
     labelKey: 'alerts.severityWarn',
   },
   ok: {
-    bar: 'bg-emerald-500',
-    badge: 'bg-emerald-600 text-white',
+    bar: wbClass.dotOk,
+    badge: wbClass.pillOk,
     labelKey: 'alerts.severityOk',
   },
 };
@@ -209,19 +210,20 @@ function AlertCard({ alert }: { alert: AlertItem }) {
   const style = SEVERITY_STYLES[alert.severity];
   return (
     <div
-      className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-md border border-slate-200/80 bg-white"
+      className={`flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-md ${wbClass.surface}`}
       title={alert.detail ? `${alert.title} — ${alert.detail}` : alert.title}>
       <span className={`h-0.5 w-full shrink-0 ${style.bar}`} aria-hidden="true" />
       <div className="flex min-h-0 flex-1 flex-col gap-0.5 px-1.5 py-1">
         <span
-          className={`w-fit rounded px-1 py-px text-[9px] font-bold leading-none ${style.badge}`}>
+          className={`w-fit rounded px-1 py-px text-[9px] font-semibold leading-none ${style.badge}`}>
           {t(style.labelKey)}
         </span>
-        <p className="line-clamp-2 text-[10px] font-semibold leading-tight text-slate-900 xl:text-[11px]">
+        <p
+          className={`line-clamp-2 text-[10px] font-semibold leading-tight xl:text-[11px] ${wbClass.ink}`}>
           {alert.title}
         </p>
         {alert.detail ? (
-          <p className="line-clamp-2 text-[9px] leading-tight text-slate-500">
+          <p className={`line-clamp-2 text-[9px] leading-tight ${wbClass.muted}`}>
             {alert.detail}
           </p>
         ) : null}
@@ -254,25 +256,28 @@ export function WallboardAlertsPanel({
       <div className="flex shrink-0 items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
           {allClear ? (
-            <span className="inline-flex items-center rounded-md bg-emerald-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+            <span
+              className={`inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${wbClass.pillOk}`}>
               {t('alerts.allClear')}
             </span>
           ) : (
             <>
               {criticalCount > 0 ? (
-                <span className="inline-flex items-center gap-1 rounded-md bg-red-600 px-2 py-0.5 text-[10px] font-bold text-white">
+                <span
+                  className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-semibold ${wbClass.pillErr}`}>
                   {t('alerts.criticalCount', { count: criticalCount })}
                 </span>
               ) : null}
               {warningCount > 0 ? (
-                <span className="inline-flex items-center gap-1 rounded-md bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-white">
+                <span
+                  className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-semibold ${wbClass.pillWarn}`}>
                   {t('alerts.warningCount', { count: warningCount })}
                 </span>
               ) : null}
             </>
           )}
         </div>
-        <span className="text-[10px] tabular-nums text-slate-400">
+        <span className={`text-[10px] tabular-nums ${wbClass.muted}`}>
           {allClear
             ? t('alerts.checksCount', { count: healthy.length })
             : t('alerts.issuesCount', { count: alerts.length })}

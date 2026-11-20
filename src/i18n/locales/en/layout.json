@@ -5,10 +5,11 @@
   "nav": {
     "aria": "Main navigation",
     "overview": "Overview",
-    "wallboard": "Wallboard",
+    "jobs": "Operations",
     "runs": "History",
-    "files": "File browser",
-    "config": "Settings"
+    "files": "Backup folders",
+    "config": "Settings",
+    "wallboard": "Wallboard"
   },
   "account": {
     "ariaButton": "User account",

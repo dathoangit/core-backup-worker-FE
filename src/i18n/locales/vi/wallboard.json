@@ -8,6 +8,11 @@
     "refreshLine": "SSE + tự làm mới dự phòng mỗi {{minutes}} phút",
     "refreshWithRelative": "SSE + tự làm mới dự phòng mỗi {{minutes}} phút · {{relative}}"
   },
+  "theme": {
+    "aria": "Giao diện sáng hoặc tối",
+    "light": "Sáng",
+    "dark": "Tối"
+  },
   "loading": "Đang tải bảng theo dõi…",
   "panels": {
     "databases": {
@@ -47,7 +52,8 @@
     "error": "Lỗi",
     "partial": "Một phần",
     "running": "Đang chạy",
-    "emptySlice": "Trống"
+    "emptySlice": "Trống",
+    "unavailable": "Không hiển thị được biểu đồ"
   },
   "legend": {
     "ok": "OK",
@@ -60,7 +66,9 @@
     "ok": "OK"
   },
   "recentJob": {
-    "waitingWorker": "· Chờ worker"
+    "waitingWorker": "· Chờ worker",
+    "timeRange": "{{start}} → {{end}}",
+    "timeRangeTitle": "Bắt đầu {{start}} · Kết thúc {{end}}"
   },
   "db": {
     "live": "BẬT",

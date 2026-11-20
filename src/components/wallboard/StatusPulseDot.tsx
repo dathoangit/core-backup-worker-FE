@@ -1,3 +1,5 @@
+import { wbClass } from './wallboard-theme';
+
 type StatusPulseDotVariant = 'live' | 'scheduleOk' | 'warn' | 'error' | 'neutral';
 
 type StatusPulseDotProps = {
@@ -6,19 +8,19 @@ type StatusPulseDotProps = {
 };
 
 const CORE: Record<StatusPulseDotVariant, string> = {
-  live: 'bg-emerald-500',
-  scheduleOk: 'bg-emerald-600',
-  warn: 'bg-amber-500',
-  error: 'bg-red-500',
-  neutral: 'bg-slate-400',
+  live: wbClass.dotOk,
+  scheduleOk: wbClass.dotOk,
+  warn: wbClass.dotWarn,
+  error: wbClass.dotErr,
+  neutral: wbClass.dotNeutral,
 };
 
 const RING: Record<StatusPulseDotVariant, string> = {
-  live: 'bg-emerald-400',
-  scheduleOk: 'bg-emerald-500',
-  warn: 'bg-amber-400',
-  error: 'bg-red-400',
-  neutral: 'bg-slate-300',
+  live: wbClass.dotOk,
+  scheduleOk: wbClass.dotOk,
+  warn: wbClass.dotWarn,
+  error: wbClass.dotErr,
+  neutral: wbClass.dotNeutral,
 };
 
 const PULSE: Record<StatusPulseDotVariant, boolean> = {
@@ -42,7 +44,7 @@ export function StatusPulseDot({ variant, className = '' }: StatusPulseDotProps)
       {pulse ? (
         <>
           <span
-            className={`absolute inset-0 rounded-full ${RING[variant]} animate-live-ring motion-reduce:animate-none`}
+            className={`absolute inset-0 rounded-full opacity-60 ${RING[variant]} animate-live-ring motion-reduce:animate-none`}
           />
           <span
             className={`relative rounded-full ${size} ${CORE[variant]} animate-live-core motion-reduce:animate-none`}

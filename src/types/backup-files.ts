@@ -1,4 +1,4 @@
-export type BackupFileKind = 'full' | 'append' | 'cdc' | 'snapshot';
+export type BackupFileKind = 'full' | 'append' | 'cdc' | 'snapshot' | 'logical';
 
 export type BackupFileEntry = {
   relativePath: string;
@@ -25,6 +25,20 @@ export type BackupFilesTreeNode = {
       totalBytes: number;
     }>;
   }>;
+};
+
+export type BackupFolderEntry = {
+  folder: string;
+  runId: string;
+  sourceGroup: string;
+  database: string;
+  kind: BackupFileKind;
+  startedAt: string;
+  finishedAt: string | null;
+  tables: string[];
+  fileCount: number;
+  rowCount: number;
+  sizeBytes: number;
 };
 
 export type BackupFileChecksumResult = {

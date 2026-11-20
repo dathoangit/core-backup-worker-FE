@@ -1,6 +1,14 @@
 import type { BackupRunStatus, DatabaseRunStatus, SourceReachability } from 'src/types/backup';
 import i18n from 'src/i18n';
 
+export function canCancelBackupRun(status: BackupRunStatus | string): boolean {
+  return status === 'queued' || status === 'running';
+}
+
+export function canResumeBackupRun(status: BackupRunStatus | string): boolean {
+  return status === 'cancelled' || status === 'error' || status === 'partial';
+}
+
 export function backupRunStatusClass(status: BackupRunStatus | string): string {
   switch (status) {
     case 'ok':
@@ -77,6 +85,19 @@ export function databaseRunStatusClass(status: DatabaseRunStatus | string): stri
       return 'bg-red-50 text-red-700';
     default:
       return 'bg-slate-100 text-slate-600';
+  }
+}
+
+export function databaseRunStatusLabel(status: DatabaseRunStatus | string): string {
+  switch (status) {
+    case 'ok':
+      return i18n.t('common:status.ok');
+    case 'error':
+      return i18n.t('common:status.error');
+    case 'skipped':
+      return i18n.t('common:status.skipped');
+    default:
+      return status;
   }
 }
 

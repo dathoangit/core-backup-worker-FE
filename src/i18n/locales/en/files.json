@@ -1,36 +1,44 @@
 {
   "meta": {
-    "title": "Backup file browser",
-    "description": "Browse backed-up .csv.gz files with size and checksum."
+    "title": "Backup folders",
+    "description": "Catalog of backup folders: date/time, contents, and size."
   },
-  "title": "Backup file browser",
-  "subtitle": "Directory tree of .csv.gz by day / DB group. Select a database to list files and compute checksums.",
+  "title": "Backup folders",
+  "subtitle": "Read-only list of folders written on disk — date/time, contents, and size. Click a row to see files inside.",
   "loading": {
-    "tree": "Loading directory tree...",
+    "folders": "Loading folders...",
     "files": "Loading files..."
   },
   "empty": {
-    "tree": "No backup files yet.",
+    "folders": "No backup folders yet.",
     "files": "No files."
   },
-  "prompt": {
-    "selectDb": "Select a database in the left tree to list files."
+  "detail": {
+    "title": "Files in folder"
   },
   "table": {
+    "datetime": "Date / time",
+    "content": "Contents",
     "file": "File",
     "kind": "Kind",
     "size": "Size",
-    "rows": "Rows",
-    "sha256": "SHA-256",
-    "md5": "MD5"
+    "rows": "Rows"
   },
   "row": {
-    "runPrefix": "run {{runId}}"
+    "finished": "finished {{time}}",
+    "fileCount": "{{count}} file(s) · run {{runId}}"
   },
-  "actions": {
-    "computeChecksum": "Compute checksum"
+  "kind": {
+    "full": "full",
+    "append": "append",
+    "cdc": "CDC",
+    "snapshot": "snapshot",
+    "logical": "logical dump"
   },
-  "tree": {
-    "fileCount": "{{count}} file(s) · {{size}}"
+  "content": {
+    "fullDump": "full database dump",
+    "tableCount": "{{count}} table(s)",
+    "moreTables": "+{{count}} more",
+    "rowCount": "{{count}} rows"
   }
 }

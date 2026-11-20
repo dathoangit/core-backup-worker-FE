@@ -7,6 +7,7 @@ import type {
 import { formatIsoAsLocalDateTime } from 'src/utils/date-vn';
 import { AutoScrollRows } from './AutoScrollRows';
 import { formatCountdown } from './wallboard-format';
+import { wbClass } from './wallboard-theme';
 
 const CHIP_VISIBLE_ROWS = 3;
 const CHIP_GAP_PX = 4;
@@ -69,7 +70,7 @@ function DbChipList({
 }: {
   databases: WallboardScheduleTarget[];
   groups?: string[];
-  tone: 'sky' | 'violet';
+  tone: 'chart' | 'amber';
 }) {
   const { t } = useTranslation('wallboard');
   const measureRef = useRef<HTMLDivElement>(null);
@@ -95,16 +96,16 @@ function DbChipList({
 
   if (databases.length === 0 && (!groups || groups.length === 0)) {
     return (
-      <p className="mt-1 text-[10px] text-slate-500">
+      <p className={`mt-1 text-[10px] ${wbClass.muted}`}>
         {t('countdown.noTargets')}
       </p>
     );
   }
 
   const chip =
-    tone === 'sky'
-      ? 'bg-sky-100 text-sky-800'
-      : 'bg-violet-100 text-violet-800';
+    tone === 'chart'
+      ? `${wbClass.chartSoft} ${wbClass.chartInk}`
+      : `${wbClass.warnSoft} ${wbClass.warnInk}`;
 
   const rowNodes = packedRows.map((row, rowIndex) => (
     <div key={`chip-row-${rowIndex}`} className="flex gap-1 overflow-hidden">
@@ -122,7 +123,7 @@ function DbChipList({
   return (
     <div className="mt-1.5 min-h-0 flex-1">
       {groups && groups.length > 0 ? (
-        <p className="mb-0.5 text-[10px] font-medium text-slate-600">
+        <p className={`mb-0.5 text-[10px] font-medium ${wbClass.muted}`}>
           {t('countdown.groupsPrefix', { groups: groups.join(', ') })}
         </p>
       ) : null}
@@ -135,7 +136,7 @@ function DbChipList({
         />
       </div>
       {databases.length > 0 ? (
-        <p className="mt-0.5 text-[9px] text-slate-500">
+        <p className={`mt-0.5 text-[9px] ${wbClass.muted}`}>
           {t('countdown.dbCount', { count: databases.length })}
         </p>
       ) : null}
@@ -163,29 +164,33 @@ export function NextJobCountdown({ schedule }: NextJobCountdownProps) {
   return (
     <div className="flex h-full min-h-0 flex-col gap-1.5">
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-1.5 sm:grid-cols-2">
-        <div className="flex min-h-0 flex-col rounded-lg border border-sky-100 bg-sky-50 px-3 py-2">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-sky-700">
+        <div
+          className={`flex min-h-0 flex-col rounded-lg px-3 py-2 ${wbClass.chartSoft}`}>
+          <p
+            className={`text-[10px] font-semibold uppercase tracking-wide ${wbClass.chartInk}`}>
             {t('countdown.incrementalTitle')}
           </p>
-          <p className="text-2xl font-bold tabular-nums text-sky-950 xl:text-3xl">
+          <p className={`text-2xl xl:text-3xl ${wbClass.kpi}`}>
             {formatCountdown(nextIncrementalAt)}
           </p>
-          <p className="truncate text-[10px] text-sky-700/80">
+          <p className={`truncate text-[10px] opacity-80 ${wbClass.chartInk}`}>
             {nextIncrementalAt
               ? formatIsoAsLocalDateTime(nextIncrementalAt)
               : t('countdown.incrementalNoCron')}
           </p>
-          <DbChipList databases={incrementalDbs} tone="sky" />
+          <DbChipList databases={incrementalDbs} tone="chart" />
         </div>
 
-        <div className="flex min-h-0 flex-col rounded-lg border border-violet-100 bg-violet-50 px-3 py-2">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-violet-700">
+        <div
+          className={`flex min-h-0 flex-col rounded-lg px-3 py-2 ${wbClass.warnSoft}`}>
+          <p
+            className={`text-[10px] font-semibold uppercase tracking-wide ${wbClass.warnInk}`}>
             {t('countdown.fullTitle')}
           </p>
-          <p className="text-2xl font-bold tabular-nums text-violet-950 xl:text-3xl">
+          <p className={`text-2xl xl:text-3xl ${wbClass.kpi}`}>
             {nextFullLabel ?? '—'}
           </p>
-          <p className="truncate text-[10px] text-violet-700/80">
+          <p className={`truncate text-[10px] opacity-80 ${wbClass.warnInk}`}>
             {nextFullAt
               ? formatCountdown(nextFullAt)
               : t('countdown.fullNoCron')}
@@ -193,7 +198,7 @@ export function NextJobCountdown({ schedule }: NextJobCountdownProps) {
           <DbChipList
             databases={fullDbs}
             groups={fullGroups}
-            tone="violet"
+            tone="amber"
           />
         </div>
       </div>

@@ -6,6 +6,7 @@ import {
   formatCompression,
   formatDailyGrowth,
 } from './wallboard-format';
+import { wbClass } from './wallboard-theme';
 
 type DiskForecastPanelProps = {
   disk: WallboardDisk | null;
@@ -28,7 +29,6 @@ export function DiskForecastPanel({
           label={t('forecast.growthPerDay')}
           value={formatDailyGrowth(forecast?.dailyGrowthBytes)}
           hint={t('forecast.last7Days')}
-          emphasize
         />
         <ForecastMetric
           label={t('forecast.gzipEfficiency')}
@@ -43,19 +43,19 @@ export function DiskForecastPanel({
           value={days != null ? t('forecast.daysValue', { days }) : '—'}
           hint={warning ? t('forecast.earlyWarning') : t('forecast.estimate')}
           tone={warning ? 'warn' : 'default'}
-          emphasize
         />
       </div>
 
       {warning ? (
-        <p className="shrink-0 rounded-md bg-amber-50 px-2 py-1 text-[11px] font-medium text-amber-800">
+        <p
+          className={`shrink-0 rounded-md px-2 py-1 text-[11px] font-medium ${wbClass.pillWarn}`}>
           {t('forecast.diskFullWarning', { days })}
         </p>
       ) : null}
 
       {disk?.exists ? (
         <div className="flex min-h-0 flex-1 flex-col gap-1">
-          <p className="shrink-0 text-[11px] text-slate-600 xl:text-xs">
+          <p className={`shrink-0 text-[11px] xl:text-xs ${wbClass.muted}`}>
             <Trans
               t={t}
               i18nKey="forecast.diskUsageLine"
@@ -66,15 +66,15 @@ export function DiskForecastPanel({
                 free: formatBytesShort(disk.freeBytes),
               }}
               components={{
-                used: <span className="font-semibold text-slate-900" />,
-                muted: <span className="text-slate-500" />,
+                used: <span className={`font-semibold ${wbClass.ink}`} />,
+                muted: <span className={wbClass.muted} />,
               }}
             />
           </p>
           <BackupStorageCylinder disk={disk} />
         </div>
       ) : (
-        <p className="flex flex-1 items-center text-xs text-slate-500">
+        <p className={`flex flex-1 items-center text-xs ${wbClass.muted}`}>
           {t('forecast.primaryUnreadable', {
             status: primaryExists ? t('primary.ok') : t('primary.missing'),
           })}
@@ -88,34 +88,25 @@ function ForecastMetric({
   label,
   value,
   hint,
-  emphasize = false,
   tone = 'default',
 }: {
   label: string;
   value: string;
   hint: string;
-  emphasize?: boolean;
   tone?: 'default' | 'warn';
 }) {
-  const box =
-    tone === 'warn'
-      ? 'bg-amber-50 border-amber-200'
-      : 'bg-slate-50 border-slate-100';
+  const box = tone === 'warn' ? wbClass.warnSoft : wbClass.metricBox;
+  const valueTone = tone === 'warn' ? wbClass.warnInk : wbClass.ink;
+  const hintTone = tone === 'warn' ? wbClass.warnInk : wbClass.muted;
 
   return (
     <div className={`rounded-lg border px-2 py-1.5 ${box}`}>
-      <p className="text-[10px] font-medium text-slate-500">{label}</p>
+      <p className={`text-[10px] font-medium ${wbClass.ink}`}>{label}</p>
       <p
-        className={`truncate text-sm font-bold tabular-nums xl:text-base ${
-          tone === 'warn'
-            ? 'text-amber-900'
-            : emphasize
-              ? 'text-slate-900'
-              : 'text-slate-800'
-        }`}>
+        className={`truncate text-sm font-semibold tabular-nums xl:text-base ${valueTone}`}>
         {value}
       </p>
-      <p className="truncate text-[9px] text-slate-400">{hint}</p>
+      <p className={`truncate text-[9px] ${hintTone}`}>{hint}</p>
     </div>
   );
 }

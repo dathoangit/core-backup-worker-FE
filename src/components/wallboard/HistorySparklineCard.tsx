@@ -15,24 +15,30 @@ import type {
   WallboardHistoryDay,
   WallboardRecentJob,
 } from 'src/types/wallboard';
+import { useWallboardPalette } from './WallboardThemeContext';
 import {
   formatBytesShort,
   formatCompactCount,
   formatShortDay,
   percent,
 } from './wallboard-format';
+import { wbClass } from './wallboard-theme';
 
 type HistorySparklineCardProps = {
   historyByDay: WallboardHistoryDay[];
   recentJobs?: WallboardRecentJob[];
 };
 
-const STATUS_COLORS = {
-  ok: '#059669',
-  error: '#dc2626',
-  partial: '#d97706',
-  bytes: '#0284c7',
-} as const;
+function withAlpha(hex: string, alpha: number): string {
+  const raw = hex.replace('#', '');
+  if (raw.length !== 6) {
+    return hex;
+  }
+  const r = Number.parseInt(raw.slice(0, 2), 16);
+  const g = Number.parseInt(raw.slice(2, 4), 16);
+  const b = Number.parseInt(raw.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
 
 type ChartDay = {
   date: string;
@@ -98,27 +104,28 @@ function HistoryTooltip({
   }
   const day = payload[0].payload;
   return (
-    <div className="rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] shadow-sm">
-      <p className="font-semibold text-slate-800">{label}</p>
-      <p className="text-emerald-700">
+    <div
+      className={`rounded-md px-2.5 py-1.5 text-[11px] ${wbClass.surface}`}>
+      <p className={`font-semibold ${wbClass.ink}`}>{label}</p>
+      <p className={wbClass.legendOk}>
         {t('history.tooltipOk')}: {day.ok}
       </p>
-      <p className="text-red-700">
+      <p className={wbClass.legendErr}>
         {t('history.tooltipError')}: {day.error}
       </p>
-      <p className="text-amber-700">
+      <p className={wbClass.legendPartial}>
         {t('history.tooltipPartial')}: {day.partial}
       </p>
-      <p className="text-sky-700">
+      <p className={wbClass.legendRunning}>
         {t('history.tooltipVolume')}: {formatBytesShort(day.bytesWritten)}
       </p>
-      <p className="text-violet-700">
+      <p className={wbClass.muted}>
         {t('history.tooltipDuration')}: {formatDurationMin(day.durationSecAvg, t)}
       </p>
-      <p className="text-slate-600">
+      <p className={wbClass.muted}>
         {t('history.tooltipRows')}: {formatCompactCount(day.rowCountTotal)}
       </p>
-      <p className="border-t border-slate-100 pt-0.5 text-slate-600">
+      <p className={`border-t pt-0.5 ${wbClass.ruleBorder} ${wbClass.muted}`}>
         {t('history.tooltipTotalJobs')} {day.total} · {t('history.tooltipOk')}{' '}
         {day.successPct}%
       </p>
@@ -131,6 +138,13 @@ export function HistorySparklineCard({
   recentJobs = [],
 }: HistorySparklineCardProps) {
   const { t } = useTranslation('wallboard');
+  const { palette } = useWallboardPalette();
+  const statusColors = {
+    ok: palette.status.ok,
+    error: palette.status.error,
+    partial: palette.status.partial,
+    bytes: palette.chart,
+  };
   const {
     okTotal,
     failedTotal,
@@ -261,60 +275,62 @@ export function HistorySparklineCard({
   return (
     <div className="flex h-full min-h-0 flex-col gap-1">
       <div className="grid shrink-0 grid-cols-4 gap-1 text-[10px] xl:text-[11px]">
-        <div className="rounded-md bg-emerald-50 px-1.5 py-1">
-          <p className="text-[9px] text-emerald-700">
-            {t('history.okPercent14d')}
-          </p>
-          <p className="text-base font-bold tabular-nums text-emerald-800 xl:text-lg">
+        <div className={`rounded-md px-1.5 py-1 ${wbClass.pillOk}`}>
+          <p className="text-[9px] opacity-90">{t('history.okPercent14d')}</p>
+          <p className={`text-base xl:text-lg ${wbClass.kpi}`}>
             {successRate}%
           </p>
         </div>
-        <div className="rounded-md bg-slate-50 px-1.5 py-1">
-          <p className="text-[9px] text-slate-500">{t('history.okFail')}</p>
-          <p className="text-base font-bold tabular-nums text-slate-900 xl:text-lg">
-            <span className="text-emerald-700">{okTotal}</span>
-            <span className="text-slate-400">/</span>
-            <span className="text-red-700">{failedTotal}</span>
+        <div className={`rounded-md px-1.5 py-1 bg-[var(--wb-raised)]`}>
+          <p className={`text-[9px] ${wbClass.muted}`}>{t('history.okFail')}</p>
+          <p className={`text-base xl:text-lg ${wbClass.kpi}`}>
+            <span className={wbClass.legendOk}>{okTotal}</span>
+            <span className={wbClass.controlText}>/</span>
+            <span className={wbClass.legendErr}>{failedTotal}</span>
           </p>
         </div>
-        <div className="rounded-md bg-sky-50 px-1.5 py-1">
-          <p className="text-[9px] text-sky-700">{t('history.volume14d')}</p>
-          <p className="truncate text-base font-bold tabular-nums text-sky-900 xl:text-lg">
+        <div className={`rounded-md px-1.5 py-1 ${wbClass.chartSoft}`}>
+          <p className={`text-[9px] ${wbClass.chartInk}`}>
+            {t('history.volume14d')}
+          </p>
+          <p
+            className={`truncate text-base xl:text-lg ${wbClass.kpi} ${wbClass.chartInk}`}>
             {formatBytesShort(totalBytes)}
           </p>
         </div>
-        <div className="rounded-md bg-violet-50 px-1.5 py-1">
-          <p className="text-[9px] text-violet-700">
+        <div className={`rounded-md px-1.5 py-1 bg-[var(--wb-raised)]`}>
+          <p className={`text-[9px] ${wbClass.muted}`}>
             {t('history.durationAvg')}
           </p>
-          <p className="text-base font-bold tabular-nums text-violet-900 xl:text-lg">
+          <p className={`text-base xl:text-lg ${wbClass.kpi}`}>
             {formatDurationMin(avgDurationSec, t)}
           </p>
         </div>
       </div>
 
-      <div className="flex shrink-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-[9px] text-slate-600 xl:text-[10px]">
+      <div
+        className={`flex shrink-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-[9px] xl:text-[10px] ${wbClass.muted}`}>
         <span className="inline-flex items-center gap-1">
           <span
             className="inline-block h-2 w-2 rounded-sm"
-            style={{ background: STATUS_COLORS.ok }}
+            style={{ background: statusColors.ok }}
           />
           {t('history.legendJobs')}
         </span>
         <span className="inline-flex items-center gap-1">
           <span
             className="inline-block h-1.5 w-3 rounded-full"
-            style={{ background: STATUS_COLORS.bytes }}
+            style={{ background: statusColors.bytes }}
           />
           {t('history.legendGbPerDay')}
         </span>
-        <span className="text-sky-700">
+        <span className={wbClass.chartInk}>
           {t('history.streak', { days: streak })}
         </span>
         {todayVsAvgBytesPct != null ? (
           <span
             className={
-              todayVsAvgBytesPct >= 0 ? 'text-sky-700' : 'text-emerald-700'
+              todayVsAvgBytesPct >= 0 ? wbClass.chartInk : wbClass.legendOk
             }>
             {t('history.todayVsAvg', {
               sign: todayVsAvgBytesPct >= 0 ? '+' : '',
@@ -323,7 +339,7 @@ export function HistorySparklineCard({
           </span>
         ) : null}
         {bestDay ? (
-          <span className="text-emerald-700">
+          <span className={wbClass.legendOk}>
             {t('history.bestDay', {
               label: bestDay.label,
               percent: bestDay.successPct,
@@ -331,7 +347,7 @@ export function HistorySparklineCard({
           </span>
         ) : null}
         {worstDay ? (
-          <span className="text-red-700">
+          <span className={wbClass.legendErr}>
             {t('history.worstDay', {
               label: worstDay.label,
               error: worstDay.error,
@@ -340,7 +356,8 @@ export function HistorySparklineCard({
           </span>
         ) : null}
         {modeSampleSize > 0 ? (
-          <span className="rounded bg-slate-100 px-1 py-0.5 font-medium text-slate-700">
+          <span
+            className={`rounded px-1 py-0.5 font-medium ${wbClass.pillNeutral}`}>
             {t('history.modeMix', { inc: incrementalPct, full: fullPct })}
           </span>
         ) : null}
@@ -366,10 +383,10 @@ export function HistorySparklineCard({
               className="h-2 rounded-[2px]"
               style={{
                 backgroundColor: failed
-                  ? `rgba(220, 38, 38, ${0.35 + intensity * 0.55})`
+                  ? withAlpha(palette.status.error, 0.35 + intensity * 0.55)
                   : intensity === 0
-                    ? '#e2e8f0'
-                    : `rgba(2, 132, 199, ${0.25 + intensity * 0.7})`,
+                    ? palette.rule
+                    : withAlpha(palette.chart, 0.25 + intensity * 0.7),
               }}
             />
           );
@@ -377,19 +394,19 @@ export function HistorySparklineCard({
       </div>
 
       <div className="min-h-0 flex-1">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
           <ComposedChart
             data={chartData}
             margin={{ top: 4, right: 8, left: 0, bottom: 0 }}
             barCategoryGap="22%">
             <CartesianGrid
               strokeDasharray="3 3"
-              stroke="#e2e8f0"
+              stroke={palette.rule}
               vertical={false}
             />
             <XAxis
               dataKey="label"
-              tick={{ fontSize: 9, fill: '#64748b' }}
+              tick={{ fontSize: 9, fill: palette.muted }}
               tickMargin={2}
               interval="preserveStartEnd"
               height={16}
@@ -397,14 +414,14 @@ export function HistorySparklineCard({
             <YAxis
               yAxisId="jobs"
               allowDecimals={false}
-              tick={{ fontSize: 9, fill: '#64748b' }}
+              tick={{ fontSize: 9, fill: palette.muted }}
               width={18}
               tickMargin={2}
             />
             <YAxis
               yAxisId="volume"
               orientation="right"
-              tick={{ fontSize: 9, fill: '#0284c7' }}
+              tick={{ fontSize: 9, fill: palette.chart }}
               width={28}
               tickMargin={2}
               tickFormatter={(v: number) =>
@@ -413,14 +430,14 @@ export function HistorySparklineCard({
             />
             <Tooltip
               content={<HistoryTooltip />}
-              cursor={{ fill: 'rgba(148, 163, 184, 0.12)' }}
+              cursor={{ fill: withAlpha(palette.control, 0.2) }}
             />
             <Bar
               yAxisId="jobs"
               dataKey="ok"
               name={t('history.seriesOk')}
               stackId="status"
-              fill={STATUS_COLORS.ok}
+              fill={statusColors.ok}
               isAnimationActive={false}
               maxBarSize={14}
             />
@@ -429,7 +446,7 @@ export function HistorySparklineCard({
               dataKey="partial"
               name={t('history.seriesPartial')}
               stackId="status"
-              fill={STATUS_COLORS.partial}
+              fill={statusColors.partial}
               isAnimationActive={false}
               maxBarSize={14}
             />
@@ -438,7 +455,7 @@ export function HistorySparklineCard({
               dataKey="error"
               name={t('history.seriesError')}
               stackId="status"
-              fill={STATUS_COLORS.error}
+              fill={statusColors.error}
               isAnimationActive={false}
               maxBarSize={14}
               radius={[2, 2, 0, 0]}
@@ -448,9 +465,9 @@ export function HistorySparklineCard({
               type="monotone"
               dataKey="bytesGb"
               name={t('history.seriesGb')}
-              stroke={STATUS_COLORS.bytes}
+              stroke={statusColors.bytes}
               strokeWidth={2}
-              dot={{ r: 2.5, fill: STATUS_COLORS.bytes }}
+              dot={{ r: 2.5, fill: statusColors.bytes }}
               activeDot={{ r: 4 }}
               isAnimationActive={false}
             />

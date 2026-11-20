@@ -14,6 +14,7 @@ import {
   backupRunStatusClass,
   backupRunStatusLabel,
   databaseRunStatusClass,
+  databaseRunStatusLabel,
   reachabilityClass,
 } from 'src/components/admin/backup/backup-status';
 import { RunProgressBar } from 'src/components/backup/RunProgressBar';
@@ -182,7 +183,7 @@ export function BackupDashboard() {
               {t('common:actions.refresh')}
             </button>
             <Link
-              href="/runs"
+              href="/jobs"
               className="rounded-lg bg-sky-600 px-3 py-2 text-sm font-semibold text-white hover:bg-sky-700">
               {t('home:actions.runBackup')}
             </Link>
@@ -305,7 +306,7 @@ export function BackupDashboard() {
                             className={`inline-flex rounded-full px-2 py-0.5 font-medium ${databaseRunStatusClass(
                               card.lastDbStatus,
                             )}`}>
-                            {card.lastDbStatus}
+                            {databaseRunStatusLabel(card.lastDbStatus)}
                           </span>
                         </dd>
                       </div>

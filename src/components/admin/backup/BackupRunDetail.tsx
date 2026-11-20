@@ -1,7 +1,12 @@
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { cancelBackupRun, fetchBackupRun } from 'src/auth/backup-api';
+import {
+  cancelBackupRun,
+  fetchBackupRun,
+  resumeBackupRun,
+} from 'src/auth/backup-api';
 import { useAuth } from 'src/auth/context';
 import { RunLogTerminal } from 'src/components/backup/RunLogTerminal';
 import { RunProgressBar } from 'src/components/backup/RunProgressBar';
@@ -12,6 +17,8 @@ import { resolveApiErrorMessage } from 'src/utils/resolve-api-error';
 import {
   backupRunStatusClass,
   backupRunStatusLabel,
+  canCancelBackupRun,
+  canResumeBackupRun,
   databaseRunStatusClass,
   formatBytes,
 } from './backup-status';
@@ -20,12 +27,9 @@ type BackupRunDetailProps = {
   runId: string;
 };
 
-function canCancel(status: BackupRun['status']): boolean {
-  return status === 'queued' || status === 'running';
-}
-
 export function BackupRunDetail({ runId }: BackupRunDetailProps) {
   const { t } = useTranslation(['runs', 'common']);
+  const router = useRouter();
   const { role } = useAuth();
 
   const labelForDbStatus = (status: string) => {
@@ -37,6 +41,7 @@ export function BackupRunDetail({ runId }: BackupRunDetailProps) {
   const [run, setRun] = useState<BackupRun | null>(null);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
+  const [resuming, setResuming] = useState(false);
   const [info, setInfo] = useState<string | null>(null);
   const loadedRunIdRef = useRef<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -130,6 +135,26 @@ export function BackupRunDetail({ runId }: BackupRunDetailProps) {
     }
   };
 
+  const handleResume = async () => {
+    if (role !== 'admin') {
+      return;
+    }
+
+    setResuming(true);
+    setError(null);
+    setInfo(null);
+
+    try {
+      const result = await resumeBackupRun(runId);
+      setInfo(t('runs:detail.resumed', { runId: result.runId }));
+      await router.push(`/runs/${encodeURIComponent(result.runId)}`);
+    } catch (err) {
+      setError(resolveApiErrorMessage(err));
+    } finally {
+      setResuming(false);
+    }
+  };
+
   return (
     <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -145,7 +170,7 @@ export function BackupRunDetail({ runId }: BackupRunDetailProps) {
           <p className="mt-1 font-mono text-xs text-slate-600">{runId}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          {run && canCancel(run.status) ? (
+          {run && canCancelBackupRun(run.status) ? (
             <button
               type="button"
               disabled={cancelling}
@@ -156,6 +181,15 @@ export function BackupRunDetail({ runId }: BackupRunDetailProps) {
                 : run.status === 'queued'
                   ? t('runs:detail.cancelQueued')
                   : t('runs:detail.cancelRunning')}
+            </button>
+          ) : null}
+          {run && canResumeBackupRun(run.status) ? (
+            <button
+              type="button"
+              disabled={resuming}
+              onClick={() => void handleResume()}
+              className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-800 hover:bg-emerald-100 disabled:opacity-50">
+              {resuming ? t('runs:detail.resuming') : t('runs:detail.resume')}
             </button>
           ) : null}
           <button

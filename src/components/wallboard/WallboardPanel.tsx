@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { wbClass } from './wallboard-theme';
 
 type WallboardPanelProps = {
   title: string;
@@ -15,15 +16,11 @@ export function WallboardPanel({
 }: WallboardPanelProps) {
   return (
     <section
-      className={`flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white p-2.5 shadow-sm xl:p-3 ${className}`}>
+      className={`flex min-h-0 flex-col overflow-hidden ${wbClass.panel} ${className}`}>
       <header className="mb-1.5 shrink-0">
-        <h2 className="text-sm font-semibold tracking-tight text-slate-900 xl:text-base">
-          {title}
-        </h2>
+        <h2 className={wbClass.panelTitle}>{title}</h2>
         {subtitle ? (
-          <p className="truncate text-[11px] text-slate-500 xl:text-xs">
-            {subtitle}
-          </p>
+          <p className={wbClass.panelSubtitle}>{subtitle}</p>
         ) : null}
       </header>
       <div className="min-h-0 flex-1 overflow-hidden">{children}</div>

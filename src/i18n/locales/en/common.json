@@ -4,6 +4,7 @@
     "save": "Save changes",
     "saving": "Saving...",
     "cancel": "Cancel",
+    "resume": "Resume",
     "close": "Close",
     "edit": "Edit",
     "view": "View",
@@ -58,7 +59,8 @@
   },
   "mode": {
     "incremental": "Incremental",
-    "full": "Full"
+    "full": "Full",
+    "logical": "Logical dump (pg_dump)"
   },
   "time": {
     "justNow": "just now",
@@ -71,8 +73,8 @@
     "onTime": "On schedule",
     "overdue": "Past due",
     "overdueAgo": "Past due · {{age}}",
-    "missed": "Missed cycles",
-    "missedAgo": "Missed cycles · {{age}}",
+    "missed": "Behind schedule",
+    "missedAgo": "Behind schedule · {{age}}",
     "lastFailed": "Last run failed"
   },
   "badge": {

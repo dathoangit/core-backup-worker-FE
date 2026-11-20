@@ -4,7 +4,9 @@ import type Highcharts from 'highcharts';
 import type HighchartsReactType from 'highcharts-react-official';
 import type { WallboardDisk } from 'src/types/wallboard';
 import { AutoScrollRows } from './AutoScrollRows';
+import { useWallboardPalette } from './WallboardThemeContext';
 import { formatBytesShort } from './wallboard-format';
+import { wbClass } from './wallboard-theme';
 
 const LEGEND_GAP_PX = 4;
 /** Approx one legend line (text + leading) for visible-row math. */
@@ -30,7 +32,7 @@ const FOLDER_COLOR: Record<string, string> = {
   LabInventory_XP: '#9333ea',
   meta: '#64748b',
   other: '#94a3b8',
-  free: '#e8eef5',
+  free: '#f0f1f2',
 };
 
 const CHART_CONTAINER_PROPS = { className: 'h-full w-full' };
@@ -58,7 +60,10 @@ function cylinderDiameter(width: number, height: number): number {
   return Math.round(Math.min(plotWidth * 0.82, plotHeight * 0.58));
 }
 
-function colorFor(id: string): string {
+function colorFor(id: string, freeColor: string): string {
+  if (id === 'free') {
+    return freeColor;
+  }
   const named = FOLDER_COLOR[id];
   if (named) {
     return named;
@@ -74,6 +79,7 @@ function colorFor(id: string): string {
 
 export function BackupStorageCylinder({ disk }: BackupStorageCylinderProps) {
   const { t } = useTranslation('wallboard');
+  const { palette } = useWallboardPalette();
   const boxRef = useRef<HTMLDivElement>(null);
   const legendRef = useRef<HTMLDivElement>(null);
   const [box, setBox] = useState({ width: 0, height: 0 });
@@ -83,9 +89,10 @@ export function BackupStorageCylinder({ disk }: BackupStorageCylinderProps) {
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const folders = useMemo(
-    () => disk.folders.filter((folder) => folder.bytes > 0),
+    () => (disk.folders ?? []).filter((folder) => folder.bytes > 0),
     [disk.folders],
   );
+  const chartReady = box.width >= 48 && box.height >= 48;
 
   useEffect(() => {
     const node = boxRef.current;
@@ -93,17 +100,23 @@ export function BackupStorageCylinder({ disk }: BackupStorageCylinderProps) {
       return;
     }
 
-    const observer = new ResizeObserver(([entry]) => {
-      const { width, height } = entry.contentRect;
+    const applySize = (width: number, height: number) => {
+      const nextWidth = Math.round(width);
+      const nextHeight = Math.round(height);
       setBox((current) => {
-        const nextWidth = Math.round(width);
-        const nextHeight = Math.round(height);
         if (current.width === nextWidth && current.height === nextHeight) {
           return current;
         }
-
         return { width: nextWidth, height: nextHeight };
       });
+    };
+
+    // Seed immediately — Highcharts must not mount at 0×0 (F5 race).
+    const rect = node.getBoundingClientRect();
+    applySize(rect.width, rect.height);
+
+    const observer = new ResizeObserver(([entry]) => {
+      applySize(entry.contentRect.width, entry.contentRect.height);
     });
     observer.observe(node);
 
@@ -161,7 +174,10 @@ export function BackupStorageCylinder({ disk }: BackupStorageCylinderProps) {
   }, []);
 
   const options = useMemo<Highcharts.Options>(() => {
-    const total = folders.reduce((sum, folder) => sum + folder.bytes, 0);
+    const total = Math.max(
+      1,
+      folders.reduce((sum, folder) => sum + folder.bytes, 0),
+    );
     const stacked = [...folders].reverse();
     const diameter = cylinderDiameter(box.width, box.height);
 
@@ -206,9 +222,9 @@ export function BackupStorageCylinder({ disk }: BackupStorageCylinderProps) {
         maxPadding: 0,
         minPadding: 0,
         title: { text: undefined },
-        gridLineColor: '#e2e8f0',
+        gridLineColor: palette.rule,
         labels: {
-          style: { color: '#64748b', fontSize: '10px' },
+          style: { color: palette.muted, fontSize: '10px' },
           formatter() {
             return formatBytesShort(Number(this.value));
           },
@@ -231,15 +247,15 @@ export function BackupStorageCylinder({ disk }: BackupStorageCylinderProps) {
         type: 'cylinder' as const,
         id: folder.id,
         name: folder.label,
-        color: colorFor(folder.id),
+        color: colorFor(folder.id, palette.rule),
         data: [folder.bytes],
       })),
     };
-  }, [box.height, box.width, folders, t]);
+  }, [box.height, box.width, folders, palette.muted, palette.rule, t]);
 
   if (folders.length === 0) {
     return (
-      <p className="flex flex-1 items-center text-xs text-slate-500">
+      <p className={`flex flex-1 items-center text-xs ${wbClass.muted}`}>
         {t('storage.emptyFolders')}
       </p>
     );
@@ -249,10 +265,10 @@ export function BackupStorageCylinder({ disk }: BackupStorageCylinderProps) {
     <div className="flex h-full min-h-0 min-w-0 gap-2">
       <div ref={boxRef} className="min-h-0 min-w-0 flex-1">
         {loadError ? (
-          <p className="flex h-full items-center text-xs text-red-700">
+          <p className={`flex h-full items-center text-xs ${wbClass.legendErr}`}>
             {loadError}
           </p>
-        ) : hc && Chart ? (
+        ) : hc && Chart && chartReady ? (
           <Chart
             highcharts={hc}
             options={options}
@@ -260,7 +276,7 @@ export function BackupStorageCylinder({ disk }: BackupStorageCylinderProps) {
             containerProps={CHART_CONTAINER_PROPS}
           />
         ) : (
-          <p className="flex h-full items-center text-xs text-slate-500">
+          <p className={`flex h-full items-center text-xs ${wbClass.muted}`}>
             {t('storage.loadingChart')}
           </p>
         )}
@@ -276,15 +292,18 @@ export function BackupStorageCylinder({ disk }: BackupStorageCylinderProps) {
             <div
               key={folder.id}
               className="flex items-baseline justify-between gap-2 text-[11px] leading-tight xl:text-xs">
-              <span className="flex min-w-0 items-center gap-1.5 text-slate-700">
+              <span
+                className={`flex min-w-0 items-center gap-1.5 ${wbClass.muted}`}>
                 <span
-                  className="mt-0.5 h-2 w-2 shrink-0 rounded-full border border-slate-200"
-                  style={{ backgroundColor: colorFor(folder.id) }}
+                  className="mt-0.5 h-2 w-2 shrink-0 rounded-full border border-[var(--wb-border)]"
+                  style={{
+                    backgroundColor: colorFor(folder.id, palette.rule),
+                  }}
                   aria-hidden
                 />
                 <span className="truncate">{folder.label}</span>
               </span>
-              <span className="shrink-0 font-semibold tabular-nums text-slate-900">
+              <span className={`shrink-0 ${wbClass.kpi}`}>
                 {formatBytesShort(folder.bytes)}
               </span>
             </div>

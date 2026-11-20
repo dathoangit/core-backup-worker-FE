@@ -4,6 +4,7 @@
     "save": "Lưu thay đổi",
     "saving": "Đang lưu...",
     "cancel": "Hủy",
+    "resume": "Chạy tiếp",
     "close": "Đóng",
     "edit": "Sửa",
     "view": "Xem",
@@ -58,7 +59,8 @@
   },
   "mode": {
     "incremental": "Incremental",
-    "full": "Full"
+    "full": "Full",
+    "logical": "Dump logic (pg_dump)"
   },
   "time": {
     "justNow": "vừa xong",
@@ -71,8 +73,8 @@
     "onTime": "Đúng lịch",
     "overdue": "Quá hạn lịch",
     "overdueAgo": "Quá hạn · {{age}}",
-    "missed": "Trễ nhiều nhịp",
-    "missedAgo": "Trễ nhiều nhịp · {{age}}",
+    "missed": "Chậm lịch",
+    "missedAgo": "Chậm lịch · {{age}}",
     "lastFailed": "Lần chạy lỗi"
   },
   "badge": {

@@ -9,6 +9,65 @@ body {
   background-color: #ffffff;
 }
 
+/* Wallboard only — Framed sheet (light) / True-black flat (dark) */
+.wb-root {
+  --wb-ground: #f7f2f2;
+  --wb-surface: #ffffff;
+  --wb-raised: #f4f6f8;
+  --wb-active: #ebedee;
+  --wb-border: #e8eaec;
+  --wb-rule: #f0f1f2;
+  --wb-control: #cdced1;
+  --wb-text: #131416;
+  --wb-muted: #5d5f60;
+  --wb-chart: #1e5a8c;
+  --wb-chart-soft: #e8f0f6;
+  --wb-chart-soft-border: #d6e4ef;
+  --wb-ok: #1e7b4f;
+  --wb-err: #c4242a;
+  --wb-warn: #a86f0c;
+  --wb-warn-fg: #92400e;
+  --wb-running: #1e5a8c;
+  --wb-pill-ok-bg: #dcfae5;
+  --wb-pill-ok-fg: #1e7b4f;
+  --wb-pill-warn-bg: #fffbeb;
+  --wb-pill-warn-fg: #92400e;
+  --wb-pill-err-bg: #ffedea;
+  --wb-pill-err-fg: #831c1e;
+  --wb-pill-neutral-bg: #ebedee;
+  --wb-pill-neutral-fg: #353736;
+  --wb-warn-soft-border: #fde68a;
+}
+
+.wb-root[data-theme='dark'] {
+  --wb-ground: #000000;
+  --wb-surface: #111111;
+  --wb-raised: #2a2a2a;
+  --wb-active: #222222;
+  --wb-border: #1a1a1a;
+  --wb-rule: #161616;
+  --wb-control: #444444;
+  --wb-text: #ffffff;
+  --wb-muted: #b4b4b4;
+  --wb-chart: #4cb3f0;
+  --wb-chart-soft: #0c1a24;
+  --wb-chart-soft-border: #1a3344;
+  --wb-ok: #86efac;
+  --wb-err: #e5566f;
+  --wb-warn: #e5a93b;
+  --wb-warn-fg: #e5a93b;
+  --wb-running: #4cb3f0;
+  --wb-pill-ok-bg: #222a10;
+  --wb-pill-ok-fg: #86efac;
+  --wb-pill-warn-bg: #2b2414;
+  --wb-pill-warn-fg: #e5a93b;
+  --wb-pill-err-bg: #2c1a20;
+  --wb-pill-err-fg: #e5566f;
+  --wb-pill-neutral-bg: #222222;
+  --wb-pill-neutral-fg: #ffffff;
+  --wb-warn-soft-border: #4a3a18;
+}
+
 @keyframes triagePulseRed {
   0%,
   100% {

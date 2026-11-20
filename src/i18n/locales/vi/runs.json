@@ -1,11 +1,17 @@
 {
   "meta": {
     "title": "Lịch sử backup",
-    "description": "Lịch sử backup runs và kích hoạt thủ công."
+    "description": "Lịch sử các backup run đã ghi nhận."
   },
   "page": {
-    "title": "Quản lý job backup",
-    "subtitle": "Xếp hàng, theo dõi, và hủy job (BullMQ — tối đa 1 job chạy cùng lúc)."
+    "title": "Lịch sử backup",
+    "subtitle": "Danh sách run đã ghi nhận — xem chi tiết, hủy hoặc chạy tiếp từ checkpoint."
+  },
+  "jobsPage": {
+    "metaTitle": "Vận hành backup",
+    "metaDescription": "Chạy thủ công, hàng đợi BullMQ và trạng thái zone.",
+    "title": "Vận hành backup",
+    "subtitle": "Xếp hàng, theo dõi, hủy job và kiểm tra zone (BullMQ — tối đa 1 job chạy cùng lúc)."
   },
   "loading": {
     "overview": "Đang tải overview...",
@@ -14,7 +20,8 @@
   "info": {
     "queued": "Đã xếp hàng job {{runId}}",
     "cancelling": "Đang hủy job {{runId}}...",
-    "cancelled": "Đã hủy job {{runId}}"
+    "cancelled": "Đã hủy job {{runId}}",
+    "resumed": "Đã chạy tiếp thành {{runId}} (cùng mode và nhóm; nối checkpoint)"
   },
   "zones": {
     "sectionTitle": "Zones",
@@ -92,12 +99,15 @@
   "detail": {
     "metaTitle": "Backup run {{runId}}",
     "metaDescription": "Chi tiết backup run {{runId}}.",
-    "backLink": "← Quay lại quản lý job",
+    "backLink": "← Quay lại lịch sử",
     "title": "Chi tiết backup run",
     "cancelQueued": "Hủy khỏi queue",
     "cancelRunning": "Hủy job",
     "cancelling": "Đang hủy job...",
     "cancelled": "Đã hủy job",
+    "resume": "Chạy tiếp từ checkpoint",
+    "resuming": "Đang xếp hàng chạy tiếp...",
+    "resumed": "Đã xếp hàng chạy tiếp {{runId}}",
     "fields": {
       "status": "Status",
       "mode": "Mode",
@@ -134,8 +144,25 @@
       "runs": "Runs",
       "sources": "Sources",
       "zones": "Zones",
-      "restore": "Restore plan"
+      "restore": "Restore plan",
+      "lookup": "Tra cứu HSBA"
     }
+  },
+  "lookup": {
+    "queryLabel": "Mã HSBA / mã NB / ID",
+    "placeholder": "2611196106",
+    "submit": "Tra cứu backup",
+    "loading": "Đang tra cứu...",
+    "hint": "Tìm trên bản HIS backup mới nhất (his_patienthistory), so sánh với live.",
+    "savedBanner": "Lưu backup lúc {{savedAt}} · run {{runId}} · hồ sơ cập nhật tới {{rowUpdatedAt}}",
+    "matchedBy": "Khớp theo {{matchedBy}}",
+    "table": {
+      "field": "Trường",
+      "backup": "Backup",
+      "live": "Live"
+    },
+    "diffCount": "{{count}} trường lệch so với live",
+    "noDiff": "Khớp live (trong phạm vi các trường hiển thị), hoặc không đọc được live."
   },
   "restore": {
     "database": "Database",

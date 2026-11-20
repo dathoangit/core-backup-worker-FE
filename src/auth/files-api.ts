@@ -2,6 +2,7 @@ import { getPublicApiBaseUrl } from 'src/config/public-api';
 import type {
   BackupFileChecksumResult,
   BackupFileEntry,
+  BackupFolderEntry,
   BackupFilesTreeNode,
 } from 'src/types/backup-files';
 import { apiGet, apiPost } from 'src/utils/api';
@@ -12,6 +13,13 @@ export function fetchBackupFilesTree(): Promise<BackupFilesTreeNode[]> {
   return apiGet<BackupFilesTreeNode[]>({
     api: apiBase,
     endPoint: '/admin/backup/files/tree',
+  });
+}
+
+export function fetchBackupFolders(): Promise<BackupFolderEntry[]> {
+  return apiGet<BackupFolderEntry[]>({
+    api: apiBase,
+    endPoint: '/admin/backup/folders',
   });
 }
 

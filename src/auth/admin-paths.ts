@@ -1,7 +1,8 @@
-const ADMIN_ONLY_EXACT = new Set(['/runs', '/config', '/files']);
+const ADMIN_ONLY_EXACT = new Set(['/jobs', '/runs', '/config', '/files']);
 
 const ADMIN_ONLY_PREFIXES = [
   '/admin',
+  '/jobs/',
   '/runs/',
   '/databases/',
   '/config/',

@@ -8,6 +8,7 @@ import {
   formatEta,
   formatRowsPerSec,
 } from './wallboard-format';
+import { wbClass } from './wallboard-theme';
 
 type ActiveJobStreamProps = {
   overviewJob: WallboardActiveJob | null;
@@ -82,8 +83,9 @@ function mergeJob(
   }
 
   if (
+    !overviewJob ||
     !liveProgress ||
-    (overviewJob && liveProgress.runId !== overviewJob.runId)
+    liveProgress.runId !== overviewJob.runId
   ) {
     if (!overviewJob) {
       return null;
@@ -100,30 +102,30 @@ function mergeJob(
     return overviewJob;
   }
 
-  const status = liveStatus ?? overviewJob!.status;
+  const status = liveStatus ?? overviewJob.status;
   const completedOk = COMPLETED_OK.has(status);
   const percent = completedOk ? 100 : liveProgress.percent;
   const rowsProcessed = liveProgress.rowsTotal;
   return {
-    ...overviewJob!,
+    ...overviewJob,
     status: status as WallboardActiveJob['status'],
     percent,
     rowsProcessed,
     estimatedRowsTotal:
       percent > 0
         ? Math.max(rowsProcessed, Math.round(rowsProcessed / (percent / 100)))
-        : overviewJob!.estimatedRowsTotal,
+        : overviewJob.estimatedRowsTotal,
     bytesProcessed: liveProgress.bytesTotal,
-    rowsPerSec: completedOk ? 0 : (liveProgress.rowsPerSec ?? overviewJob!.rowsPerSec),
+    rowsPerSec: completedOk ? 0 : (liveProgress.rowsPerSec ?? overviewJob.rowsPerSec),
     bytesPerSec: completedOk
       ? 0
-      : (liveProgress.bytesPerSec ?? overviewJob!.bytesPerSec),
+      : (liveProgress.bytesPerSec ?? overviewJob.bytesPerSec),
     etaSeconds: completedOk
       ? 0
-      : (liveProgress.etaSeconds ?? overviewJob!.etaSeconds),
-    currentDatabase: liveProgress.database ?? overviewJob!.currentDatabase,
-    currentTable: liveProgress.currentTable ?? overviewJob!.currentTable,
-    startedAt: liveProgress.startedAt ?? overviewJob!.startedAt,
+      : (liveProgress.etaSeconds ?? overviewJob.etaSeconds),
+    currentDatabase: liveProgress.database ?? overviewJob.currentDatabase,
+    currentTable: liveProgress.currentTable ?? overviewJob.currentTable,
+    startedAt: liveProgress.startedAt ?? overviewJob.startedAt,
   };
 }
 
@@ -148,13 +150,13 @@ function statusLabel(
 function statusValueClass(status: string): string {
   switch (status) {
     case 'ok':
-      return 'text-emerald-700';
+      return wbClass.legendOk;
     case 'partial':
-      return 'text-amber-700';
+      return wbClass.legendPartial;
     case 'error':
-      return 'text-red-700';
+      return wbClass.legendErr;
     default:
-      return 'text-slate-700';
+      return wbClass.muted;
   }
 }
 
@@ -171,15 +173,17 @@ export function ActiveJobStream({
   if (!job) {
     return (
       <div
-        className={`flex h-full items-center gap-2 rounded-lg border border-dashed border-slate-200 bg-slate-50 px-3 ${
+        className={`flex h-full items-center gap-2 rounded-lg px-3 ${wbClass.dashedIdle} ${
           compact ? 'py-2' : 'justify-center py-4'
         }`}>
-        <span className="inline-block h-2 w-2 shrink-0 rounded-full bg-slate-400" />
+        <span
+          className={`inline-block h-2 w-2 shrink-0 rounded-full ${wbClass.dotNeutral}`}
+        />
         <div className="min-w-0">
-          <p className="text-xs font-medium text-slate-700">
+          <p className={`text-xs font-medium ${wbClass.ink}`}>
             {t('activeJob.idleTitle')}
           </p>
-          <p className="truncate text-[10px] text-slate-500">
+          <p className={`truncate text-[10px] ${wbClass.muted}`}>
             {t('activeJob.idleHint')}
           </p>
         </div>
@@ -198,38 +202,39 @@ export function ActiveJobStream({
   const statusClass = statusValueClass(job.status);
   const barClass =
     job.status === 'error'
-      ? 'bg-red-500'
+      ? wbClass.dotErr
       : job.status === 'partial'
-        ? 'bg-amber-500'
+        ? wbClass.dotWarn
         : completedOk
-          ? 'bg-emerald-500'
-          : 'bg-sky-500';
+          ? wbClass.dotOk
+          : wbClass.dotRunning;
   const resolvedFinishedAt = finishedAt ?? job.finishedAt ?? null;
 
   return (
     <div className="flex h-full min-h-0 flex-col justify-between gap-2">
       <div className="min-w-0">
-        <p className="truncate text-sm font-semibold text-slate-900">
-          {job.mode} · {job.runId}
+        <p className={`truncate text-sm font-semibold ${wbClass.ink}`}>
+          {job.mode} ·{' '}
+          <span className="font-mono font-normal">{job.runId}</span>
         </p>
-        <p className="truncate text-[11px] text-slate-500">
+        <p className={`truncate text-[11px] ${wbClass.muted}`}>
           {job.currentDatabase ?? '—'}
           {!finished && job.currentTable ? ` · ${job.currentTable}` : ''}
         </p>
       </div>
 
       <div className="space-y-1">
-        <div className="flex items-center justify-between text-xs text-slate-600">
+        <div
+          className={`flex items-center justify-between text-xs ${wbClass.muted}`}>
           <span>
             {finished
               ? t(completedOk ? 'activeJob.completed' : 'activeJob.stopped')
               : t('activeJob.progress')}
           </span>
-          <span className="font-semibold tabular-nums text-slate-900">
-            {percent}%
-          </span>
+          <span className={wbClass.kpi}>{percent}%</span>
         </div>
-        <div className="h-2.5 overflow-hidden rounded-full bg-slate-100">
+        <div
+          className={`h-2.5 overflow-hidden rounded-full ${wbClass.progressTrack}`}>
           <div
             className={`h-full rounded-full transition-[width] duration-500 ease-out ${barClass}`}
             style={{ width: `${percent}%` }}
@@ -299,11 +304,14 @@ function Metric({
   valueClassName?: string;
 }) {
   return (
-    <div className="rounded-lg bg-slate-50 px-2 py-1">
-      <p className="text-[10px] text-slate-500">{label}</p>
+    <div className={`rounded-lg bg-[var(--wb-raised)] px-2 py-1`}>
+      <p className={`text-[10px] ${wbClass.muted}`}>{label}</p>
       <p
-        className={`truncate font-semibold tabular-nums ${
-          valueClassName ?? (emphasize ? 'text-sky-700' : 'text-slate-900')
+        className={`truncate tabular-nums ${
+          valueClassName ??
+          (emphasize
+            ? `font-semibold ${wbClass.chartInk}`
+            : `font-semibold ${wbClass.ink}`)
         }`}>
         {value}
       </p>

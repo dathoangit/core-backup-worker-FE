@@ -5,10 +5,11 @@
   "nav": {
     "aria": "Điều hướng chính",
     "overview": "Tổng quan",
-    "wallboard": "Màn hình trung tâm",
+    "jobs": "Vận hành",
     "runs": "Lịch sử",
-    "files": "Tra cứu file",
-    "config": "Cấu hình"
+    "files": "Thư mục backup",
+    "config": "Cấu hình",
+    "wallboard": "Màn hình trung tâm"
   },
   "account": {
     "ariaButton": "Tài khoản người dùng",

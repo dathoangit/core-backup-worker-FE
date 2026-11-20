@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import type { WallboardDatabase } from 'src/types/wallboard';
 import { DatabaseLagBadge } from './DatabaseLagBadge';
 import { StatusPulseDot } from './StatusPulseDot';
+import { wbClass } from './wallboard-theme';
 
 const COLS = 3;
 const VISIBLE_ROWS = 4;
@@ -47,26 +48,22 @@ function rowWindow(
 function DatabaseCard({ db }: { db: WallboardDatabase }) {
   const { t } = useTranslation('wallboard');
   return (
-    <article className="min-w-0 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5">
+    <article
+      className={`min-w-0 rounded-lg px-2 py-1.5 ${wbClass.surface}`}>
       <div className="flex items-start justify-between gap-1">
-        <p className="truncate text-xs font-semibold text-slate-900 xl:text-sm">
+        <p className={`truncate text-xs font-semibold xl:text-sm ${wbClass.ink}`}>
           {db.database}
         </p>
         <span
-          className={`inline-flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-bold ${
-            db.live
-              ? 'bg-emerald-100 text-emerald-800'
-              : 'bg-red-100 text-red-800'
+          className={`inline-flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold ${
+            db.live ? wbClass.pillOk : wbClass.pillNeutral
           }`}>
           {db.live ? <StatusPulseDot variant="live" /> : null}
           {db.live ? t('db.live') : t('db.off')}
         </span>
       </div>
-      <p className="truncate text-[10px] text-slate-500">
+      <p className={`truncate text-[10px] ${wbClass.muted}`}>
         {db.group} · {db.host}
-      </p>
-      <p className="mt-0.5 truncate font-mono text-[10px] text-slate-600">
-        {t('db.watermarkPrefix', { watermark: db.watermark ?? '—' })}
       </p>
       <div className="mt-0.5">
         <DatabaseLagBadge

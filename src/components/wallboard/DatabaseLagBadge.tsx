@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import type { WallboardLagState } from 'src/types/wallboard';
 import { StatusPulseDot } from './StatusPulseDot';
 import { lagBadge } from './wallboard-format';
+import { wbClass } from './wallboard-theme';
 
 type DatabaseLagBadgeProps = {
   lagMinutes: number | null | undefined;
@@ -17,12 +18,12 @@ export function DatabaseLagBadge({
   const badge = lagBadge(lagMinutes, lagState);
   const className =
     badge.tone === 'ok'
-      ? 'bg-emerald-100 text-emerald-800'
+      ? wbClass.pillOk
       : badge.tone === 'warn'
-        ? 'bg-amber-100 text-amber-800'
+        ? wbClass.pillWarn
         : badge.tone === 'error'
-          ? 'bg-red-100 text-red-800'
-          : 'bg-slate-100 text-slate-600';
+          ? wbClass.pillErr
+          : wbClass.pillNeutral;
 
   const dotVariant =
     lagState === 'on_time'

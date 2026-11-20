@@ -1,88 +1,79 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import i18n from 'src/i18n';
-import {
-  computeBackupFileChecksum,
-  fetchBackupFiles,
-  fetchBackupFilesTree,
-} from 'src/auth/files-api';
+import { fetchBackupFiles, fetchBackupFolders } from 'src/auth/files-api';
 import { useAuth } from 'src/auth/context';
 import { formatBytes } from 'src/components/admin/backup/backup-status';
-import type { BackupFileEntry, BackupFilesTreeNode } from 'src/types/backup-files';
+import type {
+  BackupFileEntry,
+  BackupFolderEntry,
+} from 'src/types/backup-files';
 import { resolveApiErrorMessage } from 'src/utils/resolve-api-error';
 
-type Selection = {
-  date: string;
-  group: string;
-  database: string;
-};
+const TZ = 'Asia/Ho_Chi_Minh';
 
-function shortHash(value: string | null): string {
-  if (!value) {
-    return i18n.t('common:emDash');
+function formatDateTime(iso: string, locale: string): string {
+  try {
+    return new Intl.DateTimeFormat(locale, {
+      timeZone: TZ,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    }).format(new Date(iso));
+  } catch {
+    return iso;
   }
-  if (value.length <= 16) {
-    return value;
-  }
-  return `${value.slice(0, 8)}…${value.slice(-6)}`;
 }
 
-async function copyText(value: string): Promise<void> {
-  try {
-    await navigator.clipboard.writeText(value);
-  } catch {
-    /* ignore */
-  }
+function folderKey(folder: BackupFolderEntry): string {
+  return `${folder.runId}|${folder.database}|${folder.kind}`;
 }
 
 export function FileExplorerPanel() {
   const { t, i18n: i18nInstance } = useTranslation(['files', 'common']);
   const { role } = useAuth();
-  const [tree, setTree] = useState<BackupFilesTreeNode[]>([]);
+  const [folders, setFolders] = useState<BackupFolderEntry[]>([]);
+  const [selection, setSelection] = useState<BackupFolderEntry | null>(null);
   const [files, setFiles] = useState<BackupFileEntry[]>([]);
-  const [selection, setSelection] = useState<Selection | null>(null);
-  const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set());
-  const [loadingTree, setLoadingTree] = useState(true);
+  const [loadingFolders, setLoadingFolders] = useState(true);
   const [loadingFiles, setLoadingFiles] = useState(false);
-  const [hashingPath, setHashingPath] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const loadTree = useCallback(async () => {
+  const loadFolders = useCallback(async () => {
     if (role !== 'admin') {
-      setLoadingTree(false);
+      setLoadingFolders(false);
       return;
     }
-    setLoadingTree(true);
+    setLoadingFolders(true);
     try {
-      const next = await fetchBackupFilesTree();
-      setTree(next);
+      const next = await fetchBackupFolders();
+      setFolders(next);
       setError(null);
-      if (next[0]) {
-        setExpandedDates(new Set([next[0].date]));
-      }
     } catch (err) {
       setError(resolveApiErrorMessage(err));
     } finally {
-      setLoadingTree(false);
+      setLoadingFolders(false);
     }
   }, [role]);
 
   useEffect(() => {
-    void loadTree();
-  }, [loadTree]);
+    void loadFolders();
+  }, [loadFolders]);
 
-  const selectDatabase = async (next: Selection) => {
-    setSelection(next);
+  const selectFolder = async (folder: BackupFolderEntry) => {
+    setSelection(folder);
     setLoadingFiles(true);
     try {
-      const list = await fetchBackupFiles({
-        date: next.date,
-        database: next.database,
-      });
+      const list = await fetchBackupFiles({ database: folder.database });
       setFiles(
         list.filter(
           (file) =>
-            file.sourceGroup === next.group && file.database === next.database,
+            file.runId === folder.runId &&
+            file.database === folder.database &&
+            file.kind === folder.kind,
         ),
       );
       setError(null);
@@ -94,27 +85,38 @@ export function FileExplorerPanel() {
     }
   };
 
-  const handleChecksum = async (relativePath: string) => {
-    setHashingPath(relativePath);
-    try {
-      const result = await computeBackupFileChecksum(relativePath);
-      setFiles((prev) =>
-        prev.map((file) =>
-          file.relativePath === relativePath
-            ? {
-                ...file,
-                sha256: result.sha256,
-                md5: result.md5,
-                sizeBytes: result.sizeBytes,
-              }
-            : file,
-        ),
+  const contentLabel = (folder: BackupFolderEntry): string => {
+    const parts = [
+      folder.sourceGroup,
+      folder.database,
+      t(`files:kind.${folder.kind}`),
+    ];
+
+    if (folder.kind === 'logical') {
+      parts.push(t('files:content.fullDump'));
+    } else if (folder.tables.length > 0) {
+      parts.push(
+        t('files:content.tableCount', { count: folder.tables.length }),
       );
-    } catch (err) {
-      setError(resolveApiErrorMessage(err));
-    } finally {
-      setHashingPath(null);
+      parts.push(folder.tables.slice(0, 8).join(', '));
+      if (folder.tables.length > 8) {
+        parts.push(
+          t('files:content.moreTables', {
+            count: folder.tables.length - 8,
+          }),
+        );
+      }
     }
+
+    if (folder.rowCount > 0) {
+      parts.push(
+        t('files:content.rowCount', {
+          count: folder.rowCount.toLocaleString(i18nInstance.language),
+        }),
+      );
+    }
+
+    return parts.join(' · ');
   };
 
   return (
@@ -129,94 +131,89 @@ export function FileExplorerPanel() {
         ) : null}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
-        <aside className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-          {loadingTree ? (
-            <p className="p-2 text-sm text-slate-600">{t('files:loading.tree')}</p>
-          ) : tree.length === 0 ? (
-            <p className="p-2 text-sm text-slate-600">{t('files:empty.tree')}</p>
-          ) : (
-            <ul className="space-y-1 text-sm">
-              {tree.map((node) => {
-                const open = expandedDates.has(node.date);
-                return (
-                  <li key={node.date}>
-                    <button
-                      type="button"
-                      className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left font-medium text-slate-800 hover:bg-slate-50"
-                      onClick={() => {
-                        setExpandedDates((prev) => {
-                          const next = new Set(prev);
-                          if (next.has(node.date)) {
-                            next.delete(node.date);
-                          } else {
-                            next.add(node.date);
-                          }
-                          return next;
-                        });
-                      }}>
-                      <span className="text-slate-400">{open ? '▾' : '▸'}</span>
-                      {node.date}
-                    </button>
-                    {open ? (
-                      <ul className="ml-4 mt-1 space-y-1 border-l border-slate-100 pl-2">
-                        {node.groups.map((group) => (
-                          <li key={`${node.date}-${group.group}`}>
-                            <p className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                              {group.group}
-                            </p>
-                            <ul className="space-y-0.5">
-                              {group.databases.map((db) => {
-                                const active =
-                                  selection?.date === node.date &&
-                                  selection.group === group.group &&
-                                  selection.database === db.database;
-                                return (
-                                  <li key={db.database}>
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        void selectDatabase({
-                                          date: node.date,
-                                          group: group.group,
-                                          database: db.database,
-                                        })
-                                      }
-                                      className={`w-full rounded-lg px-2 py-1.5 text-left hover:bg-sky-50 ${
-                                        active
-                                          ? 'bg-sky-100 text-sky-900'
-                                          : 'text-slate-700'
-                                      }`}>
-                                      <span className="font-medium">
-                                        {db.database}
-                                      </span>
-                                      <span className="mt-0.5 block text-xs text-slate-500">
-                                        {t('files:tree.fileCount', {
-                                          count: db.fileCount,
-                                          size: formatBytes(db.totalBytes),
-                                        })}
-                                      </span>
-                                    </button>
-                                  </li>
-                                );
-                              })}
-                            </ul>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : null}
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </aside>
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        {loadingFolders ? (
+          <p className="p-6 text-sm text-slate-600">{t('files:loading.folders')}</p>
+        ) : folders.length === 0 ? (
+          <p className="p-6 text-sm text-slate-600">{t('files:empty.folders')}</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
+              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                <tr>
+                  <th className="px-4 py-3">{t('files:table.datetime')}</th>
+                  <th className="px-4 py-3">{t('files:table.content')}</th>
+                  <th className="px-4 py-3">{t('files:table.size')}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {folders.map((folder) => {
+                  const active =
+                    selection !== null &&
+                    folderKey(selection) === folderKey(folder);
+                  return (
+                    <tr
+                      key={folderKey(folder)}
+                      className={`cursor-pointer align-top hover:bg-sky-50 ${
+                        active ? 'bg-sky-100' : ''
+                      }`}
+                      onClick={() => void selectFolder(folder)}>
+                      <td className="whitespace-nowrap px-4 py-3 tabular-nums text-slate-800">
+                        <p className="font-medium">
+                          {formatDateTime(
+                            folder.startedAt,
+                            i18nInstance.language,
+                          )}
+                        </p>
+                        {folder.finishedAt ? (
+                          <p className="mt-1 text-xs text-slate-500">
+                            {t('files:row.finished', {
+                              time: formatDateTime(
+                                folder.finishedAt,
+                                i18nInstance.language,
+                              ),
+                            })}
+                          </p>
+                        ) : null}
+                        <p className="mt-1 font-mono text-xs text-slate-500">
+                          {folder.folder}
+                        </p>
+                      </td>
+                      <td className="px-4 py-3 text-slate-700">
+                        <p>{contentLabel(folder)}</p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          {t('files:row.fileCount', {
+                            count: folder.fileCount,
+                            runId: folder.runId,
+                          })}
+                        </p>
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 tabular-nums font-medium text-slate-800">
+                        {formatBytes(folder.sizeBytes)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
+      {selection ? (
         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-          {!selection ? (
-            <p className="p-6 text-sm text-slate-600">{t('files:prompt.selectDb')}</p>
-          ) : loadingFiles ? (
+          <div className="border-b border-slate-100 px-4 py-3">
+            <h3 className="text-sm font-semibold text-slate-900">
+              {t('files:detail.title')}
+            </h3>
+            <p className="mt-0.5 font-mono text-xs text-slate-500">
+              {selection.folder}
+            </p>
+          </div>
+          {loadingFiles ? (
             <p className="p-6 text-sm text-slate-600">{t('files:loading.files')}</p>
+          ) : files.length === 0 ? (
+            <p className="p-6 text-sm text-slate-600">{t('files:empty.files')}</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
@@ -226,9 +223,6 @@ export function FileExplorerPanel() {
                     <th className="px-4 py-3">{t('files:table.kind')}</th>
                     <th className="px-4 py-3">{t('files:table.size')}</th>
                     <th className="px-4 py-3">{t('files:table.rows')}</th>
-                    <th className="px-4 py-3">{t('files:table.sha256')}</th>
-                    <th className="px-4 py-3">{t('files:table.md5')}</th>
-                    <th className="px-4 py-3"> </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -237,9 +231,6 @@ export function FileExplorerPanel() {
                       <td className="px-4 py-3">
                         <p className="font-mono text-xs text-slate-800">
                           {file.relativePath}
-                        </p>
-                        <p className="mt-1 text-xs text-slate-500">
-                          {t('files:row.runPrefix', { runId: file.runId })}
                         </p>
                       </td>
                       <td className="px-4 py-3 text-xs uppercase text-slate-600">
@@ -251,52 +242,14 @@ export function FileExplorerPanel() {
                       <td className="px-4 py-3 tabular-nums text-slate-700">
                         {file.rowCount.toLocaleString(i18nInstance.language)}
                       </td>
-                      <td className="px-4 py-3">
-                        <button
-                          type="button"
-                          className="font-mono text-xs text-sky-700 hover:underline"
-                          title={file.sha256 ?? undefined}
-                          onClick={() =>
-                            file.sha256 ? void copyText(file.sha256) : undefined
-                          }>
-                          {shortHash(file.sha256)}
-                        </button>
-                      </td>
-                      <td className="px-4 py-3">
-                        <button
-                          type="button"
-                          className="font-mono text-xs text-sky-700 hover:underline"
-                          title={file.md5 ?? undefined}
-                          onClick={() =>
-                            file.md5 ? void copyText(file.md5) : undefined
-                          }>
-                          {shortHash(file.md5)}
-                        </button>
-                      </td>
-                      <td className="px-4 py-3">
-                        {!file.sha256 || !file.md5 ? (
-                          <button
-                            type="button"
-                            disabled={hashingPath === file.relativePath}
-                            onClick={() => void handleChecksum(file.relativePath)}
-                            className="rounded border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50">
-                            {hashingPath === file.relativePath
-                              ? t('common:ellipsis')
-                              : t('files:actions.computeChecksum')}
-                          </button>
-                        ) : null}
-                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-              {files.length === 0 ? (
-                <p className="p-6 text-sm text-slate-600">{t('files:empty.files')}</p>
-              ) : null}
             </div>
           )}
         </div>
-      </div>
+      ) : null}
     </section>
   );
 }

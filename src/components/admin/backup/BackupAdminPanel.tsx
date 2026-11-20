@@ -7,6 +7,7 @@ import {
   fetchBackupSources,
   fetchBackupZones,
   fetchRestorePlan,
+  resumeBackupRun,
   triggerBackupRun,
 } from 'src/auth/backup-api';
 import { useAuth } from 'src/auth/context';
@@ -24,15 +25,18 @@ import {
   SETTING_SCHEDULE_ENABLED_KEY,
 } from 'src/types/settings';
 import { resolveApiErrorMessage } from 'src/utils/resolve-api-error';
+import { ActiveJobsSummary } from './ActiveJobsSummary';
 import { BackupOverviewCards } from './BackupOverviewCards';
 import { BackupRunsTable } from './BackupRunsTable';
 import { BackupSourcesPanel } from './BackupSourcesPanel';
 import { BackupZonesPanel } from './BackupZonesPanel';
+import { BackupLookupPanel } from './BackupLookupPanel';
+import { ManualBackupTriggerForm } from './ManualBackupTriggerForm';
 import { RestorePlanPanel } from './RestorePlanPanel';
 
-type BackupTab = 'runs' | 'sources' | 'zones' | 'restore';
+type BackupTab = 'runs' | 'sources' | 'zones' | 'restore' | 'lookup';
 
-const TAB_IDS: BackupTab[] = ['runs', 'sources', 'zones', 'restore'];
+const TAB_IDS: BackupTab[] = ['runs', 'sources', 'zones', 'restore', 'lookup'];
 
 function isTruthySetting(value: string | null | undefined): boolean {
   if (!value) {
@@ -50,6 +54,7 @@ export function BackupAdminPanel() {
   const [panelError, setPanelError] = useState<string | null>(null);
   const [triggering, setTriggering] = useState(false);
   const [cancellingRunId, setCancellingRunId] = useState<string | null>(null);
+  const [resumingRunId, setResumingRunId] = useState<string | null>(null);
 
   const [runs, setRuns] = useState<BackupRun[]>([]);
   const [sources, setSources] = useState<BackupSource[]>([]);
@@ -156,6 +161,24 @@ export function BackupAdminPanel() {
     }
   };
 
+  const handleResume = async (runId: string) => {
+    if (role !== 'admin') {
+      return;
+    }
+
+    setResumingRunId(runId);
+    setPanelError(null);
+
+    try {
+      await resumeBackupRun(runId);
+      await loadCore();
+    } catch (error) {
+      setPanelError(resolveApiErrorMessage(error));
+    } finally {
+      setResumingRunId(null);
+    }
+  };
+
   const handleLoadRestorePlan = async (database: string) => {
     if (role !== 'admin') {
       return;
@@ -236,18 +259,29 @@ export function BackupAdminPanel() {
         </div>
 
         <div className="mt-5">
-          {loading && tab !== 'restore' ? (
+          {loading && tab !== 'restore' && tab !== 'lookup' ? (
             <p className="text-sm text-slate-600">{t('common:loading.generic')}</p>
           ) : null}
 
           {tab === 'runs' && !loading ? (
-            <BackupRunsTable
-              runs={runs}
-              triggering={triggering}
-              cancellingRunId={cancellingRunId}
-              onTrigger={handleTrigger}
-              onCancel={handleCancel}
-            />
+            <div className="space-y-4">
+              <ManualBackupTriggerForm
+                triggering={triggering}
+                onTrigger={handleTrigger}
+              />
+              <ActiveJobsSummary
+                runs={runs}
+                cancellingRunId={cancellingRunId}
+                onCancel={handleCancel}
+              />
+              <BackupRunsTable
+                runs={runs}
+                cancellingRunId={cancellingRunId}
+                resumingRunId={resumingRunId}
+                onCancel={handleCancel}
+                onResume={handleResume}
+              />
+            </div>
           ) : null}
 
           {tab === 'sources' && !loading ? (
@@ -266,6 +300,8 @@ export function BackupAdminPanel() {
               onLoad={handleLoadRestorePlan}
             />
           ) : null}
+
+          {tab === 'lookup' ? <BackupLookupPanel /> : null}
         </div>
       </div>
     </section>

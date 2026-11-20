@@ -1,6 +1,6 @@
 export type SourceGroup = 'HIS' | 'EMR' | 'BADL' | 'LIS' | 'PACS';
 
-export type BackupMode = 'incremental' | 'full';
+export type BackupMode = 'incremental' | 'full' | 'logical';
 
 export type BackupTrigger = 'cron' | 'manual';
 
@@ -146,7 +146,7 @@ export type BackupZones = {
   };
 };
 
-export type RestorePlanStepKind = 'full' | 'append' | 'cdc' | 'snapshot';
+export type RestorePlanStepKind = 'full' | 'append' | 'cdc' | 'snapshot' | 'logical';
 
 export type RestorePlanStep = {
   order: number;
@@ -160,4 +160,37 @@ export type RestorePlan = {
   database: string;
   steps: RestorePlanStep[];
   notes: string[];
+};
+
+export type BackupLookupMatchedBy =
+  | 'his_patientdocument'
+  | 'value'
+  | 'his_patienthistory_id';
+
+export type BackupLookupFields = Record<string, string | null>;
+
+export type BackupLookupDiff = {
+  field: string;
+  backup: string | null;
+  live: string | null;
+};
+
+export type BackupLookupResponse = {
+  query: string;
+  matchedBy: BackupLookupMatchedBy;
+  backup: {
+    runId: string;
+    relativePath: string;
+    kind: string;
+    savedAt: string;
+    rowCreatedAt: string | null;
+    rowUpdatedAt: string | null;
+    fields: BackupLookupFields;
+  };
+  live: {
+    rowCreatedAt: string | null;
+    rowUpdatedAt: string | null;
+    fields: BackupLookupFields;
+  } | null;
+  diff: BackupLookupDiff[];
 };

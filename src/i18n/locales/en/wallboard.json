@@ -8,6 +8,11 @@
     "refreshLine": "SSE + {{minutes}}m safety refresh",
     "refreshWithRelative": "SSE + {{minutes}}m safety refresh · {{relative}}"
   },
+  "theme": {
+    "aria": "Light or dark appearance",
+    "light": "Light",
+    "dark": "Dark"
+  },
   "loading": "Loading wallboard…",
   "panels": {
     "databases": {
@@ -47,7 +52,8 @@
     "error": "Error",
     "partial": "Partial",
     "running": "Running",
-    "emptySlice": "Empty"
+    "emptySlice": "Empty",
+    "unavailable": "Chart unavailable"
   },
   "legend": {
     "ok": "OK",
@@ -60,7 +66,9 @@
     "ok": "OK"
   },
   "recentJob": {
-    "waitingWorker": "· Waiting for worker"
+    "waitingWorker": "· Waiting for worker",
+    "timeRange": "{{start}} → {{end}}",
+    "timeRangeTitle": "Started {{start}} · Finished {{end}}"
   },
   "db": {
     "live": "LIVE",

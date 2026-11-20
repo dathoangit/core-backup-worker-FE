@@ -12,7 +12,11 @@ import {
   backupRunStatusLabel,
 } from 'src/components/admin/backup/backup-status';
 import { LanguageSwitcher } from 'src/components/layout/LanguageSwitcher';
-import { APP_BRAND_SHORT_NAME, APP_ORG_NAME } from 'src/constants/branding';
+import {
+  APP_BRAND_SHORT_NAME,
+  APP_LOGO_TEXT_SRC,
+  APP_ORG_NAME,
+} from 'src/constants/branding';
 import { useBackupStream } from 'src/hooks/useBackupStream';
 import type { BackupRunProgressEvent } from 'src/types/backup-stream';
 import type { WallboardOverview } from 'src/types/wallboard';
@@ -24,11 +28,16 @@ import { DiskForecastPanel } from './DiskForecastPanel';
 import { HistorySparklineCard } from './HistorySparklineCard';
 import { NextJobCountdown } from './NextJobCountdown';
 import { WallboardAlertsPanel } from './WallboardAlertsPanel';
+import { WallboardChartBoundary } from './WallboardChartBoundary';
 import { WallboardPanel } from './WallboardPanel';
+import { WallboardThemeProvider } from './WallboardThemeContext';
+import { WallboardThemeToggle } from './WallboardThemeToggle';
 import {
   formatRelativeTime,
   percent,
 } from './wallboard-format';
+import { useWallboardTheme } from './useWallboardTheme';
+import { paletteFor, wbClass } from './wallboard-theme';
 
 /** Safety net for TV displays if SSE drops; primary updates come from the stream. */
 const SAFETY_REFRESH_MS = 5 * 60_000;
@@ -40,13 +49,6 @@ const FINISHED_JOB_STATUSES = new Set([
   'cancelled',
 ]);
 
-const STATUS_COLORS = {
-  ok: '#059669',
-  error: '#dc2626',
-  partial: '#d97706',
-  running: '#0284c7',
-} as const;
-
 function StatusDot({
   tone,
 }: {
@@ -54,14 +56,14 @@ function StatusDot({
 }) {
   const className =
     tone === 'ok'
-      ? 'bg-emerald-500'
+      ? wbClass.dotOk
       : tone === 'error'
-        ? 'bg-red-500'
+        ? wbClass.dotErr
         : tone === 'warn'
-          ? 'bg-amber-500'
+          ? wbClass.dotWarn
           : tone === 'running'
-            ? 'bg-sky-500'
-            : 'bg-slate-400';
+            ? wbClass.dotRunning
+            : wbClass.dotNeutral;
   return (
     <span
       className={`inline-block h-2 w-2 shrink-0 rounded-full ${className}`}
@@ -90,6 +92,9 @@ function runStatusTone(
 
 export function WallboardDashboard() {
   const { t } = useTranslation('wallboard');
+  const { theme, setTheme } = useWallboardTheme();
+  const palette = paletteFor(theme);
+  const statusColors = palette.status;
   const [data, setData] = useState<WallboardOverview | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -203,23 +208,43 @@ export function WallboardDashboard() {
     ].filter((row) => row.value > 0);
   }, [data, t]);
 
+  // Denominator must match donut slices (ok/error/partial/running).
+  // jobSummary.total also counts cancelled/queued, which the chart hides.
   const successPct = data
-    ? percent(data.jobSummary.ok, data.jobSummary.total)
+    ? percent(
+        data.jobSummary.ok,
+        data.jobSummary.ok +
+          data.jobSummary.error +
+          data.jobSummary.partial +
+          data.jobSummary.running,
+      )
     : 0;
 
   return (
-    <div className="flex h-screen max-h-screen flex-col overflow-hidden bg-slate-100 text-slate-900">
-      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-700 bg-slate-900 px-3 py-1.5 text-white xl:px-4 xl:py-2">
-        <div className="min-w-0">
-          <p className="truncate text-[10px] font-medium uppercase tracking-wider text-slate-400 xl:text-xs">
-            {APP_ORG_NAME}
-          </p>
-          <h1 className="truncate text-base font-semibold xl:text-lg">
-            {t('header.title', { brand: APP_BRAND_SHORT_NAME })}
-          </h1>
+    <WallboardThemeProvider theme={theme}>
+    <div
+      data-theme={theme}
+      className={`flex h-screen max-h-screen flex-col overflow-hidden font-sans ${wbClass.root}`}>
+      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[#164a74] bg-[#1e5a8c] px-3 py-1.5 text-white xl:px-4 xl:py-2">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <img
+            src={APP_LOGO_TEXT_SRC}
+            alt={APP_ORG_NAME}
+            width={40}
+            height={40}
+            className="h-9 w-9 shrink-0 rounded-md bg-white object-contain p-0.5 ring-1 ring-white/40 xl:h-10 xl:w-10"
+          />
+          <div className="min-w-0">
+            <p className="truncate text-[10px] font-medium uppercase tracking-wider text-sky-100 xl:text-xs">
+              {APP_ORG_NAME}
+            </p>
+            <h1 className="truncate text-base font-semibold xl:text-lg">
+              {t('header.title', { brand: APP_BRAND_SHORT_NAME })}
+            </h1>
+          </div>
         </div>
         <div className="flex shrink-0 items-center gap-3">
-          <div className="text-right text-[10px] text-slate-300 xl:text-xs">
+          <div className="text-right text-[10px] text-sky-100 xl:text-xs">
             <p>
               {lastFetchedAt
                 ? t('header.refreshWithRelative', {
@@ -231,26 +256,27 @@ export function WallboardDashboard() {
                   })}
             </p>
             {data ? (
-              <p className="text-slate-400">
+              <p className="font-mono text-white/70">
                 {formatIsoAsLocalDateTime(data.generatedAt)}
               </p>
             ) : null}
           </div>
-          <LanguageSwitcher variant="dark" />
+          <WallboardThemeToggle theme={theme} onChange={setTheme} />
+          <LanguageSwitcher variant="header" />
         </div>
       </header>
 
       <main className="flex min-h-0 flex-1 flex-col gap-2 p-2 xl:gap-2.5 xl:p-2.5">
         {error ? (
           <p
-            className="shrink-0 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs text-red-700"
+            className={`shrink-0 rounded-lg border px-3 py-1.5 text-xs ${wbClass.pillErr} border-[var(--wb-border)]`}
             role="alert">
             {error}
           </p>
         ) : null}
 
         {loading && !data ? (
-          <p className="flex flex-1 items-center justify-center text-slate-600">
+          <p className={`flex flex-1 items-center justify-center ${wbClass.muted}`}>
             {t('loading')}
           </p>
         ) : data ? (
@@ -274,91 +300,104 @@ export function WallboardDashboard() {
               <div className="flex h-full min-h-0 flex-col gap-1.5">
                 <div className="flex min-h-0 flex-[1.6] items-center gap-2">
                   <div className="relative h-full min-h-[7rem] min-w-0 flex-1">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart margin={{ top: 2, right: 2, bottom: 2, left: 2 }}>
-                        <Pie
-                          data={
-                            donutData.length > 0
+                    <WallboardChartBoundary
+                      fallback={
+                        <p
+                          className={`flex h-full items-center justify-center text-xs ${wbClass.muted}`}>
+                          {t('chart.unavailable')}
+                        </p>
+                      }>
+                      <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+                        <PieChart margin={{ top: 2, right: 2, bottom: 2, left: 2 }}>
+                          <Pie
+                            data={
+                              donutData.length > 0
+                                ? donutData
+                                : [
+                                    {
+                                      name: t('chart.emptySlice'),
+                                      value: 1,
+                                      key: 'empty',
+                                    },
+                                  ]
+                            }
+                            dataKey="value"
+                            nameKey="name"
+                            innerRadius="58%"
+                            outerRadius="92%"
+                            paddingAngle={2}
+                            isAnimationActive={false}>
+                            {(donutData.length > 0
                               ? donutData
-                              : [
-                                  {
-                                    name: t('chart.emptySlice'),
-                                    value: 1,
-                                    key: 'empty',
-                                  },
-                                ]
-                          }
-                          dataKey="value"
-                          nameKey="name"
-                          innerRadius="58%"
-                          outerRadius="92%"
-                          paddingAngle={2}
-                          isAnimationActive={false}>
-                          {(donutData.length > 0
-                            ? donutData
-                            : [{ key: 'empty', value: 1 }]
-                          ).map((entry) => (
-                            <Cell
-                              key={entry.key}
-                              fill={
-                                entry.key === 'ok'
-                                  ? STATUS_COLORS.ok
-                                  : entry.key === 'error'
-                                    ? STATUS_COLORS.error
-                                    : entry.key === 'partial'
-                                      ? STATUS_COLORS.partial
-                                      : entry.key === 'running'
-                                        ? STATUS_COLORS.running
-                                        : '#cbd5e1'
-                              }
-                            />
-                          ))}
-                        </Pie>
-                      </PieChart>
-                    </ResponsiveContainer>
+                              : [{ key: 'empty', value: 1 }]
+                            ).map((entry) => (
+                              <Cell
+                                key={entry.key}
+                                fill={
+                                  entry.key === 'ok'
+                                    ? statusColors.ok
+                                    : entry.key === 'error'
+                                      ? statusColors.error
+                                      : entry.key === 'partial'
+                                        ? statusColors.partial
+                                        : entry.key === 'running'
+                                          ? statusColors.running
+                                          : palette.control
+                                }
+                              />
+                            ))}
+                          </Pie>
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </WallboardChartBoundary>
                     <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                      <p className="text-xl font-bold tabular-nums leading-none text-slate-900 xl:text-2xl">
+                      <p
+                        className={`text-xl leading-none xl:text-2xl ${wbClass.kpi}`}>
                         {successPct}%
                       </p>
-                      <p className="mt-0.5 text-[10px] leading-tight text-slate-500">
+                      <p className={`mt-0.5 text-[10px] leading-tight ${wbClass.muted}`}>
                         {t('legend.ok')}
                       </p>
                     </div>
                   </div>
                   <ul className="w-max shrink-0 space-y-1 text-[11px] leading-tight xl:text-xs">
-                    <li className="flex items-baseline justify-between gap-3 text-emerald-700">
+                    <li
+                      className={`flex items-baseline justify-between gap-3 ${wbClass.legendOk}`}>
                       <span className="whitespace-nowrap">{t('legend.ok')}</span>
-                      <span className="min-w-[1.25rem] text-right font-semibold tabular-nums">
+                      <span className="min-w-[1.25rem] text-right font-medium tabular-nums">
                         {data.jobSummary.ok}
                       </span>
                     </li>
-                    <li className="flex items-baseline justify-between gap-3 text-red-700">
+                    <li
+                      className={`flex items-baseline justify-between gap-3 ${wbClass.legendErr}`}>
                       <span className="whitespace-nowrap">
                         {t('legend.error')}
                       </span>
-                      <span className="min-w-[1.25rem] text-right font-semibold tabular-nums">
+                      <span className="min-w-[1.25rem] text-right font-medium tabular-nums">
                         {data.jobSummary.error}
                       </span>
                     </li>
-                    <li className="flex items-baseline justify-between gap-3 text-amber-700">
+                    <li
+                      className={`flex items-baseline justify-between gap-3 ${wbClass.legendPartial}`}>
                       <span className="whitespace-nowrap">
                         {t('legend.partial')}
                       </span>
-                      <span className="min-w-[1.25rem] text-right font-semibold tabular-nums">
+                      <span className="min-w-[1.25rem] text-right font-medium tabular-nums">
                         {data.jobSummary.partial}
                       </span>
                     </li>
-                    <li className="flex items-baseline justify-between gap-3 text-sky-700">
+                    <li
+                      className={`flex items-baseline justify-between gap-3 ${wbClass.legendRunning}`}>
                       <span className="whitespace-nowrap">
                         {t('legend.running')}
                       </span>
-                      <span className="min-w-[1.25rem] text-right font-semibold tabular-nums">
+                      <span className="min-w-[1.25rem] text-right font-medium tabular-nums">
                         {data.jobSummary.running}
                       </span>
                     </li>
                   </ul>
                 </div>
-                <div className="shrink-0 border-t border-slate-100 pt-1.5">
+                <div className={`shrink-0 border-t pt-1.5 ${wbClass.ruleBorder}`}>
                   <ActiveJobStream
                     overviewJob={data.activeJob}
                     liveProgress={liveProgress}
@@ -385,10 +424,18 @@ export function WallboardDashboard() {
                         : t('primary.missing'),
                     })
               }>
-              <DiskForecastPanel
-                disk={disk}
-                primaryExists={data.zones.primaryExists}
-              />
+              <WallboardChartBoundary
+                fallback={
+                  <p
+                    className={`flex h-full items-center justify-center text-xs ${wbClass.muted}`}>
+                    {t('chart.unavailable')}
+                  </p>
+                }>
+                <DiskForecastPanel
+                  disk={disk}
+                  primaryExists={data.zones.primaryExists}
+                />
+              </WallboardChartBoundary>
             </WallboardPanel>
 
             {/* Row 2: Recent jobs | 14-day history | Alerts + Countdown */}
@@ -401,7 +448,7 @@ export function WallboardDashboard() {
               })}>
               <ul className="flex h-full flex-col justify-start gap-1 overflow-hidden">
                 {data.recentJobs.length === 0 ? (
-                  <li className="text-xs text-slate-500">
+                  <li className={`text-xs ${wbClass.muted}`}>
                     {t('panels.recentJobs.empty')}
                   </li>
                 ) : (
@@ -420,24 +467,40 @@ export function WallboardDashboard() {
                     return (
                       <li
                         key={job.runId}
-                        className="flex min-h-0 items-center gap-2 rounded-md border border-slate-100 bg-slate-50 px-2 py-1">
+                        className={`flex min-h-0 items-center gap-2 rounded-md px-2 py-1 ${wbClass.raised}`}>
                         <StatusDot tone={runStatusTone(job.status)} />
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-[11px] font-medium text-slate-900 xl:text-xs">
+                          <p
+                            className={`truncate text-[11px] font-medium xl:text-xs ${wbClass.ink}`}>
                             {backupRunStatusLabel(job.status)} · {job.mode} ·{' '}
                             {job.trigger}
                           </p>
-                          <p className="truncate text-[10px] text-slate-700">
+                          <p className={`truncate text-[10px] ${wbClass.muted}`}>
                             {scope}
                             {waitingWorker ? (
-                              <span className="ml-1 text-amber-700">
+                              <span className={`ml-1 ${wbClass.legendPartial}`}>
                                 {t('recentJob.waitingWorker')}
                               </span>
                             ) : null}
                           </p>
-                          <p className="truncate text-[10px] text-slate-500">
-                            {job.runId} ·{' '}
-                            {formatIsoAsLocalDateTime(job.startedAt)}
+                          <p
+                            className={`truncate font-mono text-[10px] ${wbClass.muted}`}>
+                            {job.runId}
+                          </p>
+                          <p
+                            className={`truncate font-mono text-[10px] ${wbClass.muted}`}
+                            title={t('recentJob.timeRangeTitle', {
+                              start: formatIsoAsLocalDateTime(job.startedAt),
+                              end: job.finishedAt
+                                ? formatIsoAsLocalDateTime(job.finishedAt)
+                                : t('common:emDash'),
+                            })}>
+                            {t('recentJob.timeRange', {
+                              start: formatIsoAsLocalDateTime(job.startedAt),
+                              end: job.finishedAt
+                                ? formatIsoAsLocalDateTime(job.finishedAt)
+                                : t('common:emDash'),
+                            })}
                           </p>
                         </div>
                       </li>
@@ -451,10 +514,18 @@ export function WallboardDashboard() {
               className="col-span-5 row-start-2"
               title={t('panels.history.title')}
               subtitle={t('panels.history.subtitle')}>
-              <HistorySparklineCard
-                historyByDay={data.historyByDay}
-                recentJobs={data.recentJobs}
-              />
+              <WallboardChartBoundary
+                fallback={
+                  <p
+                    className={`flex h-full items-center justify-center text-xs ${wbClass.muted}`}>
+                    {t('chart.unavailable')}
+                  </p>
+                }>
+                <HistorySparklineCard
+                  historyByDay={data.historyByDay}
+                  recentJobs={data.recentJobs}
+                />
+              </WallboardChartBoundary>
             </WallboardPanel>
 
             <div className="col-span-4 row-start-2 flex min-h-0 flex-col gap-2 xl:gap-2.5">
@@ -488,5 +559,6 @@ export function WallboardDashboard() {
         ) : null}
       </main>
     </div>
+    </WallboardThemeProvider>
   );
 }

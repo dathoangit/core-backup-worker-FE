@@ -1,5 +1,6 @@
 import { getPublicApiBaseUrl } from 'src/config/public-api';
 import type {
+  BackupLookupResponse,
   BackupQueueSnapshot,
   BackupRun,
   BackupSource,
@@ -60,6 +61,13 @@ export function cancelBackupRun(runId: string): Promise<CancelBackupRunResult> {
   });
 }
 
+export function resumeBackupRun(runId: string): Promise<TriggerBackupRunResult> {
+  return apiPost<TriggerBackupRunResult>({
+    api: apiBase,
+    endPoint: `/admin/backup/runs/${encodeURIComponent(runId)}/resume`,
+  });
+}
+
 export function fetchBackupQueue(): Promise<BackupQueueSnapshot> {
   return apiGet<BackupQueueSnapshot>({
     api: apiBase,
@@ -93,5 +101,16 @@ export function fetchRestorePlan(database = 'produce'): Promise<RestorePlan> {
     api: apiBase,
     endPoint: '/admin/backup/restore-plan',
     params: { database },
+  });
+}
+
+export function fetchBackupLookup(
+  q: string,
+  compareLive = true,
+): Promise<BackupLookupResponse> {
+  return apiGet<BackupLookupResponse>({
+    api: apiBase,
+    endPoint: '/admin/backup/lookup',
+    params: { q, compareLive },
   });
 }
